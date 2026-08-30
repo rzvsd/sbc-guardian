@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:ClubSnapshot",
+  "title": "ClubSnapshot",
+  "type": "object",
+  "required": ["snapshot_id", "snapshot_hash", "playerCount"],
+  "properties": {
+    "snapshot_id": { "type": "string" },
+    "snapshot_hash": { "type": "string" },
+    "playerCount": { "type": "integer" },
+    "items": { "type": "array", "items": { "$ref": "player-item.json" } }
+  },
+  "additionalProperties": false
+}

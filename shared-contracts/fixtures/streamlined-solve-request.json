@@ -1,0 +1,15 @@
+{
+  "contract_version": 1,
+  "game_edition": "FC26",
+  "snapshot_id": "snap-0003",
+  "snapshot_hash": "7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d",
+  "format": "STREAMLINED",
+  "challenge": {
+    "id": "chal-003",
+    "name": "Quick Upgrade",
+    "format": "STREAMLINED",
+    "requirements": [
+      { "type": "rating", "value": 82 }
+    ]
+  }
+}

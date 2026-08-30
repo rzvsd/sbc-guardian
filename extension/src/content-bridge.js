@@ -194,14 +194,28 @@
         }
 
         try {
-          this.storageArea.get(null, (items) => {
+          let settled = false;
+          const finish = (items) => {
+            if (settled) return;
+            settled = true;
+            resolve(this.policy.filter(items));
+          };
+          const handleError = (error) => {
+            if (settled) return;
+            settled = true;
+            console.warn("[FSU extension] Failed to read storage:", error?.message || error);
+            resolve({});
+          };
+          const result = this.storageArea.get(null, (items) => {
             if (this.runtimeApi.lastError) {
-              console.warn("[FSU extension] Failed to read storage:", this.runtimeApi.lastError.message);
-              resolve({});
+              handleError(this.runtimeApi.lastError);
               return;
             }
-            resolve(this.policy.filter(items));
+            finish(items);
           });
+          if (result && typeof result.then === "function") {
+            result.then(finish).catch(handleError);
+          }
         } catch {
           this.contextGuard.warnOnce();
           resolve({});
@@ -221,10 +235,14 @@
       }
 
       try {
+        let result;
         if (value === undefined) {
-          this.storageArea.remove(key);
+          result = this.storageArea.remove(key);
         } else {
-          this.storageArea.set({ [key]: value });
+          result = this.storageArea.set({ [key]: value });
+        }
+        if (result && typeof result.catch === "function") {
+          result.catch(() => this.contextGuard.warnOnce());
         }
         return true;
       } catch {
@@ -258,20 +276,33 @@
 
       return new Promise((resolve) => {
         try {
-          this.runtimeApi.sendMessage(payload, (response) => {
+          let settled = false;
+          const finish = (response) => {
+            if (settled) return;
+            settled = true;
+            resolve(response || { ok: false, error: { name: "RuntimeError", message: "No response." } });
+          };
+          const fail = (error) => {
+            if (settled) return;
+            settled = true;
+            resolve({
+              ok: false,
+              error: {
+                name: "RuntimeError",
+                message: error?.message || "Runtime message failed."
+              }
+            });
+          };
+          const result = this.runtimeApi.sendMessage(payload, (response) => {
             if (this.runtimeApi.lastError) {
-              resolve({
-                ok: false,
-                error: {
-                  name: "RuntimeError",
-                  message: this.runtimeApi.lastError.message
-                }
-              });
+              fail(this.runtimeApi.lastError);
               return;
             }
-
-            resolve(response || { ok: false, error: { name: "RuntimeError", message: "No response." } });
+            finish(response);
           });
+          if (result && typeof result.then === "function") {
+            result.then(finish).catch(fail);
+          }
         } catch (error) {
           this.contextGuard.warnOnce();
           resolve({
@@ -330,6 +361,16 @@
         return;
       }
 
+      if (message.type === "GUARDIAN_API_REQUEST") {
+        this.forwardGuardianApiRequest(message);
+        return;
+      }
+
+      if (message.type === "GUARDIAN_NATIVE_CONFIRM") {
+        this.forwardNativeConfirmation(message);
+        return;
+      }
+
       if (message.type === "GM_OPEN_IN_TAB") {
         this.forwardOpenInTab(message);
       }
@@ -373,6 +414,59 @@
               message: error?.message || "Extension context invalidated."
             }
           });
+      });
+    }
+
+    forwardGuardianApiRequest(message) {
+      this.messenger
+        .send({
+          source: CONTENT_SOURCE,
+          type: "GUARDIAN_API_REQUEST",
+          requestId: message.requestId,
+          request: message.request
+        })
+        .then((response) => {
+          this.postToPage({
+            type: "GUARDIAN_API_RESPONSE",
+            requestId: message.requestId,
+            ...response
+          });
+        })
+        .catch((error) => {
+          this.postToPage({
+            type: "GUARDIAN_API_RESPONSE",
+            requestId: message.requestId,
+            ok: false,
+            error: {
+              name: "ExtensionInvalidated",
+              message: error?.message || "Extension context invalidated."
+            }
+          });
+        });
+    }
+
+    forwardNativeConfirmation(message) {
+      this.messenger
+        .send({
+          source: CONTENT_SOURCE,
+          type: "GUARDIAN_NATIVE_CONFIRM",
+          requestId: message.requestId,
+          preview: message.preview
+        })
+        .then((response) => {
+          this.postToPage({
+            type: "GUARDIAN_NATIVE_CONFIRM_RESPONSE",
+            requestId: message.requestId,
+            ...response
+          });
+        })
+        .catch((error) => {
+          this.postToPage({
+            type: "GUARDIAN_NATIVE_CONFIRM_RESPONSE",
+            requestId: message.requestId,
+            ok: false,
+            error: { name: "ExtensionInvalidated", message: error?.message || "Extension context invalidated." }
+          });
         });
     }
 
@@ -396,15 +490,15 @@
   }
 
   class ContentBridgeApp {
-    constructor({ windowRef, documentRef, chromeApi, scripts }) {
+    constructor({ windowRef, documentRef, extensionApi, scripts }) {
       this.windowRef = windowRef;
-      this.contextGuard = new ExtensionContextGuard(chromeApi.runtime);
-      this.storage = new ExtensionStorage(chromeApi.storage.local, chromeApi.runtime, this.contextGuard);
-      this.injector = new ScriptInjector({ documentRef, runtimeApi: chromeApi.runtime });
+      this.contextGuard = new ExtensionContextGuard(extensionApi.runtime);
+      this.storage = new ExtensionStorage(extensionApi.storage.local, extensionApi.runtime, this.contextGuard);
+      this.injector = new ScriptInjector({ documentRef, runtimeApi: extensionApi.runtime });
       this.pageBridge = new PageBridge({
         windowRef,
         storage: this.storage,
-        messenger: new RuntimeMessenger(chromeApi.runtime, this.contextGuard),
+        messenger: new RuntimeMessenger(extensionApi.runtime, this.contextGuard),
         contextGuard: this.contextGuard
       });
       this.scripts = scripts;
@@ -417,10 +511,15 @@
     }
   }
 
+  const extensionApi = globalScope.browser || globalScope.chrome;
+  if (!extensionApi) {
+    throw new Error("FSU extension API unavailable");
+  }
+
   new ContentBridgeApp({
     windowRef: globalScope,
     documentRef: globalScope.document,
-    chromeApi: globalScope.chrome,
+    extensionApi,
     scripts: INJECTED_SCRIPTS
   })
     .boot()

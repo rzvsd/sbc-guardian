@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://sbcguardian.local/contracts/native-bridge/envelope.schema.json",
+  "title": "SBC Guardian Native Message Envelope",
+  "description": "Envelope shared between the Android wrapper (GeckoView) and the FSU WebExtension background core. Messages with unknown protocolVersion, unknown type, or stale sessionNonce are rejected by both sides.",
+  "type": "object",
+  "required": ["protocolVersion", "messageId", "requestId", "sessionNonce", "type", "payload", "ts"],
+  "additionalProperties": false,
+  "properties": {
+    "protocolVersion": {
+      "const": 1,
+      "description": "Must be exactly 1. Unknown versions are rejected."
+    },
+    "messageId": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Unique id (uuid) for this message. Echoed back on responses via requestId."
+    },
+    "requestId": {
+      "type": ["string", "null"],
+      "description": "Set to the messageId of the request this message answers; null for unsolicited messages."
+    },
+    "sessionNonce": {
+      "type": "string",
+      "minLength": 16,
+      "description": "Random per-app-session value. Messages from a previous session nonce are rejected."
+    },
+    "type": {
+      "enum": [
+        "HELLO",
+        "GET_APP_SETTINGS",
+        "SET_APP_SETTINGS",
+        "CAPABILITY_STATUS",
+        "ACTION_PREVIEW",
+        "ACTION_DECISION",
+        "ACTION_RESULT",
+        "SESSION_SYNC",
+        "SESSION_CLEAR",
+        "DIAGNOSTIC"
+      ],
+      "description": "Message type. Unknown types are rejected."
+    },
+    "payload": {
+      "type": "object",
+      "description": "Type-specific payload. Always an object (may be empty)."
+    },
+    "ts": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Creation timestamp used to reject malformed envelopes."
+    }
+  }
+}

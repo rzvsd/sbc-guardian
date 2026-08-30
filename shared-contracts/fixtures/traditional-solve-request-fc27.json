@@ -1,0 +1,17 @@
+{
+  "contract_version": 1,
+  "game_edition": "FC27",
+  "snapshot_id": "snap-0002",
+  "snapshot_hash": "5b722b30927b6c6d6e7a8f9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0",
+  "format": "TRADITIONAL",
+  "challenge": {
+    "id": "chal-002",
+    "name": "FC27 Launch SBC",
+    "format": "TRADITIONAL",
+    "requirements": [
+      { "type": "rating", "value": 86 }
+    ]
+  },
+  "ruleset_version": "2026.1.0-verified",
+  "taxonomy_version": 2
+}

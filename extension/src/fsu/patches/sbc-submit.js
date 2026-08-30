@@ -1,4 +1,5 @@
 import { SbcSubmitTransactionService } from "../domain/SbcSubmitTransactionService.js";
+import { registerGuardianServiceOwner } from "../../guardian/fsu/registerServiceOwner.js";
 
 export const SBC_SUBMIT_PATCH_IDS = Object.freeze({
   TRANSACTION: "sbc.submit-transaction"
@@ -13,6 +14,7 @@ export function installSbcSubmitPatch(deps) {
   } = deps;
   const transactionService =
     deps.transactionService ?? new SbcSubmitTransactionService();
+  registerGuardianServiceOwner("sbc", transactionService);
 
   return patchLifecycle.install({
     id: SBC_SUBMIT_PATCH_IDS.TRANSACTION,

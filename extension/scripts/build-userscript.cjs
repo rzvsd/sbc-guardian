@@ -17,6 +17,10 @@ const buildOptions = {
   target: ["chrome100"],
   legalComments: "none",
   charset: "utf8",
+  loader: { ".css": "text" },
+  // Marks the shipped bundle as distributed: the legacy (pre-Guardian) fallback
+  // path becomes dead code and cannot be enabled by anyone.
+  define: { __FSU_DISTRIBUTED__: "true" },
   banner: {
     js: `// FSU EAFC FUT Web Enhancer — bundled Chrome extension userscript (v${manifest.version})`
   }

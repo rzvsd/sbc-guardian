@@ -1,5 +1,6 @@
 import { responseText, safeParseJson } from "../infra/JsonParsing.js";
 import { EA_CAPABILITIES } from "../ea/EaRuntimeAdapter.js";
+import { guardianOrFailClosed } from "../../guardian/mode.js";
 import {
   MARKET_RESULT_INVALID,
   normalizeAuctionLookupResult,
@@ -20,6 +21,8 @@ function hasOwn(object, key) {
 }
 
 export class MarketActionService {
+  /** @type {Record<string, boolean>} */
+  _guardReg = {};
   /**
    * @param {any} i
    * @param {any} p
@@ -351,6 +354,37 @@ export class MarketActionService {
    * @returns {Promise<any>}
    */
   async buyPlayer(player, view, helpers) {
+    const g = guardianOrFailClosed("MARKET_BUY");
+    if (!g) return this._buyPlayerImpl(player, view, helpers);
+    // DTO is primitives only (hash-safe, no functions/controllers/view).
+    const defId = Number.isInteger(player)
+      ? player
+      : Number(player && (/** @type {any} */ (player).definitionId ?? /** @type {any} */ (player).defId));
+    if (!Number.isFinite(defId) || defId <= 0) {
+      throw new Error("GUARDIAN_PREVIEW_INVALID:MARKET_BUY");
+    }
+    const maxBuyPrice = Number(helpers?.getCachePrice?.(defId, 1)?.num);
+    if (!Number.isFinite(maxBuyPrice) || maxBuyPrice <= 0) {
+      throw new Error("GUARDIAN_PREVIEW_INVALID:MARKET_BUY_PRICE");
+    }
+    const dto = Object.freeze({ kind: "MARKET_BUY", defId, maxBuyPrice });
+    // Runtime context (helpers with callbacks, view) is bound internally and is
+    // never reachable from the public window API.
+    return g.requestGuarded("MARKET_BUY", dto, {
+      context: { player, view, helpers },
+      summary: `Buy player ${defId}`,
+      affectedItemIds: [String(defId)],
+      costRisk: `Maximum ${maxBuyPrice} coins`
+    });
+  }
+
+  /**
+   * @param {any} player
+   * @param {any} view
+   * @param {any} helpers
+   * @returns {Promise<any>}
+   */
+  async _buyPlayerImpl(player, view, helpers, /** @type {{maxBuyPrice?: number}} */ confirmed = {}) {
     const {
       showLoader,
       hideLoader,
@@ -399,7 +433,13 @@ export class MarketActionService {
       notice(["buyplayer.error", playerName, fy("buyplayer.error.child5")], 2);
       shouldMarkBuyError = true;
     } else {
-      let priceList = await this.readAuctionPrices(player, undefined, undefined, helpers);
+      const confirmedMaxBuyPrice = Number(confirmed.maxBuyPrice);
+      let priceList = await this.readAuctionPrices(
+        player,
+        Number.isFinite(confirmedMaxBuyPrice) && confirmedMaxBuyPrice > 0 ? confirmedMaxBuyPrice : undefined,
+        undefined,
+        helpers
+      );
       priceList.sort((a, b) => b._auction.buyNowPrice - a._auction.buyNowPrice);
       debug.log(priceList);
       changeLoadingText("buyplayer.loadingclose");
@@ -409,6 +449,13 @@ export class MarketActionService {
       } else {
         let currentPlayer = priceList[priceList.length - 1];
         const purchasePrice = currentPlayer._auction.buyNowPrice;
+        if (
+          Number.isFinite(confirmedMaxBuyPrice) &&
+          confirmedMaxBuyPrice > 0 &&
+          Number(purchasePrice) > confirmedMaxBuyPrice
+        ) {
+          throw new Error("GUARDIAN_CONTEXT_MISMATCH:MARKET_BUY_PRICE");
+        }
         const purchaseResult = normalizeMarketPurchaseResult(
           await ea.purchaseItemToClub(
             currentPlayer,
@@ -600,6 +647,40 @@ export class MarketActionService {
    * @returns {Promise<any>}
    */
   async playerToAuction(d, p, time, helpers) {
+    const g = guardianOrFailClosed("MARKET_LIST");
+    if (!g) return this._playerToAuctionImpl(d, p, time, helpers);
+    const itemDefId =
+      d && typeof d === "object" ? (/** @type {any} */ (d).defId ?? /** @type {any} */ (d).id ?? null) : null;
+    if (!Number.isFinite(Number(itemDefId)) || !Number.isFinite(Number(p)) || !Number.isFinite(Number(time))) {
+      throw new Error("GUARDIAN_PREVIEW_INVALID:MARKET_LIST");
+    }
+    const listingPrice = Number(helpers?.getCachePrice?.(Number(itemDefId), 1)?.num);
+    if (!Number.isFinite(listingPrice) || listingPrice <= 0) {
+      throw new Error("GUARDIAN_PREVIEW_INVALID:MARKET_LIST_PRICE");
+    }
+    const dto = Object.freeze({
+      kind: "MARKET_LIST",
+      itemDefId: Number(itemDefId),
+      requestedPrice: Number(p),
+      durationHours: Number(time),
+      listingPrice
+    });
+    return g.requestGuarded("MARKET_LIST", dto, {
+      context: { d, p, time, helpers },
+      summary: `List item ${itemDefId}`,
+      affectedItemIds: [String(itemDefId)],
+      costRisk: `List for ${listingPrice} coins / ${Number(time)}h`
+    });
+  }
+
+  /**
+   * @param {any} d
+   * @param {any} p
+   * @param {any} time
+   * @param {any} helpers
+   * @returns {Promise<any>}
+   */
+  async _playerToAuctionImpl(d, p, time, helpers, /** @type {{listingPrice?: number}} */ confirmed = {}) {
     const {
       futbinId,
       getInfo,
@@ -622,16 +703,22 @@ export class MarketActionService {
     const t = listingItem.alreadyListed;
     if (i) {
       //25.13 读取futbin最新的价格
-      try {
-        if (hasOwn(info.futbinId, i.definitionId)) {
-          await futbinId.getPrice(i.definitionId, info.futbinId[i.definitionId]);
-        } else {
-          await futbinId.getId(i);
+      const confirmedListingPrice = Number(confirmed.listingPrice);
+      if (!Number.isFinite(confirmedListingPrice) || confirmedListingPrice <= 0) {
+        try {
+          if (hasOwn(info.futbinId, i.definitionId)) {
+            await futbinId.getPrice(i.definitionId, info.futbinId[i.definitionId]);
+          } else {
+            await futbinId.getId(i);
+          }
+        } catch {
+          return false;
         }
-      } catch {
-        return false;
       }
-      const price = getCachePrice(i.definitionId, 1).num;
+      const price =
+        Number.isFinite(confirmedListingPrice) && confirmedListingPrice > 0
+          ? confirmedListingPrice
+          : getCachePrice(i.definitionId, 1).num;
 
       const listingCapacity = ea.hasTransferListingCapacity();
       if (!listingCapacity.success) {

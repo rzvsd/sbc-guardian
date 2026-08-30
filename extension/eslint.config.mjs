@@ -98,6 +98,33 @@ export default [
     }
   },
   {
+    files: ["src/guardian/**/*.js"],
+    languageOptions: {
+      ecmaVersion: 2022,
+      sourceType: "module",
+      globals: {
+        ...nodeGlobals,
+        document: "readonly",
+        window: "readonly",
+        self: "readonly",
+        customElements: "readonly",
+        AbortController: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+        crypto: "readonly",
+        fetch: "readonly",
+        chrome: "readonly",
+        browser: "readonly"
+      }
+    },
+    rules: {
+      "no-undef": "off",
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_", caughtErrorsIgnorePattern: "^_" }],
+      "no-empty": "warn",
+      "no-useless-assignment": "error"
+    }
+  },
+  {
     files: ["scripts/**/*.mjs"],
     languageOptions: {
       ecmaVersion: 2022,
@@ -117,7 +144,14 @@ export default [
     }
   },
   {
-    files: ["src/background.js", "src/content-bridge.js", "src/page-runtime.js"],
+    files: [
+      "src/background.js",
+      "src/background-gecko.js",
+      "src/platform/background-core.js",
+      "src/platform/webextension-api.js",
+      "src/content-bridge.js",
+      "src/page-runtime.js"
+    ],
     languageOptions: {
       ecmaVersion: 2022,
       sourceType: "commonjs",
@@ -127,8 +161,12 @@ export default [
         FormData: "readonly",
         URLSearchParams: "readonly",
         AbortController: "readonly",
+        TextEncoder: "readonly",
+        ArrayBuffer: "readonly",
         fetch: "readonly",
         chrome: "readonly",
+        browser: "readonly",
+        importScripts: "readonly",
         document: "readonly",
         window: "readonly",
         self: "readonly",

@@ -1,0 +1,8 @@
+{
+  "contract_version": 1,
+  "suggestion": {
+    "players": ["item-2001", "item-2002", "item-2003"],
+    "rating": 82,
+    "cost": 3200
+  }
+}

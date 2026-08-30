@@ -1,0 +1,86 @@
+[
+  {
+    "name": "fsu-fut-enhancer",
+    "version": "26.10.0",
+    "repository": "https://github.com/color8892/fsu-fut-enhancer",
+    "license": "MIT",
+    "usedAt": "runtime",
+    "externalData": "Read-only price/solver endpoints over HTTPS (allow-listed). No EA credentials sent out.",
+    "approval": "approved",
+    "pinnedCommit": "c318f5018c7a3447103158d1cc28b24bfbce1dce"
+  },
+  {
+    "name": "GeckoView",
+    "version": "153.0.20260810162159",
+    "repository": "https://github.com/mozilla/geckoview",
+    "license": "MPL-2.0",
+    "usedAt": "runtime",
+    "externalData": "Loads EA FUT Web App and hosts the built-in WebExtension. No telemetry by default.",
+    "approval": "approved",
+    "note": "Exact stable version pinned in android-wrapper/app/build.gradle.kts (153.0.20260810162159), verified against Mozilla Maven metadata; v144+ includes Mozilla's 16 KB page-size support."
+  },
+  {
+    "name": "adm-zip",
+    "version": "0.6.0",
+    "repository": "https://github.com/cthackers/adm-zip",
+    "license": "MIT",
+    "usedAt": "development",
+    "externalData": "None. Used only to build/verify extension ZIPs cross-platform.",
+    "approval": "approved"
+  },
+  {
+    "name": "esbuild",
+    "version": "0.28.1",
+    "repository": "https://github.com/evanw/esbuild",
+    "license": "MIT",
+    "usedAt": "development",
+    "externalData": "None.",
+    "approval": "approved"
+  },
+  {
+    "name": "eslint",
+    "version": "10.6.0",
+    "repository": "https://github.com/eslint/eslint",
+    "license": "MIT",
+    "usedAt": "development",
+    "externalData": "None.",
+    "approval": "approved"
+  },
+  {
+    "name": "playwright",
+    "version": "1.61.1",
+    "repository": "https://github.com/microsoft/playwright",
+    "license": "Apache-2.0",
+    "usedAt": "development",
+    "externalData": "Downloads browser binaries on install (dev only).",
+    "approval": "approved"
+  },
+  {
+    "name": "typescript",
+    "version": "7.0.2",
+    "repository": "https://github.com/microsoft/TypeScript",
+    "license": "Apache-2.0",
+    "usedAt": "development",
+    "externalData": "None.",
+    "approval": "approved"
+  },
+  {
+    "name": "lodash (vendor)",
+    "version": "bundled in vendor/lodash.min.js",
+    "repository": "https://github.com/lodash/lodash",
+    "license": "MIT",
+    "usedAt": "runtime",
+    "externalData": "None.",
+    "approval": "approved"
+  },
+  {
+    "name": "brace-expansion",
+    "version": "5.0.9",
+    "repository": "https://github.com/micromatch/brace-expansion",
+    "license": "MIT",
+    "usedAt": "development",
+    "externalData": "None.",
+    "approval": "approved",
+    "note": "Pinned via package.json overrides to remediate ESLint/minimatch transitive advisory."
+  }
+]

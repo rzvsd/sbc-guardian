@@ -1,0 +1,8 @@
+{
+  "protocolVersion": 1,
+  "sessionNonce": "session-nonce-example-0001",
+  "type": "HELLO",
+  "requestId": "req-0001",
+  "payload": { "version": "26.10.0", "platform": "gecko" },
+  "ts": "2026-08-28T11:50:00.000Z"
+}

@@ -46,7 +46,11 @@ function failure(code, issues, data = {}) {
   return { success: false, error: { code, issues }, data };
 }
 
+import { guardianOrFailClosed } from "../../guardian/mode.js";
+
 export class BulkPackOpenService {
+  /** @type {Record<string, boolean>} */
+  _guardReg = {};
   /**
    * @param {{
    *   adapter: BulkPackAdapter,
@@ -82,6 +86,20 @@ export class BulkPackOpenService {
    * }} input
    */
   async run({ packId, count, context, onProgress = () => {} }) {
+    const g = guardianOrFailClosed("PACK_OPEN_BULK");
+    if (!g) return this._runImpl({ packId, count, context, onProgress });
+    // DTO is primitives only; the runtime context (EA adapter context + the
+    // onProgress callback) is bound internally and is not hashed or exposed.
+    const dto = Object.freeze({ kind: "PACK_OPEN_BULK", packId: Number(packId), count: Number(count) });
+    return g.requestGuarded("PACK_OPEN_BULK", dto, {
+      context: { context, onProgress }
+    });
+  }
+
+  /**
+   * @param {{ packId: number, count: number, context: unknown, onProgress?: (current: number, total: number) => void }} input
+   */
+  async _runImpl({ packId, count, context, onProgress = () => {} }) {
     if (this.active) {
       return failure(BULK_PACK_ERROR_CODES.BUSY, ["bulk-pack.in-flight"]);
     }

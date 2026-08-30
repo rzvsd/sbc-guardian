@@ -2,6 +2,7 @@ import {
   STORE_PACK_OPEN_ERROR_CODES,
   storePackOpenFailure
 } from "./StorePackOpenResults.js";
+import { guardianOrFailClosed } from "../../guardian/mode.js";
 
 /**
  * @param {unknown} value
@@ -12,6 +13,8 @@ function isRecord(value) {
 }
 
 export class StorePackOpenTransactionService {
+  /** @type {Record<string, boolean>} */
+  _guardReg = {};
   /**
    * @param {{
    *   adapter: {
@@ -56,13 +59,63 @@ export class StorePackOpenTransactionService {
    *   onDiagnostic?: (result: unknown) => void
    * }} options
    */
-  intercept({
-    controller,
-    args,
-    invoke,
-    onSuccess,
-    onDiagnostic = () => {}
-  }) {
+  intercept(options) {
+    const g = guardianOrFailClosed("PACK_OPEN");
+    // The DTO is derived from the selection's primitives; the full runtime
+    // context (controller, invoke/onSuccess callbacks) is bound internally and
+    // never exposed.
+    let selection = null;
+    try {
+      const prepared = this.adapter.prepare(options.controller, options.args);
+      if (isRecord(prepared) && prepared.success === true && isRecord(prepared.data)) {
+        selection = prepared.data;
+      }
+    } catch {
+      selection = null;
+    }
+    if (!g) {
+      // Legacy (pre-Guardian) execution path — only reachable in tests via the
+      // explicit opt-in. Here the `tracked` flag decides routing, exactly as
+      // the original non-Guardian code did.
+      if (!selection || selection.tracked !== true) {
+        return this._interceptImpl(options);
+      }
+      return this._interceptImpl(options);
+    }
+    // Guardian present: EVERY pack open is routed through the confirmation gate
+    // (fail-closed). Even a non-tracked selection is still confirmed, using a
+    // neutral DTO.
+    if (!selection || selection.tracked !== true) {
+      throw new Error("GUARDIAN_PREVIEW_INVALID:PACK_OPEN");
+    }
+    const dto = Object.freeze(
+      selection && selection.tracked === true
+      ? {
+          kind: "PACK_OPEN",
+          key: String(selection.key),
+          packId: Number(selection.packId),
+          initialCount: Number(selection.initialCount)
+        }
+      : { kind: "PACK_OPEN", key: "", packId: 0, initialCount: 0 }
+    );
+    return g.requestGuarded("PACK_OPEN", dto, { context: options });
+  }
+
+  /**
+   * @param {{
+   *   controller: Record<string, unknown>,
+   *   args: unknown[],
+   *   invoke: () => unknown,
+   *   onSuccess: (result: {
+   *     packId: number,
+   *     remainingCount: number,
+   *     availablePackIds: number[]
+   *   }) => void,
+   *   onDiagnostic?: (result: unknown) => void
+   * }} options
+   */
+  _interceptImpl(options, /** @type {{key:string, packId:number, initialCount:number}|null} */ expectedDto = null) {
+    const { controller, args, invoke, onSuccess, onDiagnostic = () => {} } = options;
     let prepared;
     try {
       prepared = this.adapter.prepare(controller, args);
@@ -97,6 +150,16 @@ export class StorePackOpenTransactionService {
     const key = selection.key;
     const packId = Number(selection.packId);
     const initialCount = Number(selection.initialCount);
+    if (
+      expectedDto &&
+      (
+        String(expectedDto.key) !== key ||
+        Number(expectedDto.packId) !== packId ||
+        Number(expectedDto.initialCount) !== initialCount
+      )
+    ) {
+      throw new Error("GUARDIAN_CONTEXT_MISMATCH:PACK_OPEN");
+    }
 
     if (
       this.inFlight.size > 0 ||

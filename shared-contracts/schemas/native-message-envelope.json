@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:NativeMessageEnvelope",
+  "title": "NativeMessageEnvelope",
+  "type": "object",
+  "required": ["protocolVersion", "sessionNonce", "type", "payload", "ts"],
+  "properties": {
+    "protocolVersion": { "type": "integer", "const": 1 },
+    "sessionNonce": { "type": "string" },
+    "type": {
+      "type": "string",
+      "enum": [
+        "HELLO",
+        "GET_APP_SETTINGS",
+        "SET_APP_SETTINGS",
+        "CAPABILITY_STATUS",
+        "ACTION_PREVIEW",
+        "ACTION_DECISION",
+        "ACTION_RESULT",
+        "DIAGNOSTIC"
+      ]
+    },
+    "requestId": { "type": "string" },
+    "payload": { "type": ["object", "null"] },
+    "ts": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -391,6 +391,9 @@
         responseNormalizer: new ResponseNormalizer()
       });
       this.valueStore = null;
+      this.guardianRequests = new Map();
+      this.nextGuardianRequestId = 1;
+      this.nativeConfirmations = new Map();
       this.handleContentMessage = this.handleContentMessage.bind(this);
     }
 
@@ -416,6 +419,39 @@
         xhrShim
       }).install();
 
+      this.windowRef.__guardianApiRequest = (request) =>
+        new Promise((resolve, reject) => {
+          const requestId = `guardian-${Date.now()}-${this.nextGuardianRequestId++}`;
+          const timeoutMs = Math.min(Math.max(Number(request?.timeoutMs) || 12000, 1), 30000);
+          const timer = setTimeout(() => {
+            this.guardianRequests.delete(requestId);
+            const error = new Error("Guardian request timed out.");
+            error.name = "AbortError";
+            reject(error);
+          }, timeoutMs);
+          this.guardianRequests.set(requestId, { resolve, reject, timer });
+          this.messenger.postToContent({
+            type: "GUARDIAN_API_REQUEST",
+            requestId,
+            request: {
+              url: String(request?.url || ""),
+              method: String(request?.method || "GET"),
+              body: request?.body,
+              timeoutMs
+            }
+          });
+        });
+      this.windowRef.__guardianNativeConfirm = (preview) =>
+        new Promise((resolve, reject) => {
+          const requestId = `native-${Date.now()}-${this.nextGuardianRequestId++}`;
+          this.nativeConfirmations.set(requestId, { resolve, reject });
+          this.messenger.postToContent({
+            type: "GUARDIAN_NATIVE_CONFIRM",
+            requestId,
+            preview
+          });
+        });
+
       this.messenger.postToContent({ type: "FSU_REQUEST_INIT" });
     }
 
@@ -432,6 +468,31 @@
 
       if (message.type === "GM_XMLHTTP_RESPONSE") {
         this.callbackRegistry.complete(message.requestId, message);
+        return;
+      }
+
+      if (message.type === "GUARDIAN_API_RESPONSE") {
+        const pending = this.guardianRequests.get(message.requestId);
+        if (!pending) return;
+        this.guardianRequests.delete(message.requestId);
+        clearTimeout(pending.timer);
+        if (message.ok) {
+          pending.resolve(message.response);
+        } else {
+          const error = new Error(message.error?.message || "Guardian request failed.");
+          error.name = message.error?.name || "Error";
+          error.code = message.error?.code;
+          pending.reject(error);
+        }
+        return;
+      }
+
+      if (message.type === "GUARDIAN_NATIVE_CONFIRM_RESPONSE") {
+        const pending = this.nativeConfirmations.get(message.requestId);
+        if (!pending) return;
+        this.nativeConfirmations.delete(message.requestId);
+        if (message.ok) pending.resolve(message.approved === true);
+        else pending.reject(new Error(message.error?.message || "Native confirmation failed."));
         return;
       }
 

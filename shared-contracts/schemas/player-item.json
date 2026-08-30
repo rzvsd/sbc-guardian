@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:PlayerItem",
+  "title": "PlayerItem",
+  "type": "object",
+  "required": ["id", "name", "rating"],
+  "properties": {
+    "id": { "type": "string" },
+    "name": { "type": "string" },
+    "rating": { "type": "integer" },
+    "position": { "type": "string" },
+    "club": { "type": "string" },
+    "rarity": { "type": "string" }
+  },
+  "additionalProperties": false
+}

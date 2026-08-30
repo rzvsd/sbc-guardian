@@ -1,19 +1,24 @@
 "use strict";
 
-const { execSync } = require("child_process");
 const fs = require("fs");
 const path = require("path");
+const { createZipFromDirectory } = require("./lib/zip-utils.cjs");
 
 const root = path.resolve(__dirname, "..");
-const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
+const isGecko = process.argv.includes("--gecko");
+const manifestSource = isGecko ? "manifest.gecko.json" : "manifest.json";
+const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestSource), "utf8"));
 const version = manifest.version;
 const distDir = path.join(root, "dist");
 const stageDir = path.join(distDir, "stage");
-const zipName = `fsu-fut-enhancer-${version}.zip`;
+const zipName = isGecko
+  ? `fsu-fut-enhancer-gecko-${version}.zip`
+  : `fsu-fut-enhancer-${version}.zip`;
 const zipPath = path.join(distDir, zipName);
 
 const runtimeFiles = [
   "src/background.js",
+  "src/background-gecko.js",
   "src/content-bridge.js",
   "src/page-runtime.js",
   "src/userscript.js"
@@ -49,29 +54,20 @@ function copyDirectory(relativePath) {
   }
 }
 
-function createZip() {
-  if (process.platform === "win32") {
-    const stageGlob = path.join(stageDir, "*");
-    execSync(
-      `powershell -NoProfile -Command "Compress-Archive -Path '${stageGlob}' -DestinationPath '${zipPath}' -Force"`,
-      { stdio: "inherit" }
-    );
-    return;
-  }
-
-  execSync(`cd "${stageDir}" && zip -qr "${zipPath}" .`, { stdio: "inherit" });
-}
-
 fs.rmSync(distDir, { recursive: true, force: true });
 fs.mkdirSync(stageDir, { recursive: true });
 
-copyFile("manifest.json");
+// Stage the selected manifest as manifest.json so the browser loader finds it.
+fs.copyFileSync(path.join(root, manifestSource), path.join(stageDir, "manifest.json"));
 for (const file of runtimeFiles) {
-  copyFile(file);
+  if (fs.existsSync(path.join(root, file))) {
+    copyFile(file);
+  }
 }
 copyDirectory("vendor");
+copyDirectory("src/platform");
 
-createZip();
+createZipFromDirectory(stageDir, zipPath);
 fs.rmSync(stageDir, { recursive: true, force: true });
 
-console.log(`Packaged ${zipPath}`);
+console.log(`Packaged ${zipPath} (${isGecko ? "gecko" : "chrome"} manifest)`);

@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:ActionResult",
+  "title": "ActionResult",
+  "type": "object",
+  "required": ["decisionId", "actionId", "status", "at"],
+  "properties": {
+    "decisionId": { "type": "string" },
+    "actionId": { "type": "string" },
+    "status": { "type": "string", "enum": ["SUCCESS", "REJECTED"] },
+    "at": { "type": "string" },
+    "detail": { "type": "string" }
+  },
+  "additionalProperties": false
+}

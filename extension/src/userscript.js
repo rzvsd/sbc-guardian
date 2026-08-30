@@ -1,4 +1,4 @@
-// FSU EAFC FUT Web Enhancer — bundled Chrome extension userscript (v26.10.0)
+// FSU EAFC FUT Web Enhancer — bundled Chrome extension userscript (v26.10.1)
 "use strict";
 (() => {
   // src/fsu/core/FsuContext.js
@@ -4470,7 +4470,7 @@
     };
     registerPriceLifecycleEvents({ call, events, patchLifecycle });
     events.setSquadPricePatchEnabled(true);
-    events.loadPlayerInfo = async (items, el, type) => {
+    events.loadPlayerInfo = async (items, el2, type) => {
       const list = _.map(
         _.filter(items, function(i) {
           return _.has(i, "type") && i.type == "player" && !events.getCachePrice(i.definitionId, 3) && i.definitionId > 0;
@@ -4532,17 +4532,17 @@
           totalElement.innerText = _.sumBy(cntlr2.current()._squad.getFieldPlayers(), (i) => events.getCachePrice(i.item.definitionId, 1).num).toLocaleString();
         }
       }
-      if (el) {
-        if (el.className == "UTPlayerPicksView" && info.set.player_pickbest) {
-          events.playerSelectionSort(el);
-        } else if (el.className.includes("UTUnassigned") && el.className.includes("Controller") && "_fsuScreenshot" in el) {
+      if (el2) {
+        if (el2.className == "UTPlayerPicksView" && info.set.player_pickbest) {
+          events.playerSelectionSort(el2);
+        } else if (el2.className.includes("UTUnassigned") && el2.className.includes("Controller") && "_fsuScreenshot" in el2) {
           let sPrice = 0;
           _.map(list, (i) => {
             sPrice += events.getCachePrice(i, 1).num;
           });
-          el._fsuScreenshot._header.setText(fy2(["screenshot.text", list.length, sPrice.toLocaleString()]));
+          el2._fsuScreenshot._header.setText(fy2(["screenshot.text", list.length, sPrice.toLocaleString()]));
         } else {
-          events.losAuctionCount(el, 0);
+          events.losAuctionCount(el2, 0);
         }
       }
       if (!type && list.length > 0) {
@@ -4550,7 +4550,7 @@
           return _.has(i, "type") && i.type == "player" && !events.getCachePrice(i.definitionId, 3) && i.definitionId > 0;
         });
         if (lackPlayers.length) {
-          events.loadPlayerInfo(lackPlayers, el, 2);
+          events.loadPlayerInfo(lackPlayers, el2, 2);
         }
       }
     };
@@ -7182,11 +7182,548 @@
     return { success: false, error: { code, issues } };
   }
 
+  // src/guardian/actions/payloadHash.js
+  function canonicalize(value, seen) {
+    if (value === null || typeof value !== "object") {
+      return value;
+    }
+    if (typeof value === "function") {
+      return void 0;
+    }
+    const visited = seen || /* @__PURE__ */ new Set();
+    if (visited.has(
+      /** @type {object} */
+      value
+    )) {
+      return void 0;
+    }
+    visited.add(
+      /** @type {object} */
+      value
+    );
+    let result;
+    if (Array.isArray(value)) {
+      result = value.map((item) => canonicalize(item, visited));
+    } else {
+      const sorted = {};
+      for (const key of Object.keys(
+        /** @type {Record<string, unknown>} */
+        value
+      ).sort()) {
+        sorted[key] = canonicalize(
+          /** @type {Record<string, unknown>} */
+          value[key],
+          visited
+        );
+      }
+      result = sorted;
+    }
+    visited.delete(
+      /** @type {object} */
+      value
+    );
+    return result;
+  }
+  async function hashPayload(payload) {
+    const text = JSON.stringify(canonicalize(payload ?? null));
+    const bytes = new TextEncoder().encode(text);
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, "0")).join("");
+  }
+
+  // src/guardian/actions/ActionPreviewBuilder.js
+  var ACTION_KINDS = Object.freeze([
+    "SBC_APPLY",
+    "SBC_SUBMIT",
+    "MARKET_BUY",
+    "MARKET_LIST",
+    "PACK_OPEN",
+    "PACK_OPEN_BULK",
+    "BATCH_ACTION",
+    "SBC_ANALYZE",
+    "SETTING_CHANGE"
+  ]);
+  var IRREVERSIBLE_KINDS = /* @__PURE__ */ new Set([
+    "SBC_APPLY",
+    "SBC_SUBMIT",
+    "MARKET_BUY",
+    "MARKET_LIST",
+    "PACK_OPEN",
+    "PACK_OPEN_BULK",
+    "BATCH_ACTION"
+  ]);
+  function newId(prefix) {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return prefix + crypto.randomUUID();
+    }
+    return prefix + Date.now().toString(16) + "-" + Math.random().toString(16).slice(2);
+  }
+  async function buildActionPreview({
+    kind,
+    summary,
+    payload,
+    affectedItemIds = [],
+    costRisk,
+    now = () => Date.now(),
+    ttlMs = 5 * 60 * 1e3
+  } = {}) {
+    if (typeof kind !== "string" || !ACTION_KINDS.includes(kind)) {
+      throw new Error("unknown action kind: " + String(kind));
+    }
+    if (typeof summary !== "string" || summary.length === 0) {
+      throw new Error("summary required");
+    }
+    const payloadHash = await hashPayload(payload ?? null);
+    const expiresAt = new Date(now() + ttlMs).toISOString();
+    return {
+      actionId: newId("act-"),
+      kind,
+      payloadHash,
+      summary,
+      affectedItemIds: Array.from(affectedItemIds),
+      ...typeof costRisk === "string" && costRisk ? { costRisk } : {},
+      expiresAt,
+      irreversible: IRREVERSIBLE_KINDS.has(kind)
+    };
+  }
+
+  // src/guardian/actions/ActionDecisionStore.js
+  function createDecisionStore({ now = () => Date.now() } = {}) {
+    const store = /* @__PURE__ */ new Map();
+    function create(preview, sessionNonce) {
+      if (!preview || !preview.actionId || !preview.payloadHash) {
+        throw new Error("preview missing actionId/payloadHash");
+      }
+      if (!sessionNonce) {
+        throw new Error("missing sessionNonce");
+      }
+      const decisionId = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function" ? "dec-" + crypto.randomUUID() : "dec-" + now().toString(16) + "-" + Math.random().toString(16).slice(2);
+      const expiresAt = preview.expiresAt ? Date.parse(preview.expiresAt) : now() + 5 * 60 * 1e3;
+      store.set(decisionId, {
+        decisionId,
+        actionId: preview.actionId,
+        payloadHash: preview.payloadHash,
+        sessionNonce,
+        expiresAt,
+        used: false,
+        preview
+      });
+      return {
+        decisionId,
+        actionId: preview.actionId,
+        payloadHash: preview.payloadHash,
+        sessionNonce,
+        expiresAt: new Date(expiresAt).toISOString()
+      };
+    }
+    function consume(decision, sessionNonce, nowFn = now) {
+      if (!decision || !decision.decisionId) {
+        throw new Error("DECISION_MISSING");
+      }
+      const entry = store.get(decision.decisionId);
+      if (!entry) {
+        throw new Error("DECISION_UNKNOWN");
+      }
+      if (entry.used) {
+        throw new Error("DECISION_ALREADY_USED");
+      }
+      if (entry.sessionNonce !== sessionNonce) {
+        throw new Error("DECISION_SESSION_MISMATCH");
+      }
+      if (decision.payloadHash != null && decision.payloadHash !== entry.payloadHash) {
+        throw new Error("DECISION_PAYLOAD_MISMATCH");
+      }
+      if (nowFn() > entry.expiresAt) {
+        store.delete(decision.decisionId);
+        throw new Error("DECISION_EXPIRED");
+      }
+      entry.used = true;
+      return entry.preview;
+    }
+    function get(decisionId) {
+      return store.get(decisionId);
+    }
+    return { create, consume, get };
+  }
+
+  // src/guardian/actions/GuardianActionGate.js
+  var GuardianActionGate = class {
+    /**
+     * @param {{ sessionNonce?: string, now?: () => number, ttlMs?: number }} config
+     */
+    constructor({ sessionNonce, now = () => Date.now(), ttlMs } = {}) {
+      if (!sessionNonce) {
+        throw new Error("GuardianActionGate requires sessionNonce");
+      }
+      this.sessionNonce = sessionNonce;
+      this.now = now;
+      this.ttlMs = ttlMs;
+      this.decisions = createDecisionStore({ now });
+    }
+    /**
+     * @param {{kind?:string, summary?:string, payload?:unknown, affectedItemIds?:string[]}} spec
+     * @returns {Promise<{actionId:string, kind:string, payloadHash:string, summary:string, affectedItemIds:string[], expiresAt:string, irreversible:boolean}>}
+     */
+    buildPreview(spec) {
+      return buildActionPreview({
+        kind: spec.kind,
+        summary: spec.summary,
+        payload: spec.payload,
+        affectedItemIds: spec.affectedItemIds,
+        now: this.now,
+        ttlMs: this.ttlMs
+      });
+    }
+    /**
+     * @param {{ actionId: string, payloadHash?: string, expiresAt?: string }} preview
+     * @returns {object} decision token (present to the user)
+     */
+    requestDecision(preview) {
+      if (!preview || !preview.actionId) {
+        throw new Error("invalid preview");
+      }
+      return this.decisions.create(preview, this.sessionNonce);
+    }
+    /**
+     * Confirm and execute exactly once. No automatic retry after accept.
+     * @param {{decisionId?:string, payloadHash?:string}} decision
+     * @param {(preview:object) => unknown} perform
+     * @returns {Promise<{ok:true, result:unknown, decisionId:string}>}
+     */
+    async confirm(decision, perform) {
+      const preview = this.decisions.consume(decision, this.sessionNonce, this.now);
+      const result = await perform(preview);
+      return { ok: true, result, decisionId: decision.decisionId || "" };
+    }
+    /**
+     * Consume and validate a decision token, returning the bound preview exactly
+     * once. Throws on missing/used/expired/session/payload mismatch. The facade
+     * uses this to gate the real mutation.
+     * @param {{decisionId?:string, payloadHash?:string}} decision
+     * @param {() => number} [nowFn]
+     * @returns {object}
+     */
+    consumeDecision(decision, nowFn) {
+      return this.decisions.consume(decision, this.sessionNonce, nowFn || this.now);
+    }
+  };
+
+  // src/guardian/runtime.js
+  var GuardianRuntimeError = class extends Error {
+  };
+  var activeGuardian = null;
+  function getGuardian() {
+    return activeGuardian;
+  }
+  function setGuardian(g) {
+    activeGuardian = g;
+  }
+  var REGISTRY_KINDS = new Set(ACTION_KINDS);
+  var GuardianMutationFacade = class {
+    /**
+     * @param {{ sessionNonce?: string, now?: () => number, ttlMs?: number, setTimer?: typeof setTimeout, clearTimer?: typeof clearTimeout, mutations?: Record<string, (payload: unknown, preview: object, context?: unknown) => unknown> }} [config]
+     */
+    constructor(config = {}) {
+      const { sessionNonce, now, ttlMs, setTimer, clearTimer, mutations = {} } = config;
+      if (!sessionNonce) {
+        throw new GuardianRuntimeError("GuardianMutationFacade requires sessionNonce");
+      }
+      this.sessionNonce = sessionNonce;
+      this.now = now || (() => Date.now());
+      this.ttlMs = ttlMs;
+      this.setTimer = setTimer || ((fn, ms) => setTimeout(fn, ms));
+      this.clearTimer = clearTimer || ((timer) => clearTimeout(timer));
+      this.gate = new GuardianActionGate({ sessionNonce, now: this.now, ttlMs });
+      this.originals = new Map(Object.entries(mutations));
+      this.pending = /* @__PURE__ */ new Map();
+      this._contexts = /* @__PURE__ */ new Map();
+      this._timers = /* @__PURE__ */ new Map();
+      this.defaultPreviewHandler = null;
+    }
+    /**
+     * @param {string} kind
+     */
+    isRegistered(kind) {
+      return this.originals.has(kind);
+    }
+    getRegisteredKinds() {
+      return [...this.originals.keys()];
+    }
+    /**
+     * Register (or replace) the low-level executor for a mutation kind. The
+     * executor is captured in this private closure and is never exposed.
+     * The third argument is the per-call runtime context bound internally via
+     * requestGuarded(kind, dto, { context }); it is never supplied by the public
+     * window API.
+     * @param {string} kind
+     * @param {(payload: unknown, preview: object, context?: unknown) => unknown} executor
+     */
+    registerMutation(kind, executor) {
+      if (!REGISTRY_KINDS.has(kind)) {
+        throw new GuardianRuntimeError("GUARDIAN_UNKNOWN_KIND:" + String(kind));
+      }
+      this.originals.set(kind, executor);
+    }
+    /**
+     * Run a registered executor directly (no token). Used internally by
+     * BATCH_ACTION to perform sub-actions after the parent action was confirmed.
+     * @param {string} kind
+     * @param {unknown} payload
+     * @returns {unknown}
+     */
+    runRegistered(kind, payload) {
+      const ex = this.originals.get(kind);
+      if (!ex) {
+        throw new GuardianRuntimeError("GUARDIAN_UNKNOWN_MUTATION:" + String(kind));
+      }
+      return ex(payload, {});
+    }
+    /**
+     * STAGE 1 — prepare. Stores the preview and returns it. NEVER returns a token.
+     * @param {string} kind
+     * @param {unknown} payload
+     * @param {{ summary?: string, affectedItemIds?: string[], costRisk?: string }} [options]
+     * @returns {Promise<object>}
+     */
+    async prepare(kind, payload, options = {}) {
+      if (!REGISTRY_KINDS.has(kind)) {
+        throw new GuardianRuntimeError("GUARDIAN_UNKNOWN_KIND:" + String(kind));
+      }
+      const preview = await buildActionPreview({
+        kind,
+        summary: options.summary || kind,
+        payload,
+        affectedItemIds: options.affectedItemIds || [],
+        costRisk: options.costRisk,
+        now: this.now,
+        ttlMs: this.ttlMs
+      });
+      this.pending.set(preview.actionId, preview);
+      return preview;
+    }
+    /**
+     * STAGE 2 — approve. Mints a single-use decision token for a prepared action.
+     * This is PRIVATE: only the UI confirmation handler may call it. It is NOT
+     * exposed on window.__guardian.
+     * @param {string} actionId
+     * @returns {object}
+     */
+    approve(actionId) {
+      const preview = this.pending.get(actionId);
+      if (!preview) {
+        throw new GuardianRuntimeError("GUARDIAN_NO_PENDING:" + String(actionId));
+      }
+      const decision = this.gate.requestDecision(
+        /** @type {any} */
+        preview
+      );
+      this.pending.delete(actionId);
+      return decision;
+    }
+    /**
+     * Dismiss a prepared action. Invalidates the preview and emits zero tokens.
+     * @param {string} actionId
+     */
+    dismiss(actionId) {
+      this._cleanupAction(actionId);
+    }
+    /** @param {string} actionId */
+    _cleanupAction(actionId) {
+      this.pending.delete(actionId);
+      this._contexts.delete(actionId);
+      const timer = this._timers.get(actionId);
+      if (timer !== void 0) {
+        this.clearTimer(timer);
+        this._timers.delete(actionId);
+      }
+    }
+    /** Test-only, read-only lifecycle counters. */
+    getLifecycleDiagnostics() {
+      return Object.freeze({
+        pending: this.pending.size,
+        contexts: this._contexts.size,
+        timers: this._timers.size
+      });
+    }
+    /**
+     * STAGE 3 — execute. Validates the decision and runs the bound mutation once.
+     * @param {string} kind
+     * @param {unknown} payload
+     * @param {{ actionId: string, payloadHash?: string, expiresAt?: string }} decision
+     * @param {{ onFailure?: (error: unknown) => void }} [hooks]
+     * @returns {Promise<{ok:true, result:unknown, decisionId:string}>}
+     */
+    async execute(kind, payload, decision, hooks = {}) {
+      if (!decision || !decision.actionId) {
+        throw new GuardianRuntimeError("GUARDIAN_DECISION_REQUIRED");
+      }
+      try {
+        if (!this.originals.has(kind)) {
+          throw new GuardianRuntimeError("GUARDIAN_UNKNOWN_MUTATION:" + String(kind));
+        }
+        let preview;
+        try {
+          preview = /** @type {any} */
+          this.gate.consumeDecision(decision, this.now);
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          throw new GuardianRuntimeError(msg);
+        }
+        if (preview.kind !== kind) {
+          throw new GuardianRuntimeError("GUARDIAN_KIND_MISMATCH");
+        }
+        const payloadHash = await hashPayload(payload);
+        if (payloadHash !== preview.payloadHash) {
+          throw new GuardianRuntimeError("GUARDIAN_PAYLOAD_MISMATCH");
+        }
+        const executor = this.originals.get(kind);
+        if (!executor) {
+          throw new GuardianRuntimeError("GUARDIAN_UNKNOWN_MUTATION:" + String(kind));
+        }
+        const ctx = this._contexts.get(decision.actionId);
+        const result = await executor(payload, preview, ctx);
+        return { ok: true, result, decisionId: decision.actionId };
+      } catch (err) {
+        if (hooks.onFailure) {
+          hooks.onFailure(err);
+        }
+        throw err;
+      } finally {
+        this._cleanupAction(decision.actionId);
+      }
+    }
+    /**
+     * Public orchestration used by FSU. Requires a human confirmation step:
+     * the preview handler (UI) must call controls.approve() (Accept) or
+     * controls.dismiss() (Cancel/Escape/close). Without a preview handler,
+     * no token is emitted and zero mutations occur.
+     * @param {string} kind
+     * @param {unknown} payload
+     * @param {{ summary?: string, affectedItemIds?: string[], costRisk?: string, context?: unknown, onPreview?: (preview: object, controls: { approve: () => void, dismiss: () => void }) => void }} [options]
+     * @returns {Promise<{ok:true, result:unknown, decisionId:string}>}
+     */
+    requestGuarded(kind, payload, options = {}) {
+      if (this.pending.size > 0) {
+        return Promise.reject(new GuardianRuntimeError("GUARDIAN_ACTION_IN_PROGRESS"));
+      }
+      return new Promise((resolve, reject) => {
+        let cleanupUi = null;
+        let settled = false;
+        let approvalStarted = false;
+        let uiDisposed = false;
+        const disposeUi = () => {
+          if (uiDisposed) return;
+          uiDisposed = true;
+          if (typeof cleanupUi === "function") cleanupUi();
+        };
+        const finish = (actionId) => {
+          if (settled) return;
+          settled = true;
+          this._cleanupAction(actionId);
+          disposeUi();
+        };
+        this.prepare(kind, payload, options).then((rawPreview) => {
+          const preview = (
+            /** @type {any} */
+            rawPreview
+          );
+          if (options && options.context !== void 0) {
+            this._contexts.set(preview.actionId, options.context);
+          }
+          const expiresAtMs = Date.parse(preview.expiresAt);
+          const delay = Math.max(0, expiresAtMs - this.now());
+          const timer = this.setTimer(() => {
+            if (settled) return;
+            finish(preview.actionId);
+            reject(new GuardianRuntimeError("GUARDIAN_DECISION_EXPIRED"));
+          }, delay);
+          this._timers.set(preview.actionId, timer);
+          const controls = {
+            approve: () => {
+              if (approvalStarted || settled) return;
+              approvalStarted = true;
+              let decision;
+              try {
+                decision = this.approve(preview.actionId);
+                const activeTimer = this._timers.get(preview.actionId);
+                if (activeTimer !== void 0) {
+                  this.clearTimer(activeTimer);
+                  this._timers.delete(preview.actionId);
+                }
+                disposeUi();
+              } catch (err) {
+                finish(preview.actionId);
+                reject(err);
+                return;
+              }
+              this.execute(
+                kind,
+                payload,
+                /** @type {any} */
+                decision
+              ).then((out) => {
+                finish(preview.actionId);
+                resolve(out);
+              }).catch((err) => {
+                finish(preview.actionId);
+                reject(err);
+              });
+            },
+            dismiss: () => {
+              if (approvalStarted || settled) return;
+              finish(preview.actionId);
+              reject(new GuardianRuntimeError("GUARDIAN_DISMISSED"));
+            }
+          };
+          const handler = options.onPreview || this.defaultPreviewHandler;
+          if (handler) {
+            try {
+              const returned = handler(preview, controls);
+              if (typeof returned === "function") {
+                const returnedCleanup = (
+                  /** @type {()=>void} */
+                  returned
+                );
+                cleanupUi = returnedCleanup;
+                if (uiDisposed || settled) returnedCleanup();
+              }
+            } catch (err) {
+              finish(preview.actionId);
+              reject(err);
+            }
+          } else {
+            finish(preview.actionId);
+            reject(new GuardianRuntimeError("GUARDIAN_NO_CONFIRMATION_UI"));
+          }
+        }).catch((err) => reject(err));
+      });
+    }
+  };
+
+  // src/guardian/mode.js
+  var IS_DISTRIBUTED = true ? true : false;
+  var legacyFallbackAllowed = false;
+  function isLegacyFallbackAllowed() {
+    return !IS_DISTRIBUTED && legacyFallbackAllowed;
+  }
+  function guardianOrFailClosed(kind) {
+    const g = getGuardian();
+    if (g && g.isRegistered(kind)) {
+      return g;
+    }
+    if (isLegacyFallbackAllowed()) {
+      return null;
+    }
+    throw new GuardianRuntimeError("GUARDIAN_UNAVAILABLE");
+  }
+
   // src/fsu/domain/StorePackOpenTransactionService.js
   function isRecord8(value) {
     return value !== null && typeof value === "object";
   }
   var StorePackOpenTransactionService = class {
+    /** @type {Record<string, boolean>} */
+    _guardReg = {};
     /**
      * @param {{
      *   adapter: {
@@ -7229,14 +7766,52 @@
      *   onDiagnostic?: (result: unknown) => void
      * }} options
      */
-    intercept({
-      controller,
-      args,
-      invoke,
-      onSuccess,
-      onDiagnostic = () => {
+    intercept(options) {
+      const g = guardianOrFailClosed("PACK_OPEN");
+      let selection = null;
+      try {
+        const prepared = this.adapter.prepare(options.controller, options.args);
+        if (isRecord8(prepared) && prepared.success === true && isRecord8(prepared.data)) {
+          selection = prepared.data;
+        }
+      } catch {
+        selection = null;
       }
-    }) {
+      if (!g) {
+        if (!selection || selection.tracked !== true) {
+          return this._interceptImpl(options);
+        }
+        return this._interceptImpl(options);
+      }
+      if (!selection || selection.tracked !== true) {
+        throw new Error("GUARDIAN_PREVIEW_INVALID:PACK_OPEN");
+      }
+      const dto = Object.freeze(
+        selection && selection.tracked === true ? {
+          kind: "PACK_OPEN",
+          key: String(selection.key),
+          packId: Number(selection.packId),
+          initialCount: Number(selection.initialCount)
+        } : { kind: "PACK_OPEN", key: "", packId: 0, initialCount: 0 }
+      );
+      return g.requestGuarded("PACK_OPEN", dto, { context: options });
+    }
+    /**
+     * @param {{
+     *   controller: Record<string, unknown>,
+     *   args: unknown[],
+     *   invoke: () => unknown,
+     *   onSuccess: (result: {
+     *     packId: number,
+     *     remainingCount: number,
+     *     availablePackIds: number[]
+     *   }) => void,
+     *   onDiagnostic?: (result: unknown) => void
+     * }} options
+     */
+    _interceptImpl(options, expectedDto = null) {
+      const { controller, args, invoke, onSuccess, onDiagnostic = () => {
+      } } = options;
       let prepared;
       try {
         prepared = this.adapter.prepare(controller, args);
@@ -7263,6 +7838,9 @@
       const key = selection.key;
       const packId = Number(selection.packId);
       const initialCount = Number(selection.initialCount);
+      if (expectedDto && (String(expectedDto.key) !== key || Number(expectedDto.packId) !== packId || Number(expectedDto.initialCount) !== initialCount)) {
+        throw new Error("GUARDIAN_CONTEXT_MISMATCH:PACK_OPEN");
+      }
       if (this.inFlight.size > 0 || controller.isOpeningPack === true) {
         onDiagnostic(
           storePackOpenFailure(STORE_PACK_OPEN_ERROR_CODES.DUPLICATE, [
@@ -8133,6 +8711,8 @@
     return { success: false, error: { code, issues }, data };
   }
   var BulkPackOpenService = class {
+    /** @type {Record<string, boolean>} */
+    _guardReg = {};
     /**
      * @param {{
      *   adapter: BulkPackAdapter,
@@ -8165,6 +8745,18 @@
      * }} input
      */
     async run({ packId, count, context, onProgress = () => {
+    } }) {
+      const g = guardianOrFailClosed("PACK_OPEN_BULK");
+      if (!g) return this._runImpl({ packId, count, context, onProgress });
+      const dto = Object.freeze({ kind: "PACK_OPEN_BULK", packId: Number(packId), count: Number(count) });
+      return g.requestGuarded("PACK_OPEN_BULK", dto, {
+        context: { context, onProgress }
+      });
+    }
+    /**
+     * @param {{ packId: number, count: number, context: unknown, onProgress?: (current: number, total: number) => void }} input
+     */
+    async _runImpl({ packId, count, context, onProgress = () => {
     } }) {
       if (this.active) {
         return failure3(BULK_PACK_ERROR_CODES.BUSY, ["bulk-pack.in-flight"]);
@@ -8388,6 +8980,132 @@
       };
     }
   };
+
+  // src/guardian/fsu/registerFsuMutations.js
+  function failContext(kind) {
+    throw new GuardianRuntimeError("GUARDIAN_CONTEXT_MISMATCH:" + kind);
+  }
+  function playerIdentity(value) {
+    if (Number.isInteger(value)) return Number(value);
+    if (!value || typeof value !== "object") return null;
+    const raw = value.definitionId ?? value.defId ?? value.id;
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }
+  function registerFsuMutations(ctx, guardian) {
+    const { services: services2 = {} } = ctx;
+    const market = services2.market;
+    const sbc = services2.sbc;
+    const store = services2.store;
+    const bulk = services2.bulk;
+    if (market && !guardian.isRegistered("MARKET_BUY")) {
+      guardian.registerMutation("MARKET_BUY", (p, _pv, c) => {
+        const a = (
+          /** @type {any} */
+          c
+        );
+        if (!a || playerIdentity(a.player) !== Number(
+          /** @type {any} */
+          p.defId
+        )) {
+          failContext("MARKET_BUY");
+        }
+        return market._buyPlayerImpl(a.player, a.view, a.helpers, {
+          maxBuyPrice: Number(
+            /** @type {any} */
+            p.maxBuyPrice
+          )
+        });
+      });
+    }
+    if (market && !guardian.isRegistered("MARKET_LIST")) {
+      guardian.registerMutation("MARKET_LIST", (p, _pv, c) => {
+        const a = (
+          /** @type {any} */
+          c
+        );
+        const dto = (
+          /** @type {any} */
+          p
+        );
+        if (!a || playerIdentity(a.d) !== Number(dto.itemDefId) || Number(a.p) !== Number(dto.requestedPrice) || Number(a.time) !== Number(dto.durationHours)) {
+          failContext("MARKET_LIST");
+        }
+        return market._playerToAuctionImpl(a.d, a.p, a.time, a.helpers, {
+          listingPrice: Number(dto.listingPrice)
+        });
+      });
+    }
+    if (sbc && !guardian.isRegistered("SBC_SUBMIT")) {
+      guardian.registerMutation("SBC_SUBMIT", (p, _pv, c) => {
+        const a = (
+          /** @type {any} */
+          c
+        );
+        const challenge = a && a.args && a.args[0];
+        if (Number(challenge && challenge.id) !== Number(
+          /** @type {any} */
+          p.challengeId
+        )) {
+          failContext("SBC_SUBMIT");
+        }
+        return sbc._interceptImpl(a);
+      });
+    }
+    if (store && !guardian.isRegistered("PACK_OPEN")) {
+      guardian.registerMutation(
+        "PACK_OPEN",
+        (p, _pv, c) => store._interceptImpl(
+          /** @type {any} */
+          c,
+          /** @type {any} */
+          p
+        )
+      );
+    }
+    if (bulk && !guardian.isRegistered("PACK_OPEN_BULK")) {
+      guardian.registerMutation("PACK_OPEN_BULK", (_p, _pv, c) => {
+        const a = (
+          /** @type {any} */
+          c
+        );
+        return bulk._runImpl({
+          packId: Number(
+            /** @type {any} */
+            _p.packId
+          ),
+          count: Number(
+            /** @type {any} */
+            _p.count
+          ),
+          context: a.context,
+          onProgress: a.onProgress
+        });
+      });
+    }
+  }
+
+  // src/guardian/fsu/registerServiceOwner.js
+  var ownersByGuardian = /* @__PURE__ */ new WeakMap();
+  function registerGuardianServiceOwner(owner, service) {
+    const guardian = getGuardian();
+    if (!guardian) {
+      if (isLegacyFallbackAllowed()) return;
+      throw new GuardianRuntimeError("GUARDIAN_BOOTSTRAP_UNAVAILABLE:" + owner);
+    }
+    let owners = ownersByGuardian.get(guardian);
+    if (!owners) {
+      owners = /* @__PURE__ */ new Map();
+      ownersByGuardian.set(guardian, owners);
+    }
+    const existing = owners.get(owner);
+    if (existing && existing !== service) {
+      throw new GuardianRuntimeError("GUARDIAN_OWNER_CONFLICT:" + owner);
+    }
+    if (existing === service) return;
+    owners.set(owner, service);
+    registerFsuMutations({ services: { [owner]: service } }, guardian);
+  }
 
   // src/fsu/patches/store.js
   var inPacksController;
@@ -8738,6 +9456,7 @@
         purchasePackType: PurchasePackType
       })
     });
+    registerGuardianServiceOwner("bulk", bulkPackOpenService);
     events.cancelBulkPackOpen = () => bulkPackOpenService.cancel();
     events.isBulkPackOpenRunning = () => bulkPackOpenService.isRunning();
     events.openPacks = async (packId, packName, count) => {
@@ -9298,6 +10017,7 @@
     const storePackOpenTransactionService = new StorePackOpenTransactionService({
       adapter: storePackOpenAdapter
     });
+    registerGuardianServiceOwner("store", storePackOpenTransactionService);
     const storePackOpenLifecycleDeps = {
       call,
       events,
@@ -10153,9 +10873,9 @@
             if (!z.isOpen) {
               z.open();
             }
-            e2.target._oData.forEach(function(el, i) {
+            e2.target._oData.forEach(function(el2, i) {
               let a = document.querySelectorAll(p)[i], c = info.set.sbc_icount && "_oCount" in e2.target ? e2.target._oCount[i] >= Number(v) ? true : false : false;
-              if (el.includes(v) || c) {
+              if (el2.includes(v) || c) {
                 a.classList.remove("hide");
               } else {
                 a.classList.add("hide");
@@ -11730,9 +12450,9 @@
         const currentResult = acceleToGroup[currentStyleId];
         _.forEach(
           document.querySelectorAll(`.fsu-cards-accele[data-defid="${player.definitionId}"]`),
-          (el) => {
-            if (el.textContent.includes("*")) {
-              el.textContent = currentResult;
+          (el2) => {
+            if (el2.textContent.includes("*")) {
+              el2.textContent = currentResult;
             }
           }
         );
@@ -12075,9 +12795,9 @@
       if (cntlr2.current().className == "UTObjectivesHubViewController") {
         let rewardCount = 0;
         let barElement = cntlr2.current().getView()._objectivesTM.getRootElement().querySelectorAll(".ut-tab-bar-item-notif");
-        _.map(barElement, (el) => {
-          debug2.log(_.toInteger(el.textContent));
-          rewardCount += _.toInteger(el.textContent);
+        _.map(barElement, (el2) => {
+          debug2.log(_.toInteger(el2.textContent));
+          rewardCount += _.toInteger(el2.textContent);
         });
         info.task.obj.stat.catReward = rewardCount;
       }
@@ -12352,9 +13072,9 @@
         const currentResult = acceleToGroup[currentStyleId];
         _.forEach(
           document.querySelectorAll(`.fsu-cards-accele[data-defid="${player.definitionId}"]`),
-          (el) => {
-            if (el.textContent.includes("*")) {
-              el.textContent = currentResult;
+          (el2) => {
+            if (el2.textContent.includes("*")) {
+              el2.textContent = currentResult;
             }
           }
         );
@@ -12569,16 +13289,110 @@
     unobserve() {
     }
   };
+  var GuardedSubmitObservable = class {
+    /**
+     * @param {Promise<any>} guardPromise
+     * @param {{ onDiagnostic?: (result: unknown) => void }} [options]
+     */
+    constructor(guardPromise, { onDiagnostic = () => {
+    } } = {}) {
+      this.observers = /* @__PURE__ */ new Set();
+      this.inner = null;
+      this.failure = null;
+      this.guardPromise = Promise.resolve(guardPromise).then((out) => {
+        const observable = out && out.result;
+        if (!isRecord13(observable) || typeof observable.observe !== "function") {
+          throw new Error("SBC_SUBMIT_GUARD_RESULT_INVALID");
+        }
+        this.inner = /** @type {any} */
+        observable;
+        for (const observer of this.observers) {
+          this._observeInner(observer);
+        }
+        this.observers.clear();
+        return out;
+      });
+      this.guardPromise.catch((error) => {
+        this.failure = this._failureResponse(error);
+        onDiagnostic(this.failure);
+        for (const observer of this.observers) {
+          queueMicrotask(() => observer.callback(this, this.failure));
+        }
+        this.observers.clear();
+      });
+    }
+    /** @param {unknown} error */
+    _failureResponse(error) {
+      const source = (
+        /** @type {any} */
+        error
+      );
+      const message = source?.message || "Guardian confirmation failed.";
+      const code = source?.code || String(message).split(":", 1)[0];
+      return {
+        success: false,
+        status: 400,
+        error: { code, message }
+      };
+    }
+    /** @param {{ context: unknown, callback: (sender: unknown, response: unknown) => void }} observer */
+    _observeInner(observer) {
+      try {
+        const inner = this.inner;
+        if (!inner) throw new Error("SBC_SUBMIT_GUARD_RESULT_INVALID");
+        inner.observe(observer.context, observer.callback);
+      } catch (error) {
+        this.failure = this._failureResponse(error);
+        const failure5 = this.failure;
+        queueMicrotask(() => observer.callback(this, failure5));
+      }
+    }
+    /** @param {unknown} context @param {(sender: unknown, response: unknown) => void} callback */
+    observe(context, callback) {
+      const observer = { context, callback };
+      if (this.inner) {
+        this._observeInner(observer);
+      } else if (this.failure) {
+        const failure5 = this.failure;
+        queueMicrotask(() => callback(this, failure5));
+      } else {
+        this.observers.add(observer);
+      }
+      return this;
+    }
+    /** @param {unknown} context */
+    unobserve(context) {
+      for (const observer of this.observers) {
+        if (observer.context === context) this.observers.delete(observer);
+      }
+      this.inner?.unobserve?.(context);
+    }
+    /** @param {((value: any) => any) | undefined} onFulfilled @param {((reason: any) => any) | undefined} onRejected */
+    then(onFulfilled, onRejected) {
+      return this.guardPromise.then(onFulfilled, onRejected);
+    }
+    /** @param {((reason: any) => any) | undefined} onRejected */
+    catch(onRejected) {
+      return this.guardPromise.catch(onRejected);
+    }
+    /** @param {(() => any) | undefined} onFinally */
+    finally(onFinally) {
+      return this.guardPromise.finally(onFinally);
+    }
+  };
   function isRecord13(value) {
     return value !== null && typeof value === "object";
   }
   var SbcSubmitTransactionService = class {
+    /** @type {Record<string, boolean>} */
+    _guardReg = {};
     /**
      * @param {{ observableAdapter?: EaObservableAdapter }} [options]
      */
     constructor({ observableAdapter = new EaObservableAdapter() } = {}) {
       this.observableAdapter = observableAdapter;
       this.inFlight = /* @__PURE__ */ new Map();
+      this.guardPending = /* @__PURE__ */ new Map();
     }
     /**
      * @param {{
@@ -12589,14 +13403,62 @@
      *   onDiagnostic?: (result: unknown) => void
      * }} options
      */
-    intercept({
-      args,
-      observerContext,
-      invoke,
-      onSuccess,
-      onDiagnostic = () => {
+    /**
+     * @param {{
+     *   args: unknown[],
+     *   observerContext: object,
+     *   invoke: () => unknown,
+     *   onSuccess: (response: Record<string, unknown>) => void,
+     *   onDiagnostic?: (result: unknown) => void
+     * }} options
+     */
+    intercept(options) {
+      const g = guardianOrFailClosed("SBC_SUBMIT");
+      if (!g) return this._interceptImpl(options);
+      const challenge = options.args && options.args[0];
+      const challengeId = Number(isRecord13(challenge) ? challenge.id : void 0) || null;
+      if (!challengeId) throw new Error("GUARDIAN_PREVIEW_INVALID:SBC_SUBMIT");
+      const key = String(challengeId);
+      if (this.inFlight.has(key) || this.guardPending.has(key)) {
+        const result2 = sbcSubmitFailure(
+          SBC_SUBMIT_ERROR_CODES.IN_FLIGHT,
+          ["challenge.submit-in-flight"]
+        );
+        options.onDiagnostic?.(result2);
+        return new RejectedSubmitObservable({
+          success: false,
+          status: 409,
+          error: result2.error
+        });
       }
-    }) {
+      const dto = Object.freeze({ kind: "SBC_SUBMIT", challengeId });
+      const guardPromise = g.requestGuarded("SBC_SUBMIT", dto, { context: options });
+      const result = new GuardedSubmitObservable(guardPromise, {
+        onDiagnostic: options.onDiagnostic
+      });
+      this.guardPending.set(key, result);
+      guardPromise.then(
+        () => {
+          if (this.guardPending.get(key) === result) this.guardPending.delete(key);
+        },
+        () => {
+          if (this.guardPending.get(key) === result) this.guardPending.delete(key);
+        }
+      );
+      return result;
+    }
+    /**
+     * @param {{
+     *   args: unknown[],
+     *   observerContext: object,
+     *   invoke: () => unknown,
+     *   onSuccess: (response: Record<string, unknown>) => void,
+     *   onDiagnostic?: (result: unknown) => void
+     * }} options
+     */
+    _interceptImpl(options) {
+      const { args, observerContext, invoke, onSuccess, onDiagnostic = () => {
+      } } = options;
       const challenge = args[0];
       const setEntity = args[1];
       const challengeId = Number(
@@ -12702,6 +13564,7 @@
       debug: debug2
     } = deps;
     const transactionService = deps.transactionService ?? new SbcSubmitTransactionService();
+    registerGuardianServiceOwner("sbc", transactionService);
     return patchLifecycle.install({
       id: SBC_SUBMIT_PATCH_IDS.TRANSACTION,
       phase: "late",
@@ -15949,6 +16812,8 @@
     return object !== null && typeof object === "object" && Object.prototype.hasOwnProperty.call(object, key);
   }
   var MarketActionService = class {
+    /** @type {Record<string, boolean>} */
+    _guardReg = {};
     /**
      * @param {any} i
      * @param {any} p
@@ -16259,6 +17124,33 @@
      * @returns {Promise<any>}
      */
     async buyPlayer(player, view, helpers) {
+      const g = guardianOrFailClosed("MARKET_BUY");
+      if (!g) return this._buyPlayerImpl(player, view, helpers);
+      const defId = Number.isInteger(player) ? player : Number(player && /** @type {any} */
+      (player.definitionId ?? /** @type {any} */
+      player.defId));
+      if (!Number.isFinite(defId) || defId <= 0) {
+        throw new Error("GUARDIAN_PREVIEW_INVALID:MARKET_BUY");
+      }
+      const maxBuyPrice = Number(helpers?.getCachePrice?.(defId, 1)?.num);
+      if (!Number.isFinite(maxBuyPrice) || maxBuyPrice <= 0) {
+        throw new Error("GUARDIAN_PREVIEW_INVALID:MARKET_BUY_PRICE");
+      }
+      const dto = Object.freeze({ kind: "MARKET_BUY", defId, maxBuyPrice });
+      return g.requestGuarded("MARKET_BUY", dto, {
+        context: { player, view, helpers },
+        summary: `Buy player ${defId}`,
+        affectedItemIds: [String(defId)],
+        costRisk: `Maximum ${maxBuyPrice} coins`
+      });
+    }
+    /**
+     * @param {any} player
+     * @param {any} view
+     * @param {any} helpers
+     * @returns {Promise<any>}
+     */
+    async _buyPlayerImpl(player, view, helpers, confirmed = {}) {
       const {
         showLoader,
         hideLoader,
@@ -16305,7 +17197,13 @@
         notice(["buyplayer.error", playerName, fy2("buyplayer.error.child5")], 2);
         shouldMarkBuyError = true;
       } else {
-        let priceList = await this.readAuctionPrices(player, void 0, void 0, helpers);
+        const confirmedMaxBuyPrice = Number(confirmed.maxBuyPrice);
+        let priceList = await this.readAuctionPrices(
+          player,
+          Number.isFinite(confirmedMaxBuyPrice) && confirmedMaxBuyPrice > 0 ? confirmedMaxBuyPrice : void 0,
+          void 0,
+          helpers
+        );
         priceList.sort((a, b) => b._auction.buyNowPrice - a._auction.buyNowPrice);
         debug2.log(priceList);
         changeLoadingText("buyplayer.loadingclose");
@@ -16315,6 +17213,9 @@
         } else {
           let currentPlayer = priceList[priceList.length - 1];
           const purchasePrice = currentPlayer._auction.buyNowPrice;
+          if (Number.isFinite(confirmedMaxBuyPrice) && confirmedMaxBuyPrice > 0 && Number(purchasePrice) > confirmedMaxBuyPrice) {
+            throw new Error("GUARDIAN_CONTEXT_MISMATCH:MARKET_BUY_PRICE");
+          }
           const purchaseResult = normalizeMarketPurchaseResult(
             await ea.purchaseItemToClub(
               currentPlayer,
@@ -16495,6 +17396,42 @@
      * @returns {Promise<any>}
      */
     async playerToAuction(d, p, time, helpers) {
+      const g = guardianOrFailClosed("MARKET_LIST");
+      if (!g) return this._playerToAuctionImpl(d, p, time, helpers);
+      const itemDefId = d && typeof d === "object" ? (
+        /** @type {any} */
+        d.defId ?? /** @type {any} */
+        d.id ?? null
+      ) : null;
+      if (!Number.isFinite(Number(itemDefId)) || !Number.isFinite(Number(p)) || !Number.isFinite(Number(time))) {
+        throw new Error("GUARDIAN_PREVIEW_INVALID:MARKET_LIST");
+      }
+      const listingPrice = Number(helpers?.getCachePrice?.(Number(itemDefId), 1)?.num);
+      if (!Number.isFinite(listingPrice) || listingPrice <= 0) {
+        throw new Error("GUARDIAN_PREVIEW_INVALID:MARKET_LIST_PRICE");
+      }
+      const dto = Object.freeze({
+        kind: "MARKET_LIST",
+        itemDefId: Number(itemDefId),
+        requestedPrice: Number(p),
+        durationHours: Number(time),
+        listingPrice
+      });
+      return g.requestGuarded("MARKET_LIST", dto, {
+        context: { d, p, time, helpers },
+        summary: `List item ${itemDefId}`,
+        affectedItemIds: [String(itemDefId)],
+        costRisk: `List for ${listingPrice} coins / ${Number(time)}h`
+      });
+    }
+    /**
+     * @param {any} d
+     * @param {any} p
+     * @param {any} time
+     * @param {any} helpers
+     * @returns {Promise<any>}
+     */
+    async _playerToAuctionImpl(d, p, time, helpers, confirmed = {}) {
       const {
         futbinId,
         getInfo,
@@ -16515,16 +17452,19 @@
       const i = listingItem.item;
       const t = listingItem.alreadyListed;
       if (i) {
-        try {
-          if (hasOwn(info.futbinId, i.definitionId)) {
-            await futbinId.getPrice(i.definitionId, info.futbinId[i.definitionId]);
-          } else {
-            await futbinId.getId(i);
+        const confirmedListingPrice = Number(confirmed.listingPrice);
+        if (!Number.isFinite(confirmedListingPrice) || confirmedListingPrice <= 0) {
+          try {
+            if (hasOwn(info.futbinId, i.definitionId)) {
+              await futbinId.getPrice(i.definitionId, info.futbinId[i.definitionId]);
+            } else {
+              await futbinId.getId(i);
+            }
+          } catch {
+            return false;
           }
-        } catch {
-          return false;
         }
-        const price = getCachePrice(i.definitionId, 1).num;
+        const price = Number.isFinite(confirmedListingPrice) && confirmedListingPrice > 0 ? confirmedListingPrice : getCachePrice(i.definitionId, 1).num;
         const listingCapacity = ea.hasTransferListingCapacity();
         if (!listingCapacity.success) {
           debug2.log("EA listing-inventory capability unavailable", listingCapacity.error);
@@ -18063,14 +19003,14 @@
   // src/fsu/domain/SbcUndoHistoryService.js
   function itemFingerprint(item) {
     if (!item || typeof item !== "object") return "empty";
-    const record = (
+    const record2 = (
       /** @type {Record<string, unknown>} */
       item
     );
     return [
-      record.id ?? "",
-      record.definitionId ?? "",
-      record.concept === true ? "concept" : "owned"
+      record2.id ?? "",
+      record2.definitionId ?? "",
+      record2.concept === true ? "concept" : "owned"
     ].join(":");
   }
   function snapshotFingerprint(snapshot) {
@@ -19135,6 +20075,7 @@
     });
     registerSbcRatingEvents({ events, info, debug: debug2, fy: fy2 });
     const marketActionService = new MarketActionService();
+    registerGuardianServiceOwner("market", marketActionService);
     const marketHelpers = helpers.market;
     events.getAuction = (e2, player) => marketActionService.getAuction(e2, player, marketHelpers());
     events.buyConceptPlayer = (players, view) => marketActionService.buyConceptPlayer(players, view, marketHelpers());
@@ -21799,6 +22740,7 @@
     });
     runMidBootstrap({ fsuCtx, ctx, events, fy: fy2 });
     finalizeBootstrap({ fsuCtx, patchRegistry, html, call });
+    return fsuCtx;
   }
 
   // src/fsu/domain/lodashMixins.js
@@ -21827,6 +22769,868 @@
     });
   }
 
+  // src/guardian/i18n/index.js
+  function interpolate(template, vars) {
+    if (template == null) {
+      return "";
+    }
+    if (!vars) {
+      return template;
+    }
+    return template.replace(
+      /\{\{(\w+)\}\}/g,
+      (_2, key) => vars[key] != null ? String(vars[key]) : ""
+    );
+  }
+  function translate(messages, key, vars) {
+    const tmpl = messages && Object.prototype.hasOwnProperty.call(messages, key) ? messages[key] : key;
+    return interpolate(tmpl, vars);
+  }
+  function createTranslator(messages) {
+    return (key, vars) => translate(messages, key, vars);
+  }
+
+  // src/guardian/i18n/en.json
+  var en_default = {
+    "brand.name": "Guardian",
+    "workspace.label": "Guardian workspace",
+    "rail.label": "Guardian tools",
+    "rail.sbc": "SBC",
+    "rail.squad": "Squad",
+    "rail.filters": "Filters",
+    "rail.tools": "Tools",
+    "sbc.label": "SBC challenge",
+    "sbc.untitled": "Untitled challenge",
+    "sbc.analyze": "Analyze requirements",
+    "sbc.build": "Build",
+    "sbc.info": "Shows what the challenge needs, what it consumes and the risk of submitting.",
+    "tools.label": "Tools",
+    "info.label": "Information",
+    "info.default": "This action changes your club. Review the affected items before continuing.",
+    "filters.label": "Filters",
+    "review.label": "Proposed solution",
+    "review.cost": "Estimated cost: {{cost}}",
+    "review.rating": "Squad rating: {{rating}}",
+    "review.risk": "Risk: {{risk}}",
+    "review.accept": "Apply squad",
+    "review.edit": "Edit",
+    "review.info": "Review what the solution uses from your club and what it costs before you submit.",
+    "confirm.label": "Confirm action",
+    "confirm.kind": "Action type: {{kind}}",
+    "confirm.irreversible": "This action is irreversible. Submitted squads and items cannot be recovered.",
+    "confirm.reversible": "This action can be changed later.",
+    "confirm.info": "You must confirm explicitly. There is no skip.",
+    "confirm.reject": "Cancel",
+    "confirm.confirm": "Confirm and submit",
+    "confirm.confirmAria": "Confirm and submit this irreversible action",
+    "toast.dismiss": "Dismiss",
+    "onboarding.label": "Welcome to Guardian",
+    "onboarding.title": "Guardian is contextual",
+    "onboarding.body": "Guardian appears inside the EA Web App when you open an SBC. There is no separate home screen.",
+    "onboarding.info": "Guardian only enhances the Web App. Your EA account stays with EA.",
+    "onboarding.gotIt": "Got it",
+    "error.label": "Guardian error",
+    "error.title": "Something went wrong",
+    "error.generic": "Guardian could not complete the action. No changes were sent.",
+    "error.withCode": "Guardian error ({{code}}). No changes were sent.",
+    "error.info": "Errors never leak your session or credentials.",
+    "error.retry": "Retry"
+  };
+
+  // src/guardian/i18n/ro.json
+  var ro_default = {
+    "brand.name": "Guardian",
+    "workspace.label": "Spațiul Guardian",
+    "rail.label": "Unelte Guardian",
+    "rail.sbc": "SBC",
+    "rail.squad": "Squad",
+    "rail.filters": "Filtre",
+    "rail.tools": "Unelte",
+    "sbc.label": "Provocare SBC",
+    "sbc.untitled": "Provocare fără titlu",
+    "sbc.analyze": "Analizează cerințele",
+    "sbc.build": "Construiește",
+    "sbc.info": "Arată ce cere provocarea, ce consumă și riscul trimiterii.",
+    "tools.label": "Unelte",
+    "info.label": "Informații",
+    "info.default": "Această acțiune îți modifică clubul. Verifică elementele afectate înainte de a continua.",
+    "filters.label": "Filtre",
+    "review.label": "Soluție propusă",
+    "review.cost": "Cost estimat: {{cost}}",
+    "review.rating": "Rating squad: {{rating}}",
+    "review.risk": "Risc: {{risk}}",
+    "review.accept": "Aplică squadul",
+    "review.edit": "Editează",
+    "review.info": "Verifică ce folosește soluția din clubul tău și ce costă înainte de a trimite.",
+    "confirm.label": "Confirmă acțiunea",
+    "confirm.kind": "Tip acțiune: {{kind}}",
+    "confirm.irreversible": "Această acțiune este ireversibilă. Squadurile și elementele trimise nu pot fi recuperate.",
+    "confirm.reversible": "Această acțiune poate fi schimbată mai târziu.",
+    "confirm.info": "Trebuie să confirmi explicit. Nu există săritură.",
+    "confirm.reject": "Anulează",
+    "confirm.confirm": "Confirmă și trimite",
+    "confirm.confirmAria": "Confirmă și trimite această acțiune ireversibilă",
+    "toast.dismiss": "Închide",
+    "onboarding.label": "Bine ai venit la Guardian",
+    "onboarding.title": "Guardian este contextual",
+    "onboarding.body": "Guardian apare în interiorul EA Web App când deschizi un SBC. Nu există un ecran de start separat.",
+    "onboarding.info": "Guardian doar îmbunătățește Web App-ul. Contul tău EA rămâne la EA.",
+    "onboarding.gotIt": "Am înțeles",
+    "error.label": "Eroare Guardian",
+    "error.title": "Ceva nu a mers bine",
+    "error.generic": "Guardian nu a putut finaliza acțiunea. Nu au fost trimise modificări.",
+    "error.withCode": "Eroare Guardian ({{code}}). Nu au fost trimise modificări.",
+    "error.info": "Erorile nu divulgă sesiunea sau credențialele tale.",
+    "error.retry": "Reîncearcă"
+  };
+
+  // src/guardian/ui/dom.js
+  function el(tag, opts = {}) {
+    const node = document.createElement(tag);
+    if (opts.className) {
+      node.className = opts.className;
+    }
+    if (opts.text != null) {
+      node.textContent = String(opts.text);
+    }
+    if (opts.attrs) {
+      for (const [key, value] of Object.entries(opts.attrs)) {
+        if (value == null || value === false) {
+          continue;
+        }
+        node.setAttribute(key, value === true ? "" : String(value));
+      }
+    }
+    if (opts.children) {
+      for (const child of opts.children) {
+        if (child) {
+          node.appendChild(child);
+        }
+      }
+    }
+    return node;
+  }
+  function infoButton(onClick, label = "More information") {
+    const button = (
+      /** @type {HTMLButtonElement} */
+      el("button", {
+        className: "guardian-info-btn",
+        attrs: { type: "button", "aria-label": label, title: label }
+      })
+    );
+    button.textContent = "i";
+    button.addEventListener("click", onClick);
+    return button;
+  }
+
+  // src/guardian/ui/GuardianRail.js
+  function createGuardianRail({ t, onSelect, tools }) {
+    const toolList = tools && tools.length ? tools : ["sbc", "squad", "filters", "tools"];
+    const items = toolList.map((tool) => {
+      const button = (
+        /** @type {HTMLButtonElement} */
+        el("button", {
+          className: "guardian-rail-item",
+          attrs: { type: "button", "data-tool": tool, title: t("rail." + tool) }
+        })
+      );
+      button.textContent = t("rail." + tool);
+      button.addEventListener("click", () => onSelect && onSelect(tool));
+      return button;
+    });
+    return el("nav", {
+      className: "guardian-rail",
+      attrs: { "aria-label": t("rail.label") },
+      children: items
+    });
+  }
+
+  // src/guardian/ui/GuardianActionConfirmation.js
+  function createGuardianActionConfirmation({ t, preview, controls }) {
+    const summary = el("p", { className: "guardian-confirm-summary", text: preview.summary });
+    const kind = el("p", {
+      className: "guardian-confirm-kind",
+      text: t("confirm.kind", { kind: preview.kind })
+    });
+    const risk = el("p", {
+      className: "guardian-confirm-risk",
+      text: preview.irreversible ? t("confirm.irreversible") : t("confirm.reversible")
+    });
+    const items = (preview.affectedItemIds || []).map(
+      (id) => el("li", { className: "guardian-confirm-item", text: String(id) })
+    );
+    const affected = el("ul", { className: "guardian-confirm-items", children: items });
+    const info = infoButton(() => {
+    }, t("confirm.info"));
+    const costRisk = preview.costRisk ? el("p", { className: "guardian-confirm-cost", text: preview.costRisk }) : null;
+    const dialog = el("div", {
+      className: "guardian-action-confirmation",
+      attrs: { role: "alertdialog", "aria-modal": "true", "aria-label": t("confirm.label") },
+      children: [info, summary, kind, risk, ...costRisk ? [costRisk] : [], affected]
+    });
+    const reject = (
+      /** @type {HTMLButtonElement} */
+      el("button", { className: "guardian-btn", attrs: { type: "button" }, text: t("confirm.reject") })
+    );
+    reject.addEventListener("click", (ev) => {
+      if (!ev || ev.isTrusted !== true) return;
+      controls.dismiss();
+    });
+    const confirm = (
+      /** @type {HTMLButtonElement} */
+      el("button", {
+        className: "guardian-btn guardian-btn-danger",
+        attrs: { type: "button", "aria-label": t("confirm.confirmAria") },
+        text: t("confirm.confirm")
+      })
+    );
+    confirm.addEventListener("click", (ev) => {
+      if (!ev || ev.isTrusted !== true) return;
+      controls.approve();
+    });
+    dialog.appendChild(reject);
+    dialog.appendChild(confirm);
+    const onKey = (
+      /** @param {KeyboardEvent} ev */
+      (ev) => {
+        if (ev.key === "Escape") {
+          if (!ev || ev.isTrusted !== true) return;
+          window.removeEventListener("keydown", onKey);
+          controls.dismiss();
+        }
+      }
+    );
+    window.addEventListener("keydown", onKey);
+    dialog.dispose = () => window.removeEventListener("keydown", onKey);
+    return dialog;
+  }
+
+  // src/guardian/ui/tokens.css
+  var tokens_default = ':root {\n  --guardian-bg: #0f1420;\n  --guardian-surface: #182030;\n  --guardian-surface-2: #1f2a3d;\n  --guardian-border: #2c3a52;\n  --guardian-text: #f2f5fa;\n  --guardian-text-dim: #b8c2d4;\n  --guardian-accent: #2f81f7;\n  --guardian-accent-text: #ffffff;\n  --guardian-danger: #d23b3b;\n  --guardian-success: #2faa5a;\n  --guardian-warning: #e0a83b;\n  --guardian-radius: 10px;\n  --guardian-space-1: 4px;\n  --guardian-space-2: 8px;\n  --guardian-space-3: 12px;\n  --guardian-space-4: 16px;\n  --guardian-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;\n}\n\n.guardian-workspace,\n.guardian-rail,\n.guardian-sbc-workspace,\n.guardian-tools-drawer,\n.guardian-filter-sheet,\n.guardian-solution-review,\n.guardian-action-confirmation,\n.guardian-result-toast,\n.guardian-onboarding,\n.guardian-error-panel,\n.guardian-info-popover {\n  font-family: var(--guardian-font);\n  color: var(--guardian-text);\n  box-sizing: border-box;\n}\n\n.guardian-workspace {\n  position: relative;\n  background: var(--guardian-surface);\n  border: 1px solid var(--guardian-border);\n  border-radius: var(--guardian-radius);\n  padding: var(--guardian-space-3);\n}\n\n.guardian-rail {\n  display: flex;\n  flex-direction: column;\n  gap: var(--guardian-space-2);\n  background: var(--guardian-bg);\n  border-right: 1px solid var(--guardian-border);\n  padding: var(--guardian-space-2);\n}\n\n.guardian-rail-item,\n.guardian-tool-item,\n.guardian-btn {\n  font: inherit;\n  color: var(--guardian-text);\n  background: var(--guardian-surface-2);\n  border: 1px solid var(--guardian-border);\n  border-radius: var(--guardian-radius);\n  padding: var(--guardian-space-2) var(--guardian-space-3);\n  cursor: pointer;\n}\n\n.guardian-btn-primary {\n  background: var(--guardian-accent);\n  color: var(--guardian-accent-text);\n  border-color: var(--guardian-accent);\n}\n\n.guardian-btn-danger {\n  background: var(--guardian-danger);\n  color: #fff;\n  border-color: var(--guardian-danger);\n}\n\n.guardian-info-btn {\n  font: inherit;\n  width: 22px;\n  height: 22px;\n  border-radius: 50%;\n  border: 1px solid var(--guardian-border);\n  background: var(--guardian-surface-2);\n  color: var(--guardian-text-dim);\n  cursor: help;\n}\n\n.guardian-action-confirmation,\n.guardian-onboarding,\n.guardian-error-panel {\n  background: var(--guardian-surface);\n  border: 1px solid var(--guardian-border);\n  border-radius: var(--guardian-radius);\n  padding: var(--guardian-space-4);\n}\n\n.guardian-result-toast {\n  border-radius: var(--guardian-radius);\n  padding: var(--guardian-space-2) var(--guardian-space-3);\n  background: var(--guardian-surface-2);\n  border: 1px solid var(--guardian-border);\n}\n\n.guardian-result-success {\n  border-color: var(--guardian-success);\n}\n\n.guardian-result-error {\n  border-color: var(--guardian-danger);\n}\n\n.guardian-popover-card {\n  background: var(--guardian-surface-2);\n  border: 1px solid var(--guardian-border);\n  border-radius: var(--guardian-radius);\n  padding: var(--guardian-space-2);\n}\n\n@media (max-width: 640px) {\n  .guardian-rail {\n    flex-direction: row;\n    flex-wrap: wrap;\n    border-right: none;\n    border-bottom: 1px solid var(--guardian-border);\n  }\n  .guardian-workspace-body {\n    padding: var(--guardian-space-2);\n  }\n}\n\n@media (prefers-contrast: more) {\n  :root {\n    --guardian-text: #ffffff;\n    --guardian-text-dim: #e6ecf5;\n    --guardian-border: #5a6c8a;\n  }\n}\n';
+
+  // src/guardian/FsuSnapshotAdapter.js
+  function stable(value) {
+    if (Array.isArray(value)) return `[${value.map(stable).join(",")}]`;
+    if (value && typeof value === "object") {
+      const data = (
+        /** @type {Record<string, unknown>} */
+        value
+      );
+      return `{${Object.keys(data).sort().map((key) => `${JSON.stringify(key)}:${stable(data[key])}`).join(",")}}`;
+    }
+    return JSON.stringify(value);
+  }
+  async function sha256(value) {
+    const bytes = new TextEncoder().encode(value);
+    const digest = await crypto.subtle.digest("SHA-256", bytes);
+    return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
+  }
+  var FsuSnapshotAdapter = class {
+    /** @param {{readClubItems:()=>Promise<any>|any}} config */
+    constructor({ readClubItems }) {
+      this.readClubItems = readClubItems;
+    }
+    async capture() {
+      const result = await this.readClubItems();
+      if (!result || result.success !== true || !Array.isArray(result.items)) {
+        throw new Error("EA_CAPABILITY_UNAVAILABLE:club.snapshot");
+      }
+      const items = result.items.map((item) => ({
+        id: String(item.id),
+        name: String(item.name || "Unknown player"),
+        rating: Number(item.rating),
+        league: String(item.league || ""),
+        nation: String(item.nation || ""),
+        club: String(item.club || ""),
+        rarity: String(item.rarity || ""),
+        locked: item.locked === true,
+        duplicate: item.duplicate === true,
+        tradeable: item.tradeable === true,
+        special: item.special === true,
+        evolution_eligible: item.evolutionEligible === true
+      }));
+      if (!items.length || items.some((item) => !item.id || !Number.isInteger(item.rating))) {
+        throw new Error("GUARDIAN_PARTIAL_SNAPSHOT");
+      }
+      const snapshot_hash = await sha256(stable(items));
+      return { edition: "FC26", schema_version: 1, snapshot_hash, player_count: items.length, items };
+    }
+  };
+  function createFsuProductBindings(ctx) {
+    const values = () => {
+      const collection = ctx?.repositories?.Item?.club?.items;
+      if (!collection || typeof collection.values !== "function") return null;
+      return collection.values();
+    };
+    const normalizeRuntimeItem = (item) => ({
+      id: item.id ?? item.databaseId,
+      name: item.name ?? item._staticData?.name ?? "Unknown player",
+      rating: item.rating ?? item._rating,
+      league: String(item.leagueId ?? ""),
+      nation: String(item.nationId ?? ""),
+      club: String(item.teamId ?? ""),
+      rarity: String(item.rareflag ?? item.rareFlag ?? ""),
+      locked: item._fsuLock === true || item.locked === true,
+      duplicate: item.duplicate === true,
+      tradeable: item.untradeable !== true,
+      special: item.isSpecial === true || Number(item.rareflag) > 1,
+      evolutionEligible: item.isEvolutionEligible === true
+    });
+    const currentChallenge = () => {
+      const controller = ctx?.cntlr?.current?.();
+      if (controller?._challenge) return controller._challenge;
+      const id = controller?._challengeId;
+      const challenges = controller?._set?.challenges;
+      return id != null && challenges && typeof challenges.get === "function" ? challenges.get(id) : null;
+    };
+    return {
+      readClubItems: async () => {
+        const items = values();
+        return items ? { success: true, items: Array.from(items, normalizeRuntimeItem) } : { success: false };
+      },
+      currentChallenge,
+      applySelected: async (itemIds) => {
+        const items = values();
+        const challenge = currentChallenge();
+        if (!items || !challenge || typeof ctx?.events?.playerListFillSquad !== "function") {
+          throw new Error("EA_CAPABILITY_UNAVAILABLE:sbc.apply");
+        }
+        const byId = new Map(Array.from(items, (item) => [String(item.id ?? item.databaseId), item]));
+        const selected = itemIds.map((id) => byId.get(String(id)));
+        if (selected.some((item) => !item)) throw new Error("GUARDIAN_STALE_SNAPSHOT");
+        return ctx.events.playerListFillSquad(challenge, selected, 2);
+      }
+    };
+  }
+
+  // src/guardian/GuardianContracts.js
+  function record(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
+  }
+  function requireSnapshot(value) {
+    if (!record(value) || value.edition !== "FC26" || value.schema_version !== 1) {
+      throw new Error("GUARDIAN_INVALID_FC26_SNAPSHOT");
+    }
+    if (!Array.isArray(value.items) || !value.items.length || typeof value.snapshot_hash !== "string") {
+      throw new Error("GUARDIAN_INVALID_FC26_SNAPSHOT");
+    }
+    const ids = value.items.map((item) => String(item && item.id));
+    if (ids.some((id) => !id || id === "undefined") || new Set(ids).size !== ids.length) {
+      throw new Error("GUARDIAN_INVALID_FC26_SNAPSHOT");
+    }
+    return value;
+  }
+  function requireTraditionalSolveResponse(value) {
+    if (!record(value) || !["SOLVED", "INFEASIBLE", "TIMEOUT", "INVALID"].includes(value.status)) {
+      throw new Error("GUARDIAN_INVALID_SOLVE_RESPONSE");
+    }
+    if (value.status === "SOLVED") {
+      if (!Array.isArray(value.selected) || !value.selected.length) {
+        throw new Error("GUARDIAN_INVALID_SOLVE_RESPONSE");
+      }
+      if (typeof value.solution_id !== "string" || typeof value.decision_id !== "string") {
+        throw new Error("GUARDIAN_INVALID_SOLVE_RESPONSE");
+      }
+    }
+    return value;
+  }
+
+  // src/guardian/GuardianApiClient.js
+  var GuardianApiError = class extends Error {
+    /** @param {string} code @param {number} [status] */
+    constructor(code, status = 0) {
+      super(code);
+      this.code = code;
+      this.status = status;
+    }
+  };
+  var GuardianApiClient = class {
+    /** @param {{baseUrl:string, transport:(request:{url:string,method:string,body?:unknown,timeoutMs:number})=>Promise<{status:number,body:unknown}>, timeoutMs?:number}} config */
+    constructor({ baseUrl, transport, timeoutMs = 12e3 }) {
+      this.baseUrl = String(baseUrl || "").replace(/\/$/, "");
+      this.transport = transport;
+      this.timeoutMs = timeoutMs;
+    }
+    /** @param {string} path @param {{method?:string, body?:unknown}} [options] @returns {Promise<any>} */
+    async request(path, options = {}) {
+      try {
+        const response = await this.transport({
+          url: this.baseUrl + path,
+          method: options.method || "GET",
+          body: options.body,
+          timeoutMs: this.timeoutMs
+        });
+        const value = (
+          /** @type {any} */
+          response.body
+        );
+        if (response.status < 200 || response.status >= 300) {
+          const code = value && value.detail && (value.detail.code || value.detail);
+          throw new GuardianApiError(String(code || "GUARDIAN_API_ERROR"), response.status);
+        }
+        if (!value || typeof value !== "object") {
+          throw new GuardianApiError("GUARDIAN_INVALID_SERVER_RESPONSE", response.status);
+        }
+        return value;
+      } catch (error) {
+        const err = (
+          /** @type {any} */
+          error
+        );
+        if (err && err.name === "AbortError") {
+          throw new GuardianApiError("GUARDIAN_NETWORK_TIMEOUT");
+        }
+        if (err && err.code === "GUARDIAN_AUTH_REQUIRED") {
+          throw new GuardianApiError("GUARDIAN_AUTH_REQUIRED", 401);
+        }
+        throw error;
+      }
+    }
+    /** @param {unknown} snapshot */
+    async uploadSnapshot(snapshot) {
+      return this.request("/api/v2/snapshots", { method: "POST", body: requireSnapshot(snapshot) });
+    }
+    /** @param {unknown} body */
+    async solveTraditional(body) {
+      return requireTraditionalSolveResponse(
+        await this.request("/api/v2/solve/traditional", { method: "POST", body })
+      );
+    }
+  };
+
+  // src/guardian/GuardianApplyController.js
+  var GuardianApplyController = class {
+    /** @param {{guardian:any, applySelected:(ids:string[])=>Promise<any>|any, captureSnapshot?:()=>Promise<any>}} config */
+    constructor({ guardian, applySelected, captureSnapshot }) {
+      this.guardian = guardian;
+      this.applySelected = applySelected;
+      this.captureSnapshot = captureSnapshot;
+      if (!guardian.isRegistered("SBC_APPLY")) {
+        guardian.registerMutation("SBC_APPLY", (payload, _preview, context) => {
+          if (!context || context.solutionId !== payload.solutionId) {
+            throw new Error("GUARDIAN_CONTEXT_MISMATCH:SBC_APPLY");
+          }
+          return this.applySelected([...payload.itemIds]);
+        });
+      }
+    }
+    /** @param {any} solution */
+    async apply(solution) {
+      if (!solution || !solution.solutionId || !Array.isArray(solution.players) || !solution.players.length) {
+        throw new Error("GUARDIAN_INVALID_SOLUTION");
+      }
+      if (this.captureSnapshot) {
+        const current = await this.captureSnapshot();
+        if (!current || current.snapshot_hash !== solution.snapshotHash) {
+          throw new Error("GUARDIAN_STALE_SNAPSHOT");
+        }
+      }
+      const itemIds = solution.players.map((player) => String(player.id));
+      const result = await this.guardian.requestGuarded(
+        "SBC_APPLY",
+        { solutionId: solution.solutionId, itemIds },
+        {
+          summary: `Fill squad with ${itemIds.length} reviewed players; does not submit`,
+          affectedItemIds: itemIds,
+          costRisk: "Squad changes can be reviewed and undone before submit",
+          context: { solutionId: solution.solutionId }
+        }
+      );
+      return result.result;
+    }
+  };
+
+  // src/guardian/GuardianSolveFacade.js
+  var GuardianSolveFacade = class {
+    /** @param {{api:any, snapshotAdapter:any, requirementAdapter:any, presenter:any}} config */
+    constructor({ api, snapshotAdapter, requirementAdapter, presenter }) {
+      this.api = api;
+      this.snapshotAdapter = snapshotAdapter;
+      this.requirementAdapter = requirementAdapter;
+      this.presenter = presenter;
+    }
+    /** @param {any} challenge */
+    async solve(challenge) {
+      const compiled = this.requirementAdapter.compile(challenge);
+      const snapshot = await this.snapshotAdapter.capture();
+      const uploaded = await this.api.uploadSnapshot(snapshot);
+      if (!uploaded || uploaded.snapshot_hash !== snapshot.snapshot_hash) {
+        throw new Error("GUARDIAN_STALE_SNAPSHOT");
+      }
+      const response = await this.api.solveTraditional({
+        request: compiled.request,
+        snapshot_id: uploaded.id,
+        snapshot_hash: snapshot.snapshot_hash,
+        challenge_id: compiled.challengeId
+      });
+      if (response.status !== "SOLVED") {
+        return { status: response.status, players: [], warnings: [] };
+      }
+      return this.presenter.present(response, snapshot);
+    }
+  };
+
+  // src/guardian/fc26/Fc26RequirementAdapter.js
+  var Fc26RequirementAdapter = class {
+    /** @param {any} [eligibilityKeys] */
+    constructor(eligibilityKeys = null) {
+      this.eligibilityKeys = eligibilityKeys;
+    }
+    /** @param {any} challenge */
+    compile(challenge) {
+      if (Array.isArray(challenge?.eligibilityRequirements)) {
+        return this.compileFsu(challenge);
+      }
+      if (!challenge || !challenge.id || !Array.isArray(challenge.segments) || !challenge.segments.length) {
+        throw new Error("GUARDIAN_MALFORMED_REQUIREMENTS");
+      }
+      const segments = challenge.segments.map((segment) => {
+        if (!segment || typeof segment.constraints !== "object" || Array.isArray(segment.constraints)) {
+          throw new Error("GUARDIAN_MALFORMED_REQUIREMENTS");
+        }
+        return { constraints: { ...segment.constraints } };
+      });
+      return { challengeId: String(challenge.id), request: { segments } };
+    }
+    /** @param {any} challenge */
+    compileFsu(challenge) {
+      const keys = this.eligibilityKeys;
+      if (!keys) throw new Error("EA_CAPABILITY_UNAVAILABLE:sbc.requirements");
+      const constraints = {};
+      for (const requirement of challenge.eligibilityRequirements) {
+        const key = requirement?.getFirstKey?.();
+        const raw = requirement?.getValue?.(key);
+        const value = Number(Array.isArray(raw) ? raw[0] : raw);
+        if (!Number.isFinite(value)) throw new Error("GUARDIAN_MALFORMED_REQUIREMENTS");
+        if (key === keys.TEAM_RATING) constraints.min_team_rating = value;
+        else if (key === keys.CHEMISTRY_POINTS) constraints.min_chemistry = value;
+        else if (key === keys.PLAYER_MIN_OVR) constraints.min_player_rating = value;
+        else if (key === keys.PLAYER_EXACT_OVR) {
+          constraints.min_player_rating = value;
+          constraints.max_player_rating = value;
+        } else {
+          throw new Error("GUARDIAN_UNSUPPORTED_REQUIREMENT:" + String(key));
+        }
+      }
+      return {
+        challengeId: String(challenge.id),
+        request: { segments: [{ constraints }] }
+      };
+    }
+  };
+
+  // src/guardian/fc26/Fc26SolutionPresenter.js
+  var Fc26SolutionPresenter = class {
+    /** @param {any} response @param {any} snapshot */
+    present(response, snapshot) {
+      const byId = new Map(snapshot.items.map((item) => [String(item.id), item]));
+      const players = response.selected.map((id) => {
+        const item = byId.get(String(id));
+        if (!item) throw new Error("GUARDIAN_STALE_SNAPSHOT");
+        const reasons = [];
+        if (item.duplicate) reasons.push("duplicate preferred");
+        if (!item.tradeable) reasons.push("untradeable preferred");
+        if (!reasons.length) reasons.push("meets challenge constraints");
+        return { id: String(item.id), name: item.name, rating: item.rating, reasons };
+      });
+      return {
+        status: response.status,
+        solutionId: response.solution_id,
+        decisionId: response.decision_id,
+        snapshotHash: snapshot.snapshot_hash,
+        players,
+        rating: response.rating_sum,
+        warnings: players.filter((player) => byId.get(player.id).special).map((player) => `${player.name}: special item`)
+      };
+    }
+  };
+
+  // src/guardian/ui/GuardianSbcWorkspace.js
+  function createGuardianSbcWorkspace({ t, challenge, onBuild, onAnalyze }) {
+    const title = el("h2", {
+      className: "guardian-sbc-title",
+      text: challenge && challenge.name ? challenge.name : t("sbc.untitled")
+    });
+    const reqs = (challenge && challenge.requirements ? challenge.requirements : []).map(
+      (r) => el("li", { className: "guardian-sbc-req", text: r })
+    );
+    const reqList = el("ul", { className: "guardian-sbc-reqs", children: reqs });
+    const analyzeBtn = (
+      /** @type {HTMLButtonElement} */
+      el("button", { className: "guardian-btn", attrs: { type: "button" }, text: t("sbc.analyze") })
+    );
+    analyzeBtn.addEventListener("click", () => onAnalyze && onAnalyze());
+    const buildBtn = (
+      /** @type {HTMLButtonElement} */
+      el("button", { className: "guardian-btn guardian-btn-primary", attrs: { type: "button" }, text: t("sbc.build") })
+    );
+    buildBtn.addEventListener("click", () => onBuild && onBuild());
+    const info = infoButton(
+      () => {
+      },
+      t("sbc.info")
+    );
+    return el("section", {
+      className: "guardian-sbc-workspace",
+      attrs: { role: "region", "aria-label": t("sbc.label") },
+      children: [title, info, reqList, analyzeBtn, buildBtn]
+    });
+  }
+
+  // src/guardian/ui/GuardianSolutionReview.js
+  function createGuardianSolutionReview({ t, solution, onAccept, onEdit }) {
+    const sol = solution || {};
+    const lines = [];
+    if (sol.players) {
+      lines.push(el("li", { className: "guardian-review-players", text: sol.players.join(", ") }));
+    }
+    if (sol.cost) lines.push(el("li", { text: t("review.cost", { cost: sol.cost }) }));
+    if (sol.rating) lines.push(el("li", { text: t("review.rating", { rating: sol.rating }) }));
+    if (sol.risk) lines.push(el("li", { text: t("review.risk", { risk: sol.risk }) }));
+    const accept = (
+      /** @type {HTMLButtonElement} */
+      el("button", { className: "guardian-btn guardian-btn-primary", attrs: { type: "button" }, text: t("review.accept") })
+    );
+    accept.addEventListener("click", () => onAccept && onAccept());
+    const edit = (
+      /** @type {HTMLButtonElement} */
+      el("button", { className: "guardian-btn", attrs: { type: "button" }, text: t("review.edit") })
+    );
+    edit.addEventListener("click", () => onEdit && onEdit());
+    const info = infoButton(() => {
+    }, t("review.info"));
+    return el("div", {
+      className: "guardian-solution-review",
+      attrs: { role: "region", "aria-label": t("review.label") },
+      children: [info, el("ul", { className: "guardian-review-list", children: lines }), accept, edit]
+    });
+  }
+
+  // src/guardian/ui/GuardianWorkspace.js
+  function createGuardianWorkspace({ t, children = [] }) {
+    const header = el("header", {
+      className: "guardian-workspace-header",
+      children: [el("span", { className: "guardian-brand", text: t("brand.name") })]
+    });
+    const body = el("section", {
+      className: "guardian-workspace-body",
+      attrs: { role: "region", "aria-label": t("workspace.label") },
+      children
+    });
+    return el("div", { className: "guardian-workspace", children: [header, body] });
+  }
+
+  // src/guardian/GuardianSbcController.js
+  var GuardianSbcController = class {
+    /** @param {{solveFacade:any, applyController:any, render:(state:any)=>void}} config */
+    constructor({ solveFacade, applyController, render }) {
+      this.solveFacade = solveFacade;
+      this.applyController = applyController;
+      this.render = render;
+      this.activeChallenge = null;
+      this.solution = null;
+      this.busy = false;
+    }
+    /** @param {any} challenge */
+    attach(challenge) {
+      this.activeChallenge = challenge;
+      this.solution = null;
+      this.render({ phase: "READY", challenge });
+    }
+    async solve() {
+      if (this.busy || !this.activeChallenge) return;
+      this.busy = true;
+      this.render({ phase: "SOLVING", challenge: this.activeChallenge });
+      try {
+        this.solution = await this.solveFacade.solve(this.activeChallenge);
+        this.render({ phase: this.solution.status, challenge: this.activeChallenge, solution: this.solution });
+      } catch (error) {
+        this.render({ phase: "ERROR", error: error instanceof Error ? error.message : String(error) });
+      } finally {
+        this.busy = false;
+      }
+    }
+    async apply() {
+      if (this.busy || !this.solution || this.solution.status !== "SOLVED") return;
+      this.busy = true;
+      try {
+        await this.applyController.apply(this.solution);
+        this.render({ phase: "APPLIED_NOT_SUBMITTED", solution: this.solution });
+      } catch (error) {
+        this.render({ phase: "ERROR", error: error instanceof Error ? error.message : String(error) });
+      } finally {
+        this.busy = false;
+      }
+    }
+  };
+  function installGuardianFc26Product({ document: document2, ctx, guardian, messages, apiTransport }) {
+    const bindings = createFsuProductBindings(ctx);
+    const snapshotAdapter = new FsuSnapshotAdapter({ readClubItems: bindings.readClubItems });
+    const api = new GuardianApiClient({
+      baseUrl: "https://sbc-guardian.duckdns.org",
+      transport: apiTransport
+    });
+    const solveFacade = new GuardianSolveFacade({
+      api,
+      snapshotAdapter,
+      requirementAdapter: new Fc26RequirementAdapter(ctx.SBCEligibilityKey),
+      presenter: new Fc26SolutionPresenter()
+    });
+    const applyController = new GuardianApplyController({
+      guardian,
+      applySelected: bindings.applySelected,
+      captureSnapshot: () => snapshotAdapter.capture()
+    });
+    const t = createTranslator(messages);
+    const root = document2.querySelector("[data-guardian-root='true']");
+    const render = (state) => {
+      if (!root) return;
+      root.querySelector(".guardian-workspace")?.remove();
+      const children = [];
+      if (state.phase === "READY") {
+        const requirementText = (state.challenge.eligibilityRequirements || []).map(
+          (requirement) => ctx.events.requirementsToText(requirement)
+        );
+        children.push(
+          createGuardianSbcWorkspace({
+            t: (
+              /** @type {any} */
+              t
+            ),
+            challenge: { name: state.challenge.name, requirements: requirementText },
+            onAnalyze: () => controller.solve(),
+            onBuild: () => controller.solve()
+          })
+        );
+      } else if (state.phase === "SOLVED") {
+        children.push(
+          createGuardianSolutionReview({
+            t: (
+              /** @type {any} */
+              t
+            ),
+            solution: {
+              players: state.solution.players.map((player) => `${player.name} (${player.rating})`),
+              rating: String(state.solution.rating),
+              risk: state.solution.warnings.join("; ") || "No protected-item warnings"
+            },
+            onAccept: () => controller.apply(),
+            onEdit: () => controller.attach(bindings.currentChallenge())
+          })
+        );
+      } else {
+        const message = document2.createElement("p");
+        message.textContent = state.error || state.phase;
+        children.push(message);
+      }
+      root.appendChild(createGuardianWorkspace({ t: (
+        /** @type {any} */
+        t
+      ), children }));
+    };
+    const controller = new GuardianSbcController({ solveFacade, applyController, render });
+    return {
+      open(tool) {
+        if (tool !== "sbc") return;
+        const challenge = bindings.currentChallenge();
+        if (!challenge) render({ phase: "ERROR", error: "Open an FC26 SBC challenge first." });
+        else controller.attach(challenge);
+      },
+      controller
+    };
+  }
+
+  // src/guardian/index.js
+  function getGuardian2() {
+    return getGuardian();
+  }
+  var MESSAGES = { en: en_default, ro: ro_default };
+  function pickMessages(locale) {
+    const base = (locale || "en").slice(0, 2).toLowerCase();
+    if (base === "ro") {
+      return MESSAGES.ro;
+    }
+    return MESSAGES.en;
+  }
+  function getBundledGuardianMessages(locale) {
+    return pickMessages(locale);
+  }
+  function injectStyles(doc, css) {
+    if (!doc || !doc.createElement) return;
+    const style = doc.createElement("style");
+    style.setAttribute("data-guardian", "tokens");
+    style.textContent = css;
+    const head = doc.head || doc.body && doc.body.parentNode || doc;
+    (head.appendChild ? head : doc).appendChild(style);
+  }
+  function mountGuardian({ window: window2, document: document2, ctx, mutations, sessionNonce, locale, onToolSelect, nativeConfirm } = {}) {
+    const w = window2 || (typeof globalThis !== "undefined" ? globalThis : void 0);
+    const doc = document2 || w && w.document;
+    const nonce = sessionNonce || "sess-" + (w && w.crypto && typeof w.crypto.randomUUID === "function" ? w.crypto.randomUUID() : String(Date.now()));
+    injectStyles(doc, tokens_default);
+    const messages = pickMessages(locale);
+    const t = createTranslator(messages);
+    const guardian = new GuardianMutationFacade({ sessionNonce: nonce, mutations: mutations || {} });
+    setGuardian(guardian);
+    if (ctx) {
+      registerFsuMutations(ctx, guardian);
+    }
+    guardian.defaultPreviewHandler = (preview, controls) => {
+      if (!doc || !doc.body) {
+        controls.dismiss();
+        return;
+      }
+      if (nativeConfirm) {
+        nativeConfirm(preview).then((approved) => approved ? controls.approve() : controls.dismiss()).catch(() => showBrowserConfirmation());
+        return;
+      }
+      return showBrowserConfirmation();
+      function showBrowserConfirmation() {
+        const dialog = createGuardianActionConfirmation({ t: (
+          /** @type {any} */
+          t
+        ), preview: (
+          /** @type {any} */
+          preview
+        ), controls });
+        const overlay = (
+          /** @type {HTMLElement} */
+          el("div", { className: "guardian-overlay", attrs: { "data-guardian-overlay": "true" }, children: [dialog] })
+        );
+        doc.body.appendChild(overlay);
+        return () => {
+          const disposableDialog = (
+            /** @type {any} */
+            dialog
+          );
+          if (typeof disposableDialog.dispose === "function") disposableDialog.dispose();
+          overlay.remove();
+        };
+      }
+    };
+    let root;
+    if (doc && doc.body) {
+      root = /** @type {HTMLElement} */
+      el("div", { className: "guardian-root", attrs: { "data-guardian-root": "true" } });
+      const rail = createGuardianRail({ t: (
+        /** @type {any} */
+        t
+      ), onSelect: onToolSelect || (() => {
+      }) });
+      root.appendChild(rail);
+      doc.body.appendChild(root);
+    }
+    const api = Object.freeze({
+      requestGuarded: (kind, payload) => guardian.requestGuarded(kind, payload),
+      isRegistered: (kind) => guardian.isRegistered(kind),
+      getRegisteredKinds: () => guardian.getRegisteredKinds()
+    });
+    if (w) {
+      w.__guardian = api;
+    }
+    return api;
+  }
+
   // src/fsu/index.js
   var FsuUserscriptApp = class {
     constructor(windowRef, lodashRef) {
@@ -21838,7 +23642,24 @@
       this.exposeLodash();
       applyFsuLodashMixins(this.lodashRef);
       if (this.isFutWebApp()) {
-        futweb();
+        let product = null;
+        mountGuardian({
+          window: this.windowRef,
+          document: this.windowRef.document,
+          nativeConfirm: this.windowRef.__guardianNativeConfirm,
+          onToolSelect: (tool) => product && product.open(tool)
+        });
+        const fsuCtx = futweb();
+        const guardian = getGuardian2();
+        if (guardian) {
+          product = installGuardianFc26Product({
+            document: this.windowRef.document,
+            ctx: fsuCtx,
+            guardian,
+            apiTransport: this.windowRef.__guardianApiRequest,
+            messages: getBundledGuardianMessages(this.windowRef.navigator?.language || "en")
+          });
+        }
       }
     }
     exposeLodash() {

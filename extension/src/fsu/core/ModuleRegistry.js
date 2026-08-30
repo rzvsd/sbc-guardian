@@ -9,6 +9,7 @@ import { registerSbcDataEvents } from "../domain/SbcDataService.js";
 import { registerUiEvents } from "../ui/UiFactory.js";
 import { createDomainHelpers } from "./DomainHelpers.js";
 import { SbcReadAdapter } from "../ea/SbcReadAdapter.js";
+import { registerGuardianServiceOwner } from "../../guardian/fsu/registerServiceOwner.js";
 
 import { renderPlayerDetailsButtons } from "../patches/player-details.js";
 import { renderSbcSubstitutionPanel } from "../patches/sbc-substitution.js";
@@ -67,6 +68,7 @@ export function registerLateModules(ctx) {
   registerSbcRatingEvents({ events, info, debug, fy });
 
   const marketActionService = new MarketActionService();
+  registerGuardianServiceOwner("market", marketActionService);
   const marketHelpers = helpers.market;
 
   events.getAuction = (e, player) => marketActionService.getAuction(e, player, marketHelpers());

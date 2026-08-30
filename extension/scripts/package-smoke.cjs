@@ -9,8 +9,8 @@
 
 const fs = require("fs");
 const path = require("path");
-const { execSync } = require("child_process");
 const os = require("os");
+const { extractZip } = require("./lib/zip-utils.cjs");
 
 const root = path.resolve(__dirname, "..");
 const manifest = JSON.parse(fs.readFileSync(path.join(root, "manifest.json"), "utf8"));
@@ -20,6 +20,9 @@ const ALLOWED = new Set([
   "manifest.json",
   "vendor/lodash.min.js",
   "src/background.js",
+  "src/background-gecko.js",
+  "src/platform/background-core.js",
+  "src/platform/webextension-api.js",
   "src/content-bridge.js",
   "src/page-runtime.js",
   "src/userscript.js"
@@ -58,7 +61,7 @@ function verifyPackageZip(zipPath) {
   const tmp = fs.mkdtempSync(path.join(os.tmpdir(), "fsu-package-smoke-"));
   try {
     try {
-      execSync(`unzip -q "${zipPath}" -d "${tmp}"`, { stdio: "pipe" });
+      extractZip(zipPath, tmp);
     } catch {
       return { ok: false, error: `corrupt or unreadable ZIP: ${zipPath}` };
     }

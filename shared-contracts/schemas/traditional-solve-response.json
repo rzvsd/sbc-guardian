@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:TraditionalSolveResponse",
+  "title": "TraditionalSolveResponse",
+  "type": "object",
+  "required": ["contract_version", "solutions"],
+  "properties": {
+    "contract_version": { "type": "integer", "const": 1 },
+    "solutions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["players", "rating", "cost"],
+        "properties": {
+          "players": { "type": "array", "items": { "type": "string" } },
+          "rating": { "type": "integer" },
+          "cost": { "type": "number" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

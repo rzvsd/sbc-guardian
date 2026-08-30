@@ -1,0 +1,50 @@
+{
+  "manifest_version": 3,
+  "name": "SBC Guardian (GeckoView)",
+  "version": "26.10.1",
+  "description": "GeckoView / Firefox MV3 wrapper for the FSU EAFC FUT Web userscript.",
+  "permissions": ["storage", "nativeMessaging", "geckoViewAddons"],
+  "host_permissions": [
+    "https://www.ea.com/*",
+    "https://www.easports.com/*",
+    "https://www.futbin.org/*",
+    "https://www.fut.gg/*",
+    "https://api.fut.to/*",
+    "https://enhancer-api.futnext.com/*",
+    "https://www.futnext.com/*",
+    "https://sbc-guardian.duckdns.org/*",
+    "https://utas.mob.v5.prd.futc-ext.gcp.ea.com/*"
+  ],
+  "background": {
+    "scripts": ["src/background-gecko.js"]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.ea.com/ea-sports-fc/ultimate-team/web-app/*",
+        "https://www.easports.com/*/ea-sports-fc/ultimate-team/web-app/*",
+        "https://www.ea.com/*/ea-sports-fc/ultimate-team/web-app/*"
+      ],
+      "js": ["src/content-bridge.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "guardian@sbcguardian.local"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "vendor/lodash.min.js",
+        "src/page-runtime.js",
+        "src/userscript.js"
+      ],
+      "matches": [
+        "https://www.ea.com/*",
+        "https://www.easports.com/*"
+      ]
+    }
+  ]
+}

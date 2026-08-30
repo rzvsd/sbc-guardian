@@ -1,6 +1,6 @@
 # FSU · EA FC FUT Web Enhancer
 
-[![Version](https://img.shields.io/badge/version-26.10.0-blue)](extension/manifest.json)
+[![Version](https://img.shields.io/badge/version-26.10.1-blue)](extension/manifest.json)
 [![Tests](https://github.com/color8892/fsu-fut-enhancer/actions/workflows/test.yml/badge.svg)](https://github.com/color8892/fsu-fut-enhancer/actions/workflows/test.yml)
 [![Release](https://img.shields.io/github/v/release/color8892/fsu-fut-enhancer?label=release)](https://github.com/color8892/fsu-fut-enhancer/releases/latest)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)

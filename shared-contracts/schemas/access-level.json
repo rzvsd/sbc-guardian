@@ -1,0 +1,7 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:AccessLevel",
+  "title": "AccessLevel",
+  "type": "string",
+  "enum": ["FULL", "FULL_WITH_WARNING", "PAYWALL"]
+}

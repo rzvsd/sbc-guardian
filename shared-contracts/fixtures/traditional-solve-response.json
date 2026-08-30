@@ -1,0 +1,10 @@
+{
+  "contract_version": 1,
+  "solutions": [
+    {
+      "players": ["item-1001", "item-1002", "item-1003", "item-1004", "item-1005"],
+      "rating": 84,
+      "cost": 12500
+    }
+  ]
+}

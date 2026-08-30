@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:ActionPreview",
+  "title": "ActionPreview",
+  "type": "object",
+  "required": ["actionId", "kind", "payloadHash", "summary", "expiresAt", "irreversible"],
+  "properties": {
+    "actionId": { "type": "string" },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "SBC_APPLY",
+        "SBC_SUBMIT",
+        "MARKET_BUY",
+        "MARKET_LIST",
+        "PACK_OPEN",
+        "BATCH_ACTION",
+        "SBC_ANALYZE",
+        "SETTING_CHANGE"
+      ]
+    },
+    "payloadHash": { "type": "string" },
+    "summary": { "type": "string" },
+    "affectedItemIds": { "type": "array", "items": { "type": "string" } },
+    "expiresAt": { "type": "string" },
+    "irreversible": { "type": "boolean" }
+  },
+  "additionalProperties": false
+}

@@ -26,3 +26,35 @@ terminals/
 # Logs
 *.log
 npm-debug.log*
+
+# Python (guardian-cloud)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+*.sqlite
+*.sqlite3
+*.db
+
+# Android wrapper
+.gradle/
+local.properties
+android-wrapper/app/src/main/assets/fsu-extension/
+*.apk
+*.aab
+build/
+.kotlin/
+captures/
+.externalNativeBuild/
+
+# Web portal
+web-portal/node_modules/
+web-portal/dist/
+
+# Recovery / audit artifacts
+recovery/

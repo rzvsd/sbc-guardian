@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "FSU EAFC FUT Web Enhancer",
-  "version": "26.10.0",
+  "version": "26.10.1",
   "description": "Chrome extension wrapper for the FSU EAFC FUT Web userscript.",
   "permissions": ["storage"],
   "host_permissions": [
@@ -12,6 +12,7 @@
     "https://api.fut.to/*",
     "https://enhancer-api.futnext.com/*",
     "https://www.futnext.com/*",
+    "https://sbc-guardian.duckdns.org/*",
     "https://utas.mob.v5.prd.futc-ext.gcp.ea.com/*"
   ],
   "background": {

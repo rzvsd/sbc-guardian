@@ -1,0 +1,11 @@
+{
+  "fixture_kind": "SYNTHETIC_TEST_ONLY",
+  "notice": "All point values in this fixture are invented test data. They are not EA FC rules and must never seed production scoring.",
+  "edition": "FC27",
+  "ruleset_version": "synthetic-fc27-streamlined-v1",
+  "items": [
+    {"id": "00000000-0000-0000-0000-000000000001", "rating": 84, "scoring_category": "GOLD_COMMON", "points": 4},
+    {"id": "00000000-0000-0000-0000-000000000002", "rating": 84, "scoring_category": "GOLD_RARE", "points": 6},
+    {"id": "00000000-0000-0000-0000-000000000003", "rating": 86, "scoring_category": "SILVER_COMMON", "points": 3}
+  ]
+}

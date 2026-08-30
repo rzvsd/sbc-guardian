@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:ActionDecision",
+  "title": "ActionDecision",
+  "type": "object",
+  "required": ["decisionId", "actionId", "payloadHash", "sessionNonce", "expiresAt"],
+  "properties": {
+    "decisionId": { "type": "string" },
+    "actionId": { "type": "string" },
+    "payloadHash": { "type": "string" },
+    "sessionNonce": { "type": "string" },
+    "expiresAt": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,9 @@
+{
+  "id": "chal-001",
+  "name": "Marquee Matchups",
+  "format": "TRADITIONAL",
+  "requirements": [
+    { "type": "rating", "value": 84 },
+    { "type": "nation", "value": 2 }
+  ]
+}

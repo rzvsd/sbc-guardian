@@ -1,0 +1,89 @@
+{
+  "schema_version": 1,
+  "fixture_id": "synthetic-fc26-traditional-correctness-v1",
+  "provenance": {
+    "kind": "SYNTHETIC_RIGHTS_SAFE",
+    "owner": "SBC Guardian engineering",
+    "approved_use": "Synthetic FC26 Traditional correctness testing only",
+    "ea_confirmed": false,
+    "contains_ea_content": false
+  },
+  "cases": [
+    {
+      "id": "composite-group-and-rarity",
+      "expected_status": "SOLVED",
+      "request": {
+        "snapshot_id": "00000000-0000-4000-8000-000000009001",
+        "mode": "SAFEST",
+        "segments": [{
+          "id": "composite",
+          "name": "Synthetic composite constraints",
+          "constraints": {
+            "min_team_rating": 82,
+            "min_player_rating": 80,
+            "max_player_rating": 85,
+            "min_distinct_leagues": 6,
+            "min_distinct_nations": 4,
+            "min_distinct_clubs": 7,
+            "max_players_same_league": 2,
+            "max_players_same_nation": 3,
+            "max_players_same_club": 2,
+            "min_rare_players": 6,
+            "min_special_players": 2
+          }
+        }]
+      },
+      "policy": {"protect_evolution_eligible": false},
+      "items": [
+        {"id":"00000000-0000-4000-8000-000000000001","name":"Synthetic 1","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare","special":true,"duplicate":true},
+        {"id":"00000000-0000-4000-8000-000000000002","name":"Synthetic 2","rating":82,"league":"L1","nation":"N1","club":"C2","rarity":"Gold Rare","special":true,"duplicate":true},
+        {"id":"00000000-0000-4000-8000-000000000003","name":"Synthetic 3","rating":82,"league":"L2","nation":"N1","club":"C3","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000004","name":"Synthetic 4","rating":82,"league":"L2","nation":"N2","club":"C3","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000005","name":"Synthetic 5","rating":82,"league":"L3","nation":"N2","club":"C4","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000006","name":"Synthetic 6","rating":82,"league":"L3","nation":"N2","club":"C5","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000007","name":"Synthetic 7","rating":82,"league":"L4","nation":"N3","club":"C5","rarity":"Gold Common"},
+        {"id":"00000000-0000-4000-8000-000000000008","name":"Synthetic 8","rating":82,"league":"L4","nation":"N3","club":"C6","rarity":"Gold Common"},
+        {"id":"00000000-0000-4000-8000-000000000009","name":"Synthetic 9","rating":82,"league":"L5","nation":"N3","club":"C7","rarity":"Gold Common"},
+        {"id":"00000000-0000-4000-8000-000000000010","name":"Synthetic 10","rating":82,"league":"L5","nation":"N4","club":"C8","rarity":"Gold Common"},
+        {"id":"00000000-0000-4000-8000-000000000011","name":"Synthetic 11","rating":82,"league":"L6","nation":"N4","club":"C9","rarity":"Gold Common"},
+        {"id":"00000000-0000-4000-8000-000000000012","name":"Distractor 12","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare","special":true},
+        {"id":"00000000-0000-4000-8000-000000000013","name":"Distractor 13","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare","special":true},
+        {"id":"00000000-0000-4000-8000-000000000014","name":"Distractor 14","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare"},
+        {"id":"00000000-0000-4000-8000-000000000015","name":"Distractor 15","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare"},
+        {"id":"00000000-0000-4000-8000-000000000016","name":"Distractor 16","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare"},
+        {"id":"00000000-0000-4000-8000-000000000017","name":"Distractor 17","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare"},
+        {"id":"00000000-0000-4000-8000-000000000018","name":"Distractor 18","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare"},
+        {"id":"00000000-0000-4000-8000-000000000019","name":"Distractor 19","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare"},
+        {"id":"00000000-0000-4000-8000-000000000020","name":"Distractor 20","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare"},
+        {"id":"00000000-0000-4000-8000-000000000021","name":"Distractor 21","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare"},
+        {"id":"00000000-0000-4000-8000-000000000022","name":"Distractor 22","rating":90,"league":"LX","nation":"NX","club":"CX","rarity":"Special Rare"}
+      ]
+    },
+    {
+      "id": "contradictory-rating-bounds",
+      "expected_status": "INFEASIBLE",
+      "request": {
+        "snapshot_id": "00000000-0000-4000-8000-000000009002",
+        "segments": [{
+          "id": "contradiction",
+          "name": "Synthetic valid-shape contradiction",
+          "constraints": {"min_team_rating": 90, "max_player_rating": 82}
+        }]
+      },
+      "policy": {},
+      "items": [
+        {"id":"00000000-0000-4000-8000-000000000101","name":"Bound 1","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000102","name":"Bound 2","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000103","name":"Bound 3","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000104","name":"Bound 4","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000105","name":"Bound 5","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000106","name":"Bound 6","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000107","name":"Bound 7","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000108","name":"Bound 8","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000109","name":"Bound 9","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000110","name":"Bound 10","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"},
+        {"id":"00000000-0000-4000-8000-000000000111","name":"Bound 11","rating":82,"league":"L1","nation":"N1","club":"C1","rarity":"Gold Rare"}
+      ]
+    }
+  ]
+}

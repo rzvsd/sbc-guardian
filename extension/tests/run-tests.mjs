@@ -4,6 +4,7 @@ import path from "path";
 import { createRequire } from "module";
 import { fileURLToPath } from "url";
 import { runPreferencesServiceTests } from "./preferences-services.test.mjs";
+import { setLegacyFallbackForTests } from "../src/guardian/mode.js";
 import { runSbcChemistryTests } from "./sbc-chemistry.test.mjs";
 import { runSbcDataServiceAsyncTests, runSbcServiceTests } from "./sbc-services.test.mjs";
 import { runPlayerSearchTests } from "./player-search.test.mjs";
@@ -47,6 +48,22 @@ import { runPlayerMetaCacheTests } from "./player-meta-cache.test.mjs";
 import { runPackPreviewTests } from "./pack-preview.test.mjs";
 import { runBulkPackOpenTests } from "./bulk-pack-open.test.mjs";
 import { runUnassignedRefreshTests } from "./unassigned-refresh.test.mjs";
+import "./guardian-action-gate.test.mjs";
+import "./guardian-contract-fixtures.test.mjs";
+import "./guardian-state-machine.test.mjs";
+import "./guardian-integration.test.mjs";
+import "./guardian-fail-closed.test.mjs";
+import "./guardian-ui.test.mjs";
+import "./guardian-bundle.test.mjs";
+import "./guardian-collision.test.mjs";
+import "./guardian-payload-safety.test.mjs";
+import "./guardian-facade.test.mjs";
+import { runGuardianProductionWiringTests } from "./guardian-production-wiring.test.mjs";
+import { runGuardianLifecycleTests } from "./guardian-lifecycle.test.mjs";
+import { runGuardianContextIntegrityTests } from "./guardian-context-integrity.test.mjs";
+import { runGuardianM5Fc26Tests } from "./guardian-m5-fc26.test.mjs";
+import { runGuardianIsolatedTransportTests } from "./guardian-isolated-transport.test.mjs";
+import { runGuardianExtensionRegressionTests } from "./guardian-extension-regressions.test.mjs";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 const root = path.resolve(__dirname, "..");
@@ -431,6 +448,13 @@ function assertUserscriptBundle() {
   assert.ok(userscript.includes("createGameInfo"));
   assert.ok(userscript.includes("createFutbinIdFacade"));
   assert.ok(userscript.includes("getPriceForUrl"));
+  assert.ok(userscript.includes("mountGuardian"));
+  assert.ok(userscript.includes("guardian-root"));
+  assert.ok(userscript.includes("requestGuarded"));
+  assert.ok(userscript.includes("GUARDIAN_DECISION_REQUIRED"));
+  assert.ok(userscript.includes("GUARDIAN_KIND_MISMATCH"));
+  assert.ok(userscript.includes("GUARDIAN_PAYLOAD_MISMATCH"));
+  assert.ok(userscript.includes("GuardianRuntimeError"));
   assert.ok(!userscript.includes("function futgg"));
   assert.ok(!userscript.includes("GM_setValue(\"set\",JSON.stringify(info.set))"));
   assert.ok(!userscript.includes("GM_setValue(\"futbinId\",JSON.stringify(info.futbinId))"));
@@ -496,6 +520,12 @@ async function assertPriceService() {
 }
 
 assertLodashVendor();
+await runGuardianProductionWiringTests();
+await runGuardianLifecycleTests();
+await runGuardianContextIntegrityTests();
+await runGuardianM5Fc26Tests();
+await runGuardianIsolatedTransportTests();
+await runGuardianExtensionRegressionTests();
 assertManifest();
 assertSenderAllowlist();
 assertHeaderNormalization();
@@ -505,6 +535,10 @@ assertRequestPolicy();
 runRequestPolicyCorpusTests();
 runPlayerMetaCacheTests();
 await runPackPreviewTests();
+// The four rerouted FSU service tests exercise the ORIGINAL executors, so the
+// legacy (pre-Guardian) path must be enabled for them. It is impossible for
+// this flag to be true in the distributed bundle (IS_DISTRIBUTED === true).
+setLegacyFallbackForTests(true);
 await runBulkPackOpenTests();
 runUnassignedRefreshTests();
 await assertRequestServiceRejectsUnapprovedUrl();
@@ -538,6 +572,8 @@ runSbcChallengesLifecycleTests();
 runSbcSnapshotResultTests();
 await runSbcFillSafetyTests();
 await runSbcSaveTransactionTests();
+setLegacyFallbackForTests(true);
+try {
 await runSbcSubmitTransactionTests();
 runRemoteConfigServiceTests();
 runRemoteConfigResultsTests();
@@ -553,4 +589,7 @@ runStoreUiLifecycleTests();
 await runPatchSingleOwnerTests();
 await runMarketActionServiceTests();
 await assertTabService();
+} finally {
+  setLegacyFallbackForTests(false);
+}
 console.log("All extension tests passed.");

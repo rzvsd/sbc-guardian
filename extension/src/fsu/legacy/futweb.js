@@ -37,4 +37,5 @@ export function futweb() {
 
         runMidBootstrap({ fsuCtx, ctx, events, fy });
         finalizeBootstrap({ fsuCtx, patchRegistry, html, call });
+        return fsuCtx;
 }

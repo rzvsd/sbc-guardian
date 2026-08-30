@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:EntitlementState",
+  "title": "EntitlementState",
+  "type": "object",
+  "required": ["state"],
+  "properties": {
+    "state": { "type": "string", "enum": ["ACTIVE", "TRIAL", "EXPIRED", "NONE"] },
+    "until": { "type": "string" },
+    "reason": { "type": "string" }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:GuardianPolicy",
+  "title": "GuardianPolicy",
+  "type": "object",
+  "required": ["version", "rules"],
+  "properties": {
+    "version": { "type": "string" },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "enabled"],
+        "properties": {
+          "id": { "type": "string" },
+          "enabled": { "type": "boolean" }
+        }
+      }
+    }
+  },
+  "additionalProperties": false
+}

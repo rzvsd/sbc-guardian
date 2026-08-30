@@ -62,6 +62,18 @@
     "src/fsu/domain/SbcSquadFillService.js",
     "src/fsu/ui/HtmlSafety.js",
     "src/fsu/ui/PriceRenderer.js",
-    "src/fsu/ui/PlayerDetailsRenderer.js"
+    "src/fsu/ui/PlayerDetailsRenderer.js",
+    "src/guardian/css-modules.d.ts",
+    "src/guardian/globals.d.ts",
+    "src/guardian/actions/ActionDecisionStore.js",
+    "src/guardian/actions/ActionPreviewBuilder.js",
+    "src/guardian/actions/GuardianActionGate.js",
+    "src/guardian/features/FeatureRegistry.js",
+    "src/guardian/state/GuardianStateMachine.js",
+    "src/guardian/runtime.js",
+    "src/guardian/i18n/index.js",
+    "src/guardian/ui/dom.js",
+    "src/guardian/ui/GuardianRail.js",
+    "src/guardian/index.js"
   ]
 }

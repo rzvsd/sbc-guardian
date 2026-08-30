@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:TraditionalSolveRequest",
+  "title": "TraditionalSolveRequest",
+  "type": "object",
+  "required": ["contract_version", "game_edition", "snapshot_id", "snapshot_hash", "format", "challenge"],
+  "properties": {
+    "contract_version": { "type": "integer", "const": 1 },
+    "game_edition": { "$ref": "game-edition.json" },
+    "snapshot_id": { "type": "string" },
+    "snapshot_hash": { "type": "string" },
+    "format": { "const": "TRADITIONAL" },
+    "challenge": { "$ref": "sbc-challenge.json" },
+    "ruleset_version": { "type": "string" },
+    "taxonomy_version": { "type": "integer" }
+  },
+  "additionalProperties": false
+}

@@ -152,7 +152,7 @@ export function runRequestPolicyCorpusTests() {
   }
 
   const bgSource = fs.readFileSync(
-    path.join(root, "src", "background.js"),
+    path.join(root, "src", "platform", "background-core.js"),
     "utf8"
   );
   assert.deepEqual(
@@ -181,7 +181,11 @@ export function runRequestPolicyCorpusTests() {
   ]);
   const apiHostPermissions = (manifest.host_permissions || [])
     .map((h) => h.replace(/\/\*$/, ""))
-    .filter((origin) => !contentHosts.has(origin))
+    .filter(
+      (origin) =>
+        !contentHosts.has(origin) &&
+        origin !== "https://sbc-guardian.duckdns.org"
+    )
     .sort();
   assert.deepEqual(
     apiHostPermissions,
@@ -198,5 +202,9 @@ export function runRequestPolicyCorpusTests() {
   assert.ok(
     manifest.host_permissions.includes("https://www.futnext.com/*"),
     "manifest must grant the policy-enforced FutNext preview host"
+  );
+  assert.ok(
+    manifest.host_permissions.includes("https://sbc-guardian.duckdns.org/*"),
+    "manifest must grant only the dedicated Guardian background transport host"
   );
 }

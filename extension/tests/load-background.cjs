@@ -14,6 +14,13 @@ function loadBackground(extensionRoot) {
   };
 
   // Run as classic script so module.exports matches Node test expectations.
+  // Resolve relative requires (e.g. ./platform/background-core.js) against src/,
+  // matching how importScripts resolves inside the real service worker.
+  function srcRequire(spec) {
+    const rel = String(spec).replace(/^\.\//, "");
+    const resolved = path.resolve(extensionRoot, "src", rel);
+    return require(resolved);
+  }
   const runner = new Function(
     "module",
     "exports",
@@ -22,9 +29,10 @@ function loadBackground(extensionRoot) {
     "chrome",
     "fetch",
     "URL",
+    "require",
     code
   );
-  runner(module, module.exports, globalThis, globalThis, chromeStub, fetch, URL);
+  runner(module, module.exports, globalThis, globalThis, chromeStub, fetch, URL, srcRequire);
 
   return module.exports;
 }

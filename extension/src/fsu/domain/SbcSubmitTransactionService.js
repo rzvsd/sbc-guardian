@@ -4,6 +4,7 @@ import {
   parseSbcSubmitResponse,
   sbcSubmitFailure
 } from "./SbcSubmitResults.js";
+import { guardianOrFailClosed } from "../../guardian/mode.js";
 
 /**
  * Minimal observable-compatible rejection used when submit preconditions fail.
@@ -27,6 +28,112 @@ class RejectedSubmitObservable {
 }
 
 /**
+ * Keeps the EA observable contract while Guardian waits for confirmation.
+ * FSU callers attach observers synchronously, but the original EA method must
+ * not be invoked until the guarded promise resolves.
+ */
+class GuardedSubmitObservable {
+  /**
+   * @param {Promise<any>} guardPromise
+   * @param {{ onDiagnostic?: (result: unknown) => void }} [options]
+   */
+  constructor(guardPromise, { onDiagnostic = () => {} } = {}) {
+    /** @type {Set<{ context: unknown, callback: (sender: unknown, response: unknown) => void }>} */
+    this.observers = new Set();
+    /** @type {Record<string, any> | null} */
+    this.inner = null;
+    /** @type {Record<string, any> | null} */
+    this.failure = null;
+    /** @type {Promise<any>} */
+    this.guardPromise = Promise.resolve(guardPromise).then((out) => {
+      const observable = out && out.result;
+      if (!isRecord(observable) || typeof observable.observe !== "function") {
+        throw new Error("SBC_SUBMIT_GUARD_RESULT_INVALID");
+      }
+      this.inner = /** @type {any} */ (observable);
+      for (const observer of this.observers) {
+        this._observeInner(observer);
+      }
+      this.observers.clear();
+      return out;
+    });
+    // An EA caller may only use .observe() and never await the thenable. Keep
+    // rejected Guardian promises handled while preserving rejection for code
+    // that does use await/catch.
+    this.guardPromise.catch((error) => {
+      this.failure = this._failureResponse(error);
+      onDiagnostic(this.failure);
+      for (const observer of this.observers) {
+        queueMicrotask(() => observer.callback(this, this.failure));
+      }
+      this.observers.clear();
+    });
+  }
+
+  /** @param {unknown} error */
+  _failureResponse(error) {
+    const source = /** @type {any} */ (error);
+    const message = source?.message || "Guardian confirmation failed.";
+    const code = source?.code || String(message).split(":", 1)[0];
+    return {
+      success: false,
+      status: 400,
+      error: { code, message }
+    };
+  }
+
+  /** @param {{ context: unknown, callback: (sender: unknown, response: unknown) => void }} observer */
+  _observeInner(observer) {
+    try {
+      const inner = this.inner;
+      if (!inner) throw new Error("SBC_SUBMIT_GUARD_RESULT_INVALID");
+      inner.observe(observer.context, observer.callback);
+    } catch (error) {
+      this.failure = this._failureResponse(error);
+      const failure = this.failure;
+      queueMicrotask(() => observer.callback(this, failure));
+    }
+  }
+
+  /** @param {unknown} context @param {(sender: unknown, response: unknown) => void} callback */
+  observe(context, callback) {
+    const observer = { context, callback };
+    if (this.inner) {
+      this._observeInner(observer);
+    } else if (this.failure) {
+      const failure = this.failure;
+      queueMicrotask(() => callback(this, failure));
+    } else {
+      this.observers.add(observer);
+    }
+    return this;
+  }
+
+  /** @param {unknown} context */
+  unobserve(context) {
+    for (const observer of this.observers) {
+      if (observer.context === context) this.observers.delete(observer);
+    }
+    this.inner?.unobserve?.(context);
+  }
+
+  /** @param {((value: any) => any) | undefined} onFulfilled @param {((reason: any) => any) | undefined} onRejected */
+  then(onFulfilled, onRejected) {
+    return this.guardPromise.then(onFulfilled, onRejected);
+  }
+
+  /** @param {((reason: any) => any) | undefined} onRejected */
+  catch(onRejected) {
+    return this.guardPromise.catch(onRejected);
+  }
+
+  /** @param {(() => any) | undefined} onFinally */
+  finally(onFinally) {
+    return this.guardPromise.finally(onFinally);
+  }
+}
+
+/**
  * @param {unknown} value
  * @returns {value is Record<string, unknown>}
  */
@@ -35,6 +142,8 @@ function isRecord(value) {
 }
 
 export class SbcSubmitTransactionService {
+  /** @type {Record<string, boolean>} */
+  _guardReg = {};
   /**
    * @param {{ observableAdapter?: EaObservableAdapter }} [options]
    */
@@ -42,6 +151,8 @@ export class SbcSubmitTransactionService {
     this.observableAdapter = observableAdapter;
     /** @type {Map<string, Record<string, unknown>>} */
     this.inFlight = new Map();
+    /** @type {Map<string, GuardedSubmitObservable>} */
+    this.guardPending = new Map();
   }
 
   /**
@@ -53,13 +164,62 @@ export class SbcSubmitTransactionService {
    *   onDiagnostic?: (result: unknown) => void
    * }} options
    */
-  intercept({
-    args,
-    observerContext,
-    invoke,
-    onSuccess,
-    onDiagnostic = () => {}
-  }) {
+  /**
+   * @param {{
+   *   args: unknown[],
+   *   observerContext: object,
+   *   invoke: () => unknown,
+   *   onSuccess: (response: Record<string, unknown>) => void,
+   *   onDiagnostic?: (result: unknown) => void
+   * }} options
+   */
+  intercept(options) {
+    const g = guardianOrFailClosed("SBC_SUBMIT");
+    if (!g) return this._interceptImpl(options);
+    const challenge = options.args && options.args[0];
+    const challengeId = Number(isRecord(challenge) ? challenge.id : undefined) || null;
+    if (!challengeId) throw new Error("GUARDIAN_PREVIEW_INVALID:SBC_SUBMIT");
+    const key = String(challengeId);
+    if (this.inFlight.has(key) || this.guardPending.has(key)) {
+      const result = sbcSubmitFailure(
+        SBC_SUBMIT_ERROR_CODES.IN_FLIGHT,
+        ["challenge.submit-in-flight"]
+      );
+      options.onDiagnostic?.(result);
+      return new RejectedSubmitObservable({
+        success: false,
+        status: 409,
+        error: result.error
+      });
+    }
+    const dto = Object.freeze({ kind: "SBC_SUBMIT", challengeId });
+    const guardPromise = g.requestGuarded("SBC_SUBMIT", dto, { context: options });
+    const result = new GuardedSubmitObservable(guardPromise, {
+      onDiagnostic: options.onDiagnostic
+    });
+    this.guardPending.set(key, result);
+    guardPromise.then(
+      () => {
+        if (this.guardPending.get(key) === result) this.guardPending.delete(key);
+      },
+      () => {
+        if (this.guardPending.get(key) === result) this.guardPending.delete(key);
+      }
+    );
+    return result;
+  }
+
+  /**
+   * @param {{
+   *   args: unknown[],
+   *   observerContext: object,
+   *   invoke: () => unknown,
+   *   onSuccess: (response: Record<string, unknown>) => void,
+   *   onDiagnostic?: (result: unknown) => void
+   * }} options
+   */
+  _interceptImpl(options) {
+    const { args, observerContext, invoke, onSuccess, onDiagnostic = () => {} } = options;
     const challenge = args[0];
     const setEntity = args[1];
     const challengeId = Number(

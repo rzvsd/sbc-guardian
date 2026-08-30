@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { execSync } from "node:child_process";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 
@@ -14,9 +13,10 @@ const {
   ALLOWED,
   BOOT_MARKER
 } = require("../scripts/package-smoke.cjs");
+const { createZipFromDirectory } = require("../scripts/lib/zip-utils.cjs");
 
 function writeZipFromDir(dir, zipPath) {
-  execSync(`cd "${dir}" && zip -qr "${zipPath}" .`, { stdio: "pipe" });
+  createZipFromDirectory(dir, zipPath);
 }
 
 export function runPackageSmokeTests() {
@@ -30,6 +30,7 @@ export function runPackageSmokeTests() {
     // Success fixture.
     const okDir = path.join(tmpRoot, "ok");
     fs.mkdirSync(path.join(okDir, "src"), { recursive: true });
+    fs.mkdirSync(path.join(okDir, "src", "platform"), { recursive: true });
     fs.mkdirSync(path.join(okDir, "vendor"), { recursive: true });
     fs.writeFileSync(
       path.join(okDir, "manifest.json"),
@@ -37,6 +38,9 @@ export function runPackageSmokeTests() {
     );
     for (const file of [
       "src/background.js",
+      "src/background-gecko.js",
+      "src/platform/background-core.js",
+      "src/platform/webextension-api.js",
       "src/content-bridge.js",
       "src/page-runtime.js"
     ]) {

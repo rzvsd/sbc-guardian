@@ -1,0 +1,9 @@
+{
+  "actionId": "act-00000000-0000-0000-0000-000000000001",
+  "kind": "SBC_SUBMIT",
+  "payloadHash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+  "summary": "Submit this squad to Marquee Matchups?",
+  "affectedItemIds": ["item-1001", "item-1002"],
+  "expiresAt": "2026-08-28T12:00:00.000Z",
+  "irreversible": true
+}

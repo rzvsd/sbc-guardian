@@ -12,6 +12,7 @@ import {
     BulkPackOpenService
 } from "../domain/BulkPackOpenService.js";
 import { BulkPackOpenAdapter } from "../ea/BulkPackOpenAdapter.js";
+import { registerGuardianServiceOwner } from "../../guardian/fsu/registerServiceOwner.js";
 
 let inPacksController;
 let specialPlayersController;
@@ -431,6 +432,7 @@ export function installStorePatches(deps) {
             purchasePackType: PurchasePackType
         })
     });
+    registerGuardianServiceOwner("bulk", bulkPackOpenService);
     events.cancelBulkPackOpen = () => bulkPackOpenService.cancel();
     events.isBulkPackOpenRunning = () => bulkPackOpenService.isRunning();
     events.openPacks = async (packId, packName, count) => {
@@ -1048,6 +1050,7 @@ export function installStorePatches(deps) {
         new StorePackOpenTransactionService({
             adapter: storePackOpenAdapter
         });
+    registerGuardianServiceOwner("store", storePackOpenTransactionService);
     const storePackOpenLifecycleDeps = {
         call,
         events,

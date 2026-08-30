@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "guardian:ScoringRuleset",
+  "title": "ScoringRuleset",
+  "type": "object",
+  "required": ["id", "weights"],
+  "properties": {
+    "id": { "type": "string" },
+    "ruleset_version": { "type": "string" },
+    "taxonomy_version": { "type": "integer" },
+    "weights": { "type": "object", "additionalProperties": { "type": "number" } }
+  },
+  "additionalProperties": false
+}
