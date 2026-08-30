@@ -1,0 +1,110 @@
+{
+  "theme": "dark",
+  "typography": {
+    "headings": {
+      "fontFamily": "Outfit, sans-serif",
+      "strategy": "Clean, modern, avoid giant headings. Max text-3xl for main screens.",
+      "weights": ["Medium", "SemiBold"]
+    },
+    "body": {
+      "fontFamily": "Inter, sans-serif",
+      "strategy": "Highly legible, clean.",
+      "weights": ["Regular", "Medium"]
+    }
+  },
+  "colors": {
+    "background": "#09090b",
+    "surface": "#121214",
+    "surfaceElevated": "#18181b",
+    "primary": "#10b981",
+    "primaryHover": "#059669",
+    "mintHighlight": "#d1fae5",
+    "success": "#34d399",
+    "warning": "#fbbf24",
+    "danger": "#ef4444",
+    "textPrimary": "#f4f4f5",
+    "textSecondary": "#a1a1aa",
+    "border": "#27272a"
+  },
+  "visual_enhancers": {
+    "glassmorphism": "Use heavily on the floating Guardian pill and bottom sheet handles. backdrop-blur-xl bg-zinc-900/70 with a 1px border-zinc-800.",
+    "shadows": "Ambient diffuse shadows for floating elements, no harsh drop shadows.",
+    "radii": "Rounded-2xl for bottom sheets (Android bottom sheet native feel), rounded-full for pills and floating action buttons.",
+    "borders": "1px solid #27272a (zinc-800) for subtle separation. Avoid thick borders.",
+    "textures": "Subtle noise on main background if possible, otherwise clean dark flats."
+  },
+  "layouts": {
+    "app_container": "Mobile-first width constraint. max-w-md mx-auto h-screen relative overflow-hidden bg-zinc-950 text-zinc-50.",
+    "bottom_nav": "Fixed bottom navigation bar, glassmorphic or solid surface, 4 items: Home, EA FC, Protection, Profile.",
+    "ea_fc_mock_view": "Full screen beneath the Guardian UI. Use the soccer field background. Darkened with a scrim.",
+    "guardian_pill": "Floating absolute bottom-24 left-1/2 -translate-x-1/2 z-40. Glassmorphic pill.",
+    "bottom_sheet": "Framer motion AnimatePresence. Slides up from bottom. rounded-t-3xl. Max height 85vh, internal scroll."
+  },
+  "components": {
+    "StatusPill": "Small rounded-full badge showing connection/protection state. Green dot + text.",
+    "PlayerReviewCard": "Horizontal layout: Player image (left), Name + Rating (center), Icon explanation (right). bg-zinc-900 rounded-xl p-3.",
+    "PresetCard": "Selectable card for protection presets. When selected, add a subtle mint border or soft animated glow.",
+    "ExplanationSheet": "Contextual bottom sheet with an icon (Info/Shield/Warning), title, and human-readable text.",
+    "SubmitButton": "Full width, h-14, danger color or primary color depending on context. Press state scale 0.98."
+  },
+  "motion": {
+    "strategy": "Restrained, premium, calm. No bouncing.",
+    "bottomSheet": "y: '100%' to y: 0. transition: { type: 'spring', damping: 25, stiffness: 200 }",
+    "pillInteraction": "hover/press scale: 0.95. No continuous pulsing.",
+    "stagedLoading": "Fade in/out for steps: 'SBC detected' -> 'Analyzing club' -> 'Solution found'."
+  },
+  "media": {
+    "icons_library": "@phosphor-icons/react",
+    "icons_usage": "ShieldCheck (Protection), Info (Context), Warning (Risk), User (Profile), House (Home), SoccerBall (EA FC)",
+    "image_urls": {
+      "soccer_field_bg": {
+        "url": "https://images.unsplash.com/photo-1546608235-3310a2494cdf?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1NDh8MHwxfHNlYXJjaHwxfHxzb2NjZXIlMjBmaWVsZCUyMGdyYXNzJTIwdG9wJTIwdmlldyUyMGRhcmt8ZW58MHx8fHwxNzg4MTIxMzYxfDA&ixlib=rb-4.1.0&q=85",
+        "description": "Mocked underlying EA FC app scenery (dark soccer field top view).",
+        "category": "background"
+      },
+      "player_portrait_1": {
+        "url": "https://images.unsplash.com/photo-1614150011754-cd8b7c8dc0cc?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA0MTJ8MHwxfHNlYXJjaHwzfHxmb290YmFsbCUyMHNvY2NlciUyMHBsYXllciUyMHBvcnRyYWl0fGVufDB8fHx8MTc4ODEyMTM1NXww&ixlib=rb-4.1.0&q=85",
+        "description": "Mood player portrait for solution preview.",
+        "category": "player_mock"
+      },
+      "player_portrait_2": {
+        "url": "https://images.pexels.com/photos/5114503/pexels-photo-5114503.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+        "description": "Focused player portrait for solution preview.",
+        "category": "player_mock"
+      },
+      "abstract_texture": {
+        "url": "https://images.unsplash.com/photo-1710438399422-2fca27686bcd?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA1MDZ8MHwxfHNlYXJjaHwyfHxhYnN0cmFjdCUyMGRhcmslMjBqYWRlJTIwZ3JlZW4lMjBiYWNrZ3JvdW5kfGVufDB8fHx8MTc4ODEyMTM1NXww&ixlib=rb-4.1.0&q=85",
+        "description": "Subtle abstract dark jade wave texture for premium header cards (e.g. Protection Active card).",
+        "category": "texture"
+      }
+    }
+  },
+  "accessibility": {
+    "contrast": "Ensure soft off-white text (#f4f4f5) against #09090b passes APCA.",
+    "focus": "Focus rings should use primary #10b981 color.",
+    "touch_targets": "Minimum 48x48px for all interactive elements (buttons, pill, nav items).",
+    "screen_readers": "Include aria-labels for the floating pill and icon-only buttons."
+  },
+  "instructions_to_main_agent": [
+    "This is a mobile-web prototype. Restrict the main container to `max-w-md mx-auto h-[100dvh]` to simulate a phone screen.",
+    "Implement a Bottom Navigation bar with 4 tabs: Home, EA FC, Protection, Profile.",
+    "The 'EA FC' tab should display the mocked field background and a floating 'Guardian Pill' at the bottom. Clicking it opens the main flow Bottom Sheet.",
+    "Implement the Bottom Sheet using Framer Motion (slide up from bottom). Avoid Shadcn dialog for this, or heavily customize it to be a real bottom sheet.",
+    "Within the Bottom Sheet flow, mock a staged loading: 'Detecting SBC...' -> 'Scanning Club...' -> 'Solution Ready'.",
+    "The Solution screen should have a prominent 'Apply Squad' button. Show protected players clearly with the ShieldCheck icon.",
+    "The 'Submit' flow requires a destructive confirmation dialog (red accents, warning icons).",
+    "The 'Protection' tab should list presets (Relaxed, Recommended, Very Safe, Custom) using selectable cards.",
+    "Use Phosphor icons (@phosphor-icons/react).",
+    "DO NOT use generic centered web layouts. This must feel like a native Android app.",
+    "Every interactive element MUST include a data-testid attribute.",
+    "Follow the color palette strictly: deep graphite background, jade green accents, amber warnings. No excessive neon glows."
+  ],
+  "UNIVERSAL_GUIDELINES_FOR_MAIN_AGENT": [
+    "Prioritize using pre-existing components from src/components/ui when applicable.",
+    "Do not apply universal transitions (e.g., transition: all). Add specific transitions.",
+    "Do not center align the app container in global CSS.",
+    "Use sonner for toast notifications.",
+    "Every interaction needs micro-animations (hover, press).",
+    "Never use placeholder text for images; use the provided image URLs."
+  ]
+}

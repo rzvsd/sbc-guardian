@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  background: #050506;
+  color: #f4f4f5;
+  font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+::selection {
+  background: rgba(16, 185, 129, 0.35);
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.tap {
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+.tap:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+.dot-live {
+  animation: pulse-dot 2.4s ease-in-out infinite;
+}

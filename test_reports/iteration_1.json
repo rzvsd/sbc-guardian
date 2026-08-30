@@ -1,0 +1,24 @@
+{
+  "summary": "Comprehensive frontend regression of SBC Guardian mobile prototype at 390x844. Verified onboarding, Home, EA FC Guardian flow (detected → finding → solution → review → applied → submit-confirm → submitted), all info sheets, all 4 error/state scenarios (noSolution, clubChanged, connectionError, offline), Protection presets + toggles + advanced settings, and Profile toasts + sign-out. Backend health endpoint verified.",
+  "backend_issues": { "critical": [], "minor": [] },
+  "frontend_issues": {
+    "ui_bugs": [],
+    "integration_issues": [],
+    "design_issues": [
+      {"screen": "Sheet component (all bottom sheets)", "issues": ["Backdrop dismiss area is only the strip above the sheet (top ~100px on 390x844). No explicit close 'X' or drag-to-dismiss handle. Users may not realise they can tap outside — consider adding a close affordance."]}
+    ]
+  },
+  "test_report_links": [],
+  "action_items": [],
+  "critical_code_review_comments": [
+    "Sheet component (ui.jsx line 69-99): tapping the visible drag-handle at top of sheet does NOT close it — only clicks in the empty area above the sheet trigger onClose. Consider making the handle or a header button call onClose for better mobile UX.",
+    "GuardianContext scenario/toast/applied state is component-local and lost on page reload. This is fine for a prototype but should be noted."
+  ],
+  "updated_files": [],
+  "success_rate": { "backend": "100%", "frontend": "100%" },
+  "test_credentials": "none — pure mock UI",
+  "seed_data_creation": "none",
+  "retest_needed": false,
+  "main_agent_can_self_test": true,
+  "context_for_next_testing_agent": "All flows validated via Playwright at 390x844. Note that: (1) closing bottom sheets via backdrop must click near the top of the screen — use element.click(position={x:20,y:20}, force=True) on the *-backdrop testid; (2) advanced-settings-panel is initially below the fold — call scroll_into_view_if_needed() before clicking info-prefer-untradeables/duplicates; (3) scenario state resets on page.reload() because it lives in React state, not localStorage — set scenario AFTER reload; (4) Applied/submitted state is component-local in EaFc.jsx and also resets on reload. Full test walkthrough executed and passed: onboarding, apply, submit, activity persistence, all 4 scenarios, protection toggles, sign-out."
+}
