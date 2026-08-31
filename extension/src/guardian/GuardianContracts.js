@@ -33,3 +33,17 @@ export function requireTraditionalSolveResponse(value) {
   }
   return value;
 }
+
+/** @param {unknown} value @returns {any} */
+export function requireStreamlinedSolveResponse(value) {
+  if (!record(value) || !["SOLVED", "INFEASIBLE", "TIMEOUT", "INVALID"].includes(value.status)) {
+    throw new Error("GUARDIAN_INVALID_STREAMLINED_RESPONSE");
+  }
+  if (value.status === "SOLVED" && (!Array.isArray(value.selected) || !value.selected.length)) {
+    throw new Error("GUARDIAN_INVALID_STREAMLINED_RESPONSE");
+  }
+  if (value.edition !== "FC27" || typeof value.ruleset_version !== "string") {
+    throw new Error("GUARDIAN_INVALID_STREAMLINED_RESPONSE");
+  }
+  return value;
+}

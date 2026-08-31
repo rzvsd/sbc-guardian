@@ -1,4 +1,4 @@
-import { requireSnapshot, requireTraditionalSolveResponse } from "./GuardianContracts.js";
+import { requireSnapshot, requireTraditionalSolveResponse, requireStreamlinedSolveResponse } from "./GuardianContracts.js";
 
 export class GuardianApiError extends Error {
   /** @param {string} code @param {number} [status] */
@@ -56,6 +56,13 @@ export class GuardianApiClient {
   async solveTraditional(body) {
     return requireTraditionalSolveResponse(
       await this.request("/api/v2/solve/traditional", { method: "POST", body })
+    );
+  }
+
+  /** @param {unknown} body */
+  async solveStreamlined(body) {
+    return requireStreamlinedSolveResponse(
+      await this.request("/api/v2/solve/streamlined", { method: "POST", body })
     );
   }
 }
