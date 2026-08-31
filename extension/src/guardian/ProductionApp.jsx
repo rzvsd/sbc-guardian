@@ -27,6 +27,11 @@ export default function ProductionApp({ runtimeAdapter }) {
             Find solution
           </button>
         )}
+        {ready && state.phase === "SOLUTION_READY" && (
+          <button type="button" style={{ marginLeft: "8px" }} onClick={() => runtimeAdapter.applySolution()}>
+            Apply (not submit)
+          </button>
+        )}
       </div>
     </div>
   );

@@ -17,7 +17,8 @@ export class Fc26SolutionPresenter {
       decisionId: response.decision_id,
       snapshotHash: snapshot.snapshot_hash,
       players,
-      rating: response.rating_sum,
+      ratingSum: response.rating_sum,
+      teamRating: null,
       warnings: players.filter((/** @type {any} */ player) => byId.get(player.id).special).map((/** @type {any} */ player) => `${player.name}: special item`)
     };
   }

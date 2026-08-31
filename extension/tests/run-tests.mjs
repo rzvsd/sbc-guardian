@@ -58,6 +58,7 @@ import "./guardian-bundle.test.mjs";
 import "./guardian-collision.test.mjs";
 import "./guardian-payload-safety.test.mjs";
 import "./guardian-ui-adapter.test.mjs";
+import "./fc26-presenter.test.mjs";
 import "./guardian-facade.test.mjs";
 import { runGuardianProductionWiringTests } from "./guardian-production-wiring.test.mjs";
 import { runGuardianLifecycleTests } from "./guardian-lifecycle.test.mjs";
