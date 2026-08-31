@@ -19,6 +19,12 @@ class PlayerItem(BaseModel):
     locked: bool = False
     excluded: bool = False
     evolution_eligible: bool = False
+    favorite: bool = False
+    in_active_squad: bool = False
+    tradeable: bool = True
+    market_value_coins: int | None = None
+    valuation_source: str | None = None
+    valued_at: str | None = None
     points: int = 0
     scoring_category: str = ""
 

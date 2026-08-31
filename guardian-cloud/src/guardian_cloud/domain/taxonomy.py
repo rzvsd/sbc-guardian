@@ -52,6 +52,12 @@ def normalize_player(raw: dict) -> PlayerItem:
         locked=bool(raw.get("locked", False)),
         excluded=bool(raw.get("excluded", False)),
         evolution_eligible=bool(raw.get("evolution_eligible", False)),
+        favorite=bool(raw.get("favorite", False)),
+        in_active_squad=bool(raw.get("in_active_squad", False)),
+        tradeable=bool(raw.get("tradeable", True)),
+        market_value_coins=raw.get("market_value_coins"),
+        valuation_source=raw.get("valuation_source"),
+        valued_at=raw.get("valued_at"),
         points=int(raw.get("points", 0)),
         scoring_category=scoring_category,
     )
