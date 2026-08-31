@@ -9,7 +9,9 @@ const isGecko = process.argv.includes("--gecko");
 const manifestSource = isGecko ? "manifest.gecko.json" : "manifest.json";
 const manifest = JSON.parse(fs.readFileSync(path.join(root, manifestSource), "utf8"));
 const version = manifest.version;
-const distDir = path.join(root, "dist");
+const distDir = process.env.FSU_DIST_DIR
+  ? path.resolve(process.env.FSU_DIST_DIR)
+  : path.join(root, "dist");
 const stageDir = path.join(distDir, "stage");
 const zipName = isGecko
   ? `fsu-fut-enhancer-gecko-${version}.zip`

@@ -1,5 +1,6 @@
 import assert from "node:assert";
 import fs from "fs";
+import os from "os";
 import path from "path";
 import { fileURLToPath } from "url";
 import vm from "node:vm";
@@ -207,17 +208,23 @@ assert.ok(bundleCode.includes("PACK_OPEN_BULK"), "bundle: PACK_OPEN_BULK kind pr
 
 // ---- ZIP inspection ----
 const AdmZip = require("adm-zip");
-const distDir = path.join(root, "dist");
-for (const f of fs.readdirSync(distDir)) {
-  if (f.endsWith(".zip")) fs.unlinkSync(path.join(distDir, f));
+const distDir = fs.mkdtempSync(path.join(os.tmpdir(), "guardian-bundle-"));
+let zipUserscript;
+try {
+  require("child_process").execFileSync("node", ["scripts/package-extension.cjs"], {
+    cwd: root,
+    env: { ...process.env, FSU_DIST_DIR: distDir },
+    stdio: "inherit"
+  });
+  const zipName = fs.readdirSync(distDir).find((f) => f.endsWith(".zip"));
+  assert.ok(zipName, "distribution ZIP was produced");
+  const zip = new AdmZip(path.join(distDir, zipName));
+  const userscriptEntry = zip.getEntry("src/userscript.js");
+  assert.ok(userscriptEntry, "ZIP contains src/userscript.js");
+  zipUserscript = userscriptEntry.getData().toString("utf8");
+} finally {
+  fs.rmSync(distDir, { recursive: true, force: true });
 }
-require("child_process").execFileSync("node", ["scripts/package-extension.cjs"], { cwd: root, stdio: "inherit" });
-const zipName = fs.readdirSync(distDir).find((f) => f.endsWith(".zip"));
-assert.ok(zipName, "distribution ZIP was produced");
-const zip = new AdmZip(path.join(distDir, zipName));
-const userscriptEntry = zip.getEntry("src/userscript.js");
-assert.ok(userscriptEntry, "ZIP contains src/userscript.js");
-const zipUserscript = userscriptEntry.getData().toString("utf8");
 
 assert.ok(!zipUserscript.includes("registerMutations:"), "ZIP: no registerMutations public property in shipped userscript");
 assert.ok(zipUserscript.includes("requestGuarded:"), "ZIP: requestGuarded public property in shipped userscript");
