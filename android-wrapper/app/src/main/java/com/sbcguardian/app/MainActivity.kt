@@ -15,6 +15,7 @@ class MainActivity : ComponentActivity() {
     private lateinit var messageBridge: GeckoMessageBridge
     private lateinit var sessionStore: GuardianSessionStore
     private val extensionReady = mutableStateOf(false)
+    private val extensionError = mutableStateOf<String?>(null)
     private val linked = mutableStateOf(false)
     private val pairingCode = mutableStateOf("")
     private val pairingBusy = mutableStateOf(false)
@@ -52,8 +53,10 @@ class MainActivity : ComponentActivity() {
                 }
             },
             onError = { error ->
+                extensionError.value = error?.message ?: "Built-in extension installation failed"
+                extensionReady.value = true
                 sessionController.uiState.value = WrapperUiState.Error(
-                    error?.message ?: "Built-in extension installation failed"
+                    extensionError.value!!
                 )
             }
         )
@@ -62,6 +65,7 @@ class MainActivity : ComponentActivity() {
             val preview = pendingPreview.value
             when {
                 !extensionReady.value -> Text("Preparing SBC Guardian…")
+                extensionError.value != null -> Text("SBC Guardian unavailable: ${extensionError.value}")
                 !linked.value -> AccountLinkScreen(
                     code = pairingCode.value,
                     busy = pairingBusy.value,
