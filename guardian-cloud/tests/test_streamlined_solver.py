@@ -16,3 +16,16 @@ def test_fc27_exact_points_and_determinism():
     second = solve_streamlined(items, ruleset=rs)
     assert first.score == 4 + 6 + 3
     assert first.selected == second.selected
+
+
+def test_locked_items_are_never_selected():
+    items = [
+        PlayerItem(id="locked", rating=99, points=999, locked=True),
+        PlayerItem(id="safe", rating=80, points=1),
+    ]
+    result = solve_streamlined(
+        items,
+        target_count=1,
+        ruleset=ScoringRuleset(edition="FC27", ruleset_version="v1"),
+    )
+    assert result.selected == ["safe"]

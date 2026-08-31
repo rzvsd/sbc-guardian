@@ -52,7 +52,7 @@ def solve_traditional(case: dict[str, Any]) -> SolveResult:
 
     for i, it in enumerate(items):
         if it.locked:
-            model.add(x[i] == 1)
+            model.add(x[i] == 0)
         if it.excluded:
             model.add(x[i] == 0)
 

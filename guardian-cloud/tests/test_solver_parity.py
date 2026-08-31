@@ -23,7 +23,7 @@ def test_uniqueness_and_subset_of_input():
     assert set(res.selected).issubset(ids)
 
 
-def test_locked_included_excluded_absent():
+def test_locked_and_excluded_are_absent():
     case = {
         "request": {
             "segments": [
@@ -38,12 +38,12 @@ def test_locked_included_excluded_absent():
         ]
         + [
             {"id": f"F{i}", "rating": 82, "league": f"L{i}", "nation": f"N{i}", "club": f"C{i}"}
-            for i in range(3, 13)
+            for i in range(3, 14)
         ],
     }
     res = solve_traditional(case)
     assert res.status == "SOLVED"
-    assert "L1" in res.selected
+    assert "L1" not in res.selected
     assert "X1" not in res.selected
 
 

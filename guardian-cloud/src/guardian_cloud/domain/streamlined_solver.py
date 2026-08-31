@@ -22,7 +22,7 @@ def solve_streamlined(
     Streamlined format has lighter constraints: pick the highest-value items
     (by ruleset points, then rating, then id) up to target_count (or all)."""
     rs = ruleset or ScoringRuleset(ruleset_version="v1")
-    pool = [it for it in items if not it.excluded]
+    pool = [it for it in items if not it.excluded and not it.locked]
     ordered = sorted(pool, key=lambda it: (-it.points, -it.rating, it.id))
     if target_count is not None:
         ordered = ordered[:target_count]

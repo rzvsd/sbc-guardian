@@ -60,8 +60,8 @@ def _validate_selection(
         raise HTTPException(status_code=422, detail="solver returned item outside eligible snapshot")
     if players is not None and compiled is not None:
         selected_ids = set(selected)
-        if any(player.locked and player.id not in selected_ids for player in players):
-            raise HTTPException(status_code=422, detail="solver omitted a locked item")
+        if any(player.locked and player.id in selected_ids for player in players):
+            raise HTTPException(status_code=422, detail="solver selected a locked item")
         selected_items = [player for player in players if player.id in selected_ids]
         if not check_solution(selected_items, compiled):
             raise HTTPException(status_code=422, detail="solver returned a solution that fails requirements")
