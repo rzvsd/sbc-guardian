@@ -192,6 +192,16 @@ def create_solution(
     return sol
 
 
+def list_solutions(session: Session, account_id: str, limit: int = 10) -> list[Solution]:
+    stmt = (
+        select(Solution)
+        .where(Solution.account_id == account_id)
+        .order_by(Solution.created_at.desc(), Solution.id.desc())
+        .limit(limit)
+    )
+    return list(session.execute(stmt).scalars())
+
+
 def confirm_solution(session: Session, account_id: str, solution_id: str, decision_id: str) -> Solution:
     lock_account(session, account_id)
     sol = session.execute(
