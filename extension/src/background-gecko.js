@@ -87,7 +87,7 @@
           const pending = pendingConfirmations.get(message.requestId);
           if (!pending || typeof message.payload?.approved !== "boolean") return;
           clearTimeout(pending.timeout);
-          pendingConfirmations.delete(message.messageId);
+          pendingConfirmations.delete(message.requestId);
           pending.resolve(message.payload.approved);
           return;
         }
