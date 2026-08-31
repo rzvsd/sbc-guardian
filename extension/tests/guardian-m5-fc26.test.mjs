@@ -92,6 +92,20 @@ export async function runGuardianM5Fc26Tests() {
   await controller.apply();
   assert.deepEqual(states, ["READY", "SOLVING", "SOLVED", "APPLIED_NOT_SUBMITTED"]);
 
+  let releaseSolve;
+  const delayedStates = [];
+  const delayedController = new GuardianSbcController({
+    solveFacade: { solve: () => new Promise((resolve) => { releaseSolve = resolve; }) },
+    applyController,
+    render: (state) => delayedStates.push(state)
+  });
+  delayedController.attach({ id: "old" });
+  const pendingSolve = delayedController.solve();
+  delayedController.attach({ id: "new" });
+  releaseSolve({ status: "SOLVED", solutionId: "stale", players: [] });
+  await pendingSolve;
+  assert.equal(delayedStates.at(-1).phase, "READY", "late solve cannot overwrite a newer challenge");
+
   assert.throws(
     () => new Fc26RequirementAdapter().compile({ id: 1, segments: [] }),
     /GUARDIAN_MALFORMED_REQUIREMENTS/

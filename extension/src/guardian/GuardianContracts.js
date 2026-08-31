@@ -31,6 +31,22 @@ export function requireSnapshotForEdition(value, edition) {
   return value;
 }
 
+/** Raw FC27 snapshots are inputs for server-side taxonomy review. They must
+ * be structurally valid but can never claim verification or authoritative
+ * scoring categories. */
+/** @param {unknown} value @param {"FC26"|"FC27"} edition @returns {any} */
+export function requireRawSnapshotForEdition(value, edition) {
+  if (!record(value) || value.edition !== edition || !Array.isArray(value.items) || !value.items.length || typeof value.snapshot_hash !== "string") {
+    throw new Error(`GUARDIAN_INVALID_${edition}_SNAPSHOT`);
+  }
+  const ids = value.items.map((item) => String(item && item.id));
+  if (ids.some((id) => !id || id === "undefined") || new Set(ids).size !== ids.length) throw new Error(`GUARDIAN_INVALID_${edition}_SNAPSHOT`);
+  if (edition !== "FC27" || value.schema_version !== 2 || value.taxonomy_verified === true) {
+    throw new Error("GUARDIAN_INVALID_RAW_FC27_SNAPSHOT");
+  }
+  return value;
+}
+
 /** @param {unknown} value @returns {any} */
 export function requireTraditionalSolveResponse(value) {
   if (!record(value) || !["SOLVED", "INFEASIBLE", "TIMEOUT", "INVALID"].includes(value.status)) {
@@ -57,6 +73,14 @@ export function requireStreamlinedSolveResponse(value) {
   }
   if (value.edition !== "FC27" || typeof value.ruleset_version !== "string") {
     throw new Error("GUARDIAN_INVALID_STREAMLINED_RESPONSE");
+  }
+  return value;
+}
+
+/** @param {unknown} value @param {"FC26"|"FC27"} edition @returns {any} */
+export function requireActiveScoringRuleset(value, edition) {
+  if (!record(value) || value.edition !== edition || typeof value.ruleset_version !== "string" || !value.ruleset_version || value.active !== true || (edition === "FC27" && value.taxonomy_version !== 2)) {
+    throw new Error(`GUARDIAN_INVALID_${edition}_RULESET`);
   }
   return value;
 }

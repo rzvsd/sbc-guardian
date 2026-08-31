@@ -8,6 +8,7 @@ import { MarketActionService } from "../src/fsu/domain/MarketActionService.js";
 import { SbcSubmitTransactionService } from "../src/fsu/domain/SbcSubmitTransactionService.js";
 import { StorePackOpenTransactionService } from "../src/fsu/domain/StorePackOpenTransactionService.js";
 import { BulkPackOpenService } from "../src/fsu/domain/BulkPackOpenService.js";
+import { createFsuProductBindings } from "../src/guardian/FsuSnapshotAdapter.js";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export async function runGuardianProductionWiringTests() {
@@ -77,6 +78,36 @@ assert.deepEqual(calls, [
   ["store", 7],
   ["bulk", 14, 2]
 ]);
+
+let submitArguments;
+let submitObserver;
+const submitController = { _set: { id: 99 } };
+const submitCtx = {
+  cntlr: { current: () => submitController },
+  services: {
+    SBC: {
+      submitChallenge(...args) {
+        submitArguments = args;
+        return {
+          observe(_context, callback) { submitObserver = callback; return this; },
+          unobserve() {}
+        };
+      }
+    },
+    UserSettings: { getSBCValidationSkip: () => false },
+    Chemistry: { isFeatureEnabled: () => true }
+  },
+  repositories: { Item: { club: { items: new Map() } } }
+};
+submitController._challenge = { id: 15, setId: 99 };
+const bindings = createFsuProductBindings(submitCtx);
+const submitPromise = bindings.submitCurrentChallenge();
+assert.equal(submitArguments.length, 4, "submit uses the EA service's complete signature");
+assert.equal(submitArguments[0], submitController._challenge);
+assert.equal(submitArguments[1], submitController._set);
+assert.equal(submitArguments[3], true);
+submitObserver(submitController, { success: true });
+assert.deepEqual(await submitPromise, { success: true, response: { success: true } });
 
 setGuardian(null);
 console.log("guardian-production-wiring: all assertions passed");

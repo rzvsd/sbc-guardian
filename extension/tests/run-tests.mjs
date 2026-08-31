@@ -583,6 +583,8 @@ await runSbcSaveTransactionTests();
 setLegacyFallbackForTests(true);
 try {
 await runSbcSubmitTransactionTests();
+await import("./fc27-solve-facade.test.mjs");
+await import("./guardian-product-router.test.mjs");
 runRemoteConfigServiceTests();
 runRemoteConfigResultsTests();
 runPackageSmokeTests();

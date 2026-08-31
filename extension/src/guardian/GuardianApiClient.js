@@ -1,4 +1,4 @@
-import { requireSnapshotForEdition, requireTraditionalSolveResponse, requireStreamlinedSolveResponse } from "./GuardianContracts.js";
+import { requireActiveScoringRuleset, requireRawSnapshotForEdition, requireSnapshotForEdition, requireTraditionalSolveResponse, requireStreamlinedSolveResponse } from "./GuardianContracts.js";
 
 export class GuardianApiError extends Error {
   /** @param {string} code @param {number} [status] */
@@ -53,6 +53,13 @@ export class GuardianApiClient {
     return this.request("/api/v2/snapshots", { method: "POST", body: requireSnapshotForEdition(value, value?.edition === "FC27" ? "FC27" : "FC26") });
   }
 
+  /** Upload an unverified FC27 capture for admin taxonomy review. */
+  /** @param {unknown} snapshot */
+  async uploadRawSnapshot(snapshot) {
+    const value = /** @type {any} */ (snapshot);
+    return this.request("/api/v2/snapshots", { method: "POST", body: requireRawSnapshotForEdition(value, "FC27") });
+  }
+
   /** @param {unknown} body */
   async solveTraditional(body) {
     return requireTraditionalSolveResponse(
@@ -69,6 +76,24 @@ export class GuardianApiClient {
 
   async getPolicy() { return this.request("/api/v2/guardian/policy"); }
   async getLatestSnapshot() { return this.request("/api/v2/snapshots/latest"); }
+  async getLatestVerifiedSnapshot(edition = "FC27") {
+    return this.request(`/api/v2/snapshots/latest?edition=${encodeURIComponent(edition)}&taxonomy_verified=true`);
+  }
+  /** @param {"FC26"|"FC27"} [edition] */
+  async getActiveScoringRuleset(edition = "FC27") {
+    return requireActiveScoringRuleset(
+      await this.request(`/api/v2/scoring-rulesets/active?edition=${encodeURIComponent(edition)}`),
+      edition
+    );
+  }
+  /** @param {string} snapshotId */
+  async getSnapshotItems(snapshotId) {
+    const value = await this.request(`/api/v2/snapshots/${encodeURIComponent(snapshotId)}/items`);
+    if (!Array.isArray(value.items) || typeof value.snapshot_id !== "string" || typeof value.snapshot_hash !== "string") {
+      throw new GuardianApiError("GUARDIAN_INVALID_SNAPSHOT_ITEMS");
+    }
+    return value;
+  }
   /** @param {number} [limit] */
   async listSolutions(limit = 10) {
     const bounded = Math.max(1, Math.min(50, Number(limit) || 10));

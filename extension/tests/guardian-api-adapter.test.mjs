@@ -15,4 +15,9 @@ assert.deepEqual(await adapter.loadAccount(), [{ id: "a" }, { access_level: "FUL
 await adapter.updatePolicy({ version: 2 });
 await adapter.signOut();
 assert.deepEqual(calls, ["policy", "account", "access", ["put", { version: 2 }], "logout"]);
+const resumedAdapter = new GuardianUiAdapter({
+  reconciler: { pendingConfirmation: () => ({ solutionId: "s1", decisionId: "d1" }) }
+});
+assert.equal(resumedAdapter.getState().phase, "EA_SUBMITTED_CONFIRM_PENDING");
+assert.equal(resumedAdapter.getState().submitPending.solutionId, "s1");
 console.log("guardian-api-adapter: all assertions passed");

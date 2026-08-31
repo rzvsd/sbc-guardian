@@ -61,12 +61,14 @@ def _validate_selection(
         raise HTTPException(status_code=422, detail="solver returned invalid item selection")
     if not set(selected).issubset(available_ids) or set(selected) & consumed:
         raise HTTPException(status_code=422, detail="solver returned item outside eligible snapshot")
-    if players is not None and compiled is not None:
+    if players is not None:
         selected_ids = set(selected)
-        if any(player.locked and player.id in selected_ids for player in players):
-            raise HTTPException(status_code=422, detail="solver selected a locked item")
         selected_items = [player for player in players if player.id in selected_ids]
-        if not check_solution(selected_items, compiled):
+        if any(player.locked for player in selected_items):
+            raise HTTPException(status_code=422, detail="solver selected a locked item")
+        if any(player.excluded for player in selected_items):
+            raise HTTPException(status_code=422, detail="solver selected an excluded item")
+        if compiled is not None and not check_solution(selected_items, compiled):
             raise HTTPException(status_code=422, detail="solver returned a solution that fails requirements")
 
 
@@ -215,7 +217,7 @@ def solve_streamlined_endpoint(
     )
     selected = suggestion.selected
     if selected:
-        _validate_selection(selected, {player.id for player in players}, consumed)
+        _validate_selection(selected, {player.id for player in players}, consumed, players=players, compiled=None)
 
     # Revalidate the ruleset is still active before persisting (race guard).
     current = repo.active_ruleset(session, "FC27")

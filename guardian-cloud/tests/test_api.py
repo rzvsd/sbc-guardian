@@ -41,6 +41,46 @@ def test_snapshots_flow(client, auth_headers, session):
     assert client.get(f"/api/v2/snapshots/{sid}", headers={"X-Guardian-Account": "x"}).status_code == 401
 
 
+def test_fc27_raw_snapshot_is_reviewable_but_not_verified(client, auth_headers):
+    headers, _ = auth_headers
+    response = client.post(
+        "/api/v2/snapshots",
+        headers=headers,
+        json={
+            "snapshot_hash": "raw-fc27",
+            "edition": "FC27",
+            "schema_version": 2,
+            "items": [{"id": "p1", "rating": 80}],
+        },
+    )
+    assert response.status_code == 200
+    latest = client.get(
+        "/api/v2/snapshots/latest?edition=FC27&taxonomy_verified=false",
+        headers=headers,
+    )
+    assert latest.status_code == 200
+    assert latest.json()["taxonomy_verified"] is False
+
+
+def test_snapshot_items_endpoint_is_owned(client, auth_headers, other_auth_headers, session):
+    headers, account_id = auth_headers
+    other_headers, _ = other_auth_headers
+    snap = repo.save_snapshot(
+        session,
+        account_id,
+        snapshot_hash="items",
+        items=[{"id": "p1", "rating": 80}],
+        edition="FC27",
+        schema_version=2,
+        taxonomy_verified=True,
+    )
+    session.commit()
+    own = client.get(f"/api/v2/snapshots/{snap.id}/items", headers=headers)
+    assert own.status_code == 200
+    assert own.json()["items"][0]["id"] == "p1"
+    assert client.get(f"/api/v2/snapshots/{snap.id}/items", headers=other_headers).status_code == 404
+
+
 def test_policy_flow(client, auth_headers):
     headers, _ = auth_headers
     assert client.get("/api/v2/guardian/policy", headers=headers).status_code == 200
@@ -129,6 +169,40 @@ def test_solve_streamlined_endpoint(client, auth_headers, session):
     assert selected
     server_points = {str(it["id"]): int(it.get("points", 0)) for it in data["items"]}
     assert r.json()["score"] == sum(server_points[i] for i in selected)
+
+
+def test_streamlined_rejects_locked_selection_even_if_solver_returns_it(
+    client, auth_headers, session, monkeypatch
+):
+    from guardian_cloud.api import solve as solve_api
+    from guardian_cloud.domain.streamlined_solver import StreamlinedSuggestion
+
+    headers, account_id = auth_headers
+    rs, data = _seed_fc27_ruleset(session)
+    locked_id = str(data["items"][0]["id"])
+    items = [{**data["items"][0], "locked": True}, *data["items"][1:]]
+    snap = repo.save_snapshot(
+        session,
+        account_id,
+        snapshot_hash="locked-streamlined",
+        items=items,
+        edition="FC27",
+        schema_version=2,
+        taxonomy_verified=True,
+    )
+    session.commit()
+    monkeypatch.setattr(
+        solve_api,
+        "solve_streamlined",
+        lambda *args, **kwargs: StreamlinedSuggestion(status="SOLVED", selected=[locked_id], score=1),
+    )
+    response = client.post(
+        "/api/v2/solve/streamlined",
+        headers=headers,
+        json={"snapshot_id": snap.id, "ruleset_version": rs.ruleset_version},
+    )
+    assert response.status_code == 422
+    assert "locked" in response.json()["detail"]
 
 
 def test_streamlined_try_another_uses_no_good_and_dismisses_previous(

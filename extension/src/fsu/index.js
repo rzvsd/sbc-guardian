@@ -8,6 +8,7 @@ import {
   installGuardianFc27Product,
   mountGuardian
 } from "../guardian/index.js";
+import { GuardianProductRouter } from "../guardian/GuardianProductRouter.js";
 
 class FsuUserscriptApp {
   constructor(windowRef, lodashRef) {
@@ -34,17 +35,22 @@ class FsuUserscriptApp {
       const fsuCtx = futweb();
       const guardian = getGuardian();
       if (guardian) {
-        const challengeEdition = String(fsuCtx?.cntlr?.current?.()?._challenge?.edition || "").toUpperCase();
-        const install = challengeEdition === "FC27" ? installGuardianFc27Product : installGuardianFc26Product;
-        product = install({
-          document: this.windowRef.document,
-          ctx: fsuCtx,
-          guardian,
-          apiTransport: this.windowRef.__guardianApiRequest,
-          messages: getBundledGuardianMessages(this.windowRef.navigator?.language || "en")
-        });
-        mountReactGuardianOverlay({ document: this.windowRef.document, adapter: product.uiAdapter });
-      }
+      const installConfig = {
+        document: this.windowRef.document,
+        ctx: fsuCtx,
+        guardian,
+        apiTransport: this.windowRef.__guardianApiRequest,
+        messages: getBundledGuardianMessages(this.windowRef.navigator?.language || "en")
+      };
+      const fc26 = installGuardianFc26Product(installConfig);
+      const fc27 = installGuardianFc27Product(installConfig);
+      product = new GuardianProductRouter({
+        fc26,
+        fc27,
+        currentChallenge: () => fsuCtx?.cntlr?.current?.()?._challenge || null
+      });
+      mountReactGuardianOverlay({ document: this.windowRef.document, adapter: product });
+    }
     }
   }
 

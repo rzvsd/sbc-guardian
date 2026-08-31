@@ -16,6 +16,8 @@ export class GuardianUiAdapter {
     this.refreshClub = refreshClub;
     this.state = { phase: "BOOTING" };
     this.listeners = new Set();
+    const pending = this.reconciler?.pendingConfirmation?.();
+    if (pending) this.state = { phase: "EA_SUBMITTED_CONFIRM_PENDING", submitPending: pending };
   }
 
   /** @param {(state:any)=>void} listener */
@@ -40,7 +42,34 @@ export class GuardianUiAdapter {
   findSolution() { return this.controller?.solve(); }
   applySolution() { return this.controller?.apply(); }
   tryAlternative() { return this.controller?.tryAlternative ? this.controller.tryAlternative() : Promise.reject(new Error("ALTERNATIVE_NOT_AVAILABLE")); }
-  requestSubmit() { return this.reconciler ? this.reconciler.submit(/** @type {any} */ (this.state).solution) : Promise.reject(new Error("SUBMIT_REQUIRES_CONFIRMATION")); }
+  async requestSubmit() {
+    if (!this.reconciler) throw new Error("SUBMIT_REQUIRES_CONFIRMATION");
+    const solution = /** @type {any} */ (this.state).solution;
+    this.publish({ ...this.state, phase: "SUBMIT_CONFIRMATION" });
+    this.publish({ ...this.state, phase: "SUBMITTING_EA" });
+    try {
+      const result = await this.reconciler.submit(solution);
+      this.publish({ ...this.state, phase: "SUBMITTED", submitResult: result });
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const phase = message === "BACKEND_CONFIRM_PENDING" ? "EA_SUBMITTED_CONFIRM_PENDING" : "APPLIED_NOT_SUBMITTED";
+      this.publish({ ...this.state, phase, error: message });
+      throw error;
+    }
+  }
+  async resumeSubmitConfirmation() {
+    if (!this.reconciler?.resumePendingConfirmation) throw new Error("NO_BACKEND_CONFIRMATION_PENDING");
+    try {
+      const result = await this.reconciler.resumePendingConfirmation();
+      this.publish({ ...this.state, phase: "SUBMITTED", submitResult: result, submitPending: null });
+      return result;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.publish({ ...this.state, phase: "EA_SUBMITTED_CONFIRM_PENDING", error: message });
+      throw error;
+    }
+  }
   discardSolution() { this.publish({ ...this.state, phase: "EA_READY", solution: null }); }
   async loadPolicy() {
     if (!this.api) return Promise.reject(new Error("POLICY_NOT_AVAILABLE"));

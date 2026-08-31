@@ -88,13 +88,23 @@ def save_snapshot(
     return snap
 
 
-def latest_snapshot(session: Session, account_id: str) -> ClubSnapshot | None:
+def latest_snapshot(
+    session: Session,
+    account_id: str,
+    *,
+    edition: str | None = None,
+    taxonomy_verified: bool | None = None,
+) -> ClubSnapshot | None:
     stmt = (
         select(ClubSnapshot)
         .where(ClubSnapshot.account_id == account_id)
         .order_by(ClubSnapshot.created_at.desc(), ClubSnapshot.id.desc())
         .limit(1)
     )
+    if edition is not None:
+        stmt = stmt.where(ClubSnapshot.edition == edition)
+    if taxonomy_verified is not None:
+        stmt = stmt.where(ClubSnapshot.taxonomy_verified == taxonomy_verified)
     return session.execute(stmt).scalar_one_or_none()
 
 

@@ -26,21 +26,29 @@ export class FsuSnapshotAdapter {
     if (!result || result.success !== true || !Array.isArray(result.items)) {
       throw new Error("EA_CAPABILITY_UNAVAILABLE:club.snapshot");
     }
-    const items = result.items.map((/** @type {any} */ item) => ({
-      id: String(item.id),
-      name: String(item.name || "Unknown player"),
-      rating: Number(item.rating),
-      league: String(item.league || ""),
-      nation: String(item.nation || ""),
-      club: String(item.club || ""),
-      rarity: String(item.rarity || ""),
-      locked: item.locked === true,
-      duplicate: item.duplicate === true,
-      tradeable: item.tradeable === true,
-      special: item.special === true,
-      evolution_eligible: item.evolutionEligible === true,
-      scoring_category: String(item.scoring_category || item.scoringCategory || "").toUpperCase()
-    }));
+    const items = result.items.map((/** @type {any} */ item) => {
+      const rawValue = item.marketValueCoins ?? item.market_value_coins;
+      return {
+        id: String(item.id),
+        name: String(item.name || "Unknown player"),
+        rating: Number(item.rating),
+        league: String(item.league || ""),
+        nation: String(item.nation || ""),
+        club: String(item.club || ""),
+        rarity: String(item.rarity || ""),
+        locked: item.locked === true,
+        duplicate: item.duplicate === true,
+        tradeable: item.tradeable === true,
+        special: item.special === true,
+        evolution_eligible: item.evolutionEligible === true,
+        favorite: item.favorite === true,
+        in_active_squad: item.inActiveSquad === true || item.in_active_squad === true,
+        market_value_coins: rawValue != null && rawValue !== "" && Number.isFinite(Number(rawValue)) ? Number(rawValue) : null,
+        valuation_source: item.valuationSource ?? item.valuation_source ?? null,
+        valued_at: item.valuedAt ?? item.valued_at ?? null,
+        scoring_category: String(item.scoring_category || item.scoringCategory || "").toUpperCase()
+      };
+    });
     if (!items.length || items.some((/** @type {any} */ item) => !item.id || !Number.isInteger(item.rating))) {
       throw new Error("GUARDIAN_PARTIAL_SNAPSHOT");
     }
@@ -68,7 +76,12 @@ export function createFsuProductBindings(ctx) {
     duplicate: item.duplicate === true,
     tradeable: item.untradeable !== true,
     special: item.isSpecial === true || Number(item.rareflag) > 1,
-    evolutionEligible: item.isEvolutionEligible === true
+    evolutionEligible: item.isEvolutionEligible === true,
+    favorite: item.favorite === true,
+    inActiveSquad: item.inActiveSquad === true || item.in_active_squad === true,
+    marketValueCoins: item.marketValueCoins ?? item.market_value_coins ?? null,
+    valuationSource: item.valuationSource ?? item.valuation_source ?? null,
+    valuedAt: item.valuedAt ?? item.valued_at ?? null
   });
   const currentChallenge = () => {
     const controller = ctx?.cntlr?.current?.();
@@ -93,6 +106,28 @@ export function createFsuProductBindings(ctx) {
       const selected = itemIds.map((id) => byId.get(String(id)));
       if (selected.some((item) => !item)) throw new Error("GUARDIAN_STALE_SNAPSHOT");
       return ctx.events.playerListFillSquad(challenge, selected, 2);
+    },
+    submitCurrentChallenge: async () => {
+      const challenge = currentChallenge();
+      const controller = ctx?.cntlr?.current?.();
+      const services = ctx?.services;
+      const submit = services?.SBC?.submitChallenge;
+      const setEntity = controller?._set || (challenge && services?.SBC?.repository?.getSetById?.(challenge.setId));
+      if (!challenge || !controller || typeof submit !== "function" || !setEntity) {
+        throw new Error("EA_CAPABILITY_UNAVAILABLE:sbc.submit");
+      }
+      const skipValidation = services?.UserSettings?.getSBCValidationSkip?.() === true;
+      const chemistryEnabled = services?.Chemistry?.isFeatureEnabled?.() === true;
+      const observable = submit.call(services.SBC, challenge, setEntity, skipValidation, chemistryEnabled);
+      if (!observable || typeof observable.observe !== "function") {
+        throw new Error("GUARDIAN_INVALID_EA_SUBMIT_RESPONSE");
+      }
+      return new Promise((resolve) => {
+        observable.observe(controller, (/** @type {any} */ observer, /** @type {any} */ response) => {
+          observer?.unobserve?.(controller);
+          resolve(response?.success === true ? { success: true, response } : { success: false, response });
+        });
+      });
     }
   };
 }

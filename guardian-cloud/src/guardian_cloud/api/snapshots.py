@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 
@@ -37,8 +37,6 @@ def post_snapshot(
         if player.id in seen:
             raise HTTPException(status_code=400, detail="duplicate snapshot item id")
         seen.add(player.id)
-        if body.edition == "FC27" and not player.scoring_category:
-            raise HTTPException(status_code=400, detail="FC27 item taxonomy is unresolved")
         normalized.append(player.model_copy(update={"points": 0}).model_dump())
     if body.player_count not in (0, len(normalized)):
         raise HTTPException(status_code=400, detail="snapshot player count mismatch")
@@ -57,9 +55,17 @@ def post_snapshot(
 
 @router.get("/api/v2/snapshots/latest")
 def get_latest(
-    account_id: str = Depends(require_product_access), session: Session = Depends(get_session)
+    edition: str | None = Query(default=None, pattern="^FC(26|27)$"),
+    taxonomy_verified: bool | None = Query(default=None),
+    account_id: str = Depends(require_product_access),
+    session: Session = Depends(get_session),
 ) -> dict:
-    snap = repo.latest_snapshot(session, account_id)
+    snap = repo.latest_snapshot(
+        session,
+        account_id,
+        edition=edition,
+        taxonomy_verified=taxonomy_verified,
+    )
     if snap is None:
         raise HTTPException(status_code=404, detail="no snapshot")
     return {
@@ -70,6 +76,21 @@ def get_latest(
         "schema_version": snap.schema_version,
         "taxonomy_verified": snap.taxonomy_verified,
     }
+
+
+@router.get("/api/v2/snapshots/{snapshot_id}/items")
+def get_items(
+    snapshot_id: str,
+    account_id: str = Depends(require_product_access),
+    session: Session = Depends(get_session),
+) -> dict:
+    """Return the immutable inventory for solve provenance checks.
+
+    This is an owned snapshot endpoint, not a history endpoint; foreign and
+    missing IDs are handled identically by the repository ownership boundary.
+    """
+    snap = repo.get_snapshot(session, account_id, snapshot_id)
+    return {"snapshot_id": snap.id, "snapshot_hash": snap.snapshot_hash, "items": repo.get_snapshot_items(session, account_id, snap.id)}
 
 
 @router.get("/api/v2/snapshots/{snapshot_id}")

@@ -46379,7 +46379,7 @@
   }
   function Home({ state, adapter, run }) {
     const challenge = state.challenge;
-    return /* @__PURE__ */ import_react.default.createElement("div", { className: "flex h-full flex-col gap-4 overflow-y-auto no-scrollbar px-5 pb-6 pt-5" }, /* @__PURE__ */ import_react.default.createElement("header", { className: "flex items-center justify-between" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-[0.16em] text-zinc-500" }, "Guardian"), /* @__PURE__ */ import_react.default.createElement("h1", { className: "font-display text-2xl font-semibold tracking-tight text-zinc-100" }, "SBC Guardian")), /* @__PURE__ */ import_react.default.createElement(Status, { phase: state.phase })), state.error && /* @__PURE__ */ import_react.default.createElement(Card, { className: "border-rose-400/30 bg-rose-950/20" }, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-sm text-rose-200" }, state.error)), /* @__PURE__ */ import_react.default.createElement(Card, null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-zinc-500" }, "Current context"), challenge ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("h2", { className: "mt-2 font-display text-xl font-semibold text-zinc-100" }, challenge.name || "SBC challenge"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-1 text-sm text-zinc-400" }, challenge.edition || "EA FC", " · ", challenge.squad_size || "—", " players")) : /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-sm text-zinc-400" }, "Open an SBC in EA FC to let Guardian read the real challenge."), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-4 flex flex-wrap gap-2" }, /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("openEa"), testId: "production-open-ea" }, "Open EA FC"), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("refreshClub"), testId: "production-refresh-club" }, "Refresh club"), state.phase === "SBC_DETECTED" && /* @__PURE__ */ import_react.default.createElement(Button, { onClick: () => run("findSolution"), testId: "production-find-solution" }, "Find solution"))), state.solution && /* @__PURE__ */ import_react.default.createElement(SolutionCard, { solution: state.solution, state, adapter, run }), /* @__PURE__ */ import_react.default.createElement(Card, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-zinc-500" }, "Recent activity"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-1 text-sm text-zinc-400" }, "Server-backed history only")), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("loadHome"), testId: "production-refresh-home" }, "Refresh")), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-3 divide-y divide-brd" }, (state.activity || []).slice(0, 5).map((entry) => /* @__PURE__ */ import_react.default.createElement("div", { key: entry.id || `${entry.created_at}-${entry.name}`, className: "flex justify-between py-3 text-sm" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "text-zinc-300" }, entry.name || entry.challenge_name || "Solution"), /* @__PURE__ */ import_react.default.createElement("span", { className: "text-zinc-500" }, entry.status || entry.phase || "—"))), !state.activity?.length && /* @__PURE__ */ import_react.default.createElement("p", { className: "py-3 text-sm text-zinc-500" }, "No activity returned yet."))));
+    return /* @__PURE__ */ import_react.default.createElement("div", { className: "flex h-full flex-col gap-4 overflow-y-auto no-scrollbar px-5 pb-6 pt-5" }, /* @__PURE__ */ import_react.default.createElement("header", { className: "flex items-center justify-between" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-[0.16em] text-zinc-500" }, "Guardian"), /* @__PURE__ */ import_react.default.createElement("h1", { className: "font-display text-2xl font-semibold tracking-tight text-zinc-100" }, "SBC Guardian")), /* @__PURE__ */ import_react.default.createElement(Status, { phase: state.phase })), state.error && /* @__PURE__ */ import_react.default.createElement(Card, { className: "border-rose-400/30 bg-rose-950/20" }, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-sm text-rose-200" }, state.error)), state.phase === "EA_SUBMITTED_CONFIRM_PENDING" && /* @__PURE__ */ import_react.default.createElement(Card, { className: "border-amber-300/30 bg-amber-950/20" }, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-sm text-amber-100" }, "EA was submitted once. Guardian confirmation is still pending."), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("resumeSubmitConfirmation"), testId: "production-resume-confirm" }, "Retry Guardian confirmation")), /* @__PURE__ */ import_react.default.createElement(Card, null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-zinc-500" }, "Current context"), challenge ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("h2", { className: "mt-2 font-display text-xl font-semibold text-zinc-100" }, challenge.name || "SBC challenge"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-1 text-sm text-zinc-400" }, challenge.edition || "EA FC", " · ", challenge.squad_size || "—", " players")) : /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-sm text-zinc-400" }, "Open an SBC in EA FC to let Guardian read the real challenge."), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-4 flex flex-wrap gap-2" }, /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("openEa"), testId: "production-open-ea" }, "Open EA FC"), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("refreshClub"), testId: "production-refresh-club" }, "Refresh club"), state.phase === "SBC_DETECTED" && /* @__PURE__ */ import_react.default.createElement(Button, { onClick: () => run("findSolution"), testId: "production-find-solution" }, "Find solution"))), state.solution && /* @__PURE__ */ import_react.default.createElement(SolutionCard, { solution: state.solution, state, adapter, run }), /* @__PURE__ */ import_react.default.createElement(Card, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-zinc-500" }, "Recent activity"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-1 text-sm text-zinc-400" }, "Server-backed history only")), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("loadHome"), testId: "production-refresh-home" }, "Refresh")), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-3 divide-y divide-brd" }, (state.activity || []).slice(0, 5).map((entry) => /* @__PURE__ */ import_react.default.createElement("div", { key: entry.id || `${entry.created_at}-${entry.name}`, className: "flex justify-between py-3 text-sm" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "text-zinc-300" }, entry.name || entry.challenge_name || "Solution"), /* @__PURE__ */ import_react.default.createElement("span", { className: "text-zinc-500" }, entry.status || entry.phase || "—"))), !state.activity?.length && /* @__PURE__ */ import_react.default.createElement("p", { className: "py-3 text-sm text-zinc-500" }, "No activity returned yet."))));
   }
   function EaFc({ state, run }) {
     return /* @__PURE__ */ import_react.default.createElement("div", { className: "flex h-full flex-col gap-4 overflow-y-auto no-scrollbar px-5 pb-6 pt-5" }, /* @__PURE__ */ import_react.default.createElement(Card, { className: "border-jade/20 bg-[#08130e]" }, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-jade" }, "EA FC underneath"), /* @__PURE__ */ import_react.default.createElement("h1", { className: "mt-2 font-display text-2xl font-semibold text-zinc-100" }, "Your EA page stays visible"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-sm leading-relaxed text-zinc-400" }, "Guardian is an overlay. It does not replace the EA FC interface or submit anything by itself."), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-4 flex gap-2" }, /* @__PURE__ */ import_react.default.createElement(Button, { onClick: () => run("openEa"), testId: "production-ea-open" }, "Open EA FC"), state.phase === "SBC_DETECTED" && /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("findSolution"), testId: "production-ea-find" }, "Find solution"))), state.challenge && /* @__PURE__ */ import_react.default.createElement(Card, null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs uppercase tracking-wider text-zinc-500" }, "Detected challenge"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-lg font-semibold text-zinc-100" }, state.challenge.name || "SBC"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-1 text-sm text-zinc-400" }, state.challenge.edition || "EA FC")));
@@ -46421,7 +46421,7 @@
   }
 
   // guardian-css:guardian-ui-css
-  var guardian_ui_css_default = "*, ::before, ::after {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n::backdrop {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}/*\n! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com\n*//*\n1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)\n2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)\n*/\n\n*,\n::before,\n::after {\n  box-sizing: border-box; /* 1 */\n  border-width: 0; /* 2 */\n  border-style: solid; /* 2 */\n  border-color: #e5e7eb; /* 2 */\n}\n\n::before,\n::after {\n  --tw-content: '';\n}\n\n/*\n1. Use a consistent sensible line-height in all browsers.\n2. Prevent adjustments of font size after orientation changes in iOS.\n3. Use a more readable tab size.\n4. Use the user's configured `sans` font-family by default.\n5. Use the user's configured `sans` font-feature-settings by default.\n6. Use the user's configured `sans` font-variation-settings by default.\n7. Disable tap highlights on iOS\n*/\n\nhtml,\n:host {\n  line-height: 1.5; /* 1 */\n  -webkit-text-size-adjust: 100%; /* 2 */\n  -moz-tab-size: 4; /* 3 */\n  -o-tab-size: 4;\n     tab-size: 4; /* 3 */\n  font-family: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"; /* 4 */\n  font-feature-settings: normal; /* 5 */\n  font-variation-settings: normal; /* 6 */\n  -webkit-tap-highlight-color: transparent; /* 7 */\n}\n\n/*\n1. Remove the margin in all browsers.\n2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.\n*/\n\nbody {\n  margin: 0; /* 1 */\n  line-height: inherit; /* 2 */\n}\n\n/*\n1. Add the correct height in Firefox.\n2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)\n3. Ensure horizontal rules are visible by default.\n*/\n\nhr {\n  height: 0; /* 1 */\n  color: inherit; /* 2 */\n  border-top-width: 1px; /* 3 */\n}\n\n/*\nAdd the correct text decoration in Chrome, Edge, and Safari.\n*/\n\nabbr:where([title]) {\n  -webkit-text-decoration: underline dotted;\n          text-decoration: underline dotted;\n}\n\n/*\nRemove the default font size and weight for headings.\n*/\n\nh1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n  font-size: inherit;\n  font-weight: inherit;\n}\n\n/*\nReset links to optimize for opt-in styling instead of opt-out.\n*/\n\na {\n  color: inherit;\n  text-decoration: inherit;\n}\n\n/*\nAdd the correct font weight in Edge and Safari.\n*/\n\nb,\nstrong {\n  font-weight: bolder;\n}\n\n/*\n1. Use the user's configured `mono` font-family by default.\n2. Use the user's configured `mono` font-feature-settings by default.\n3. Use the user's configured `mono` font-variation-settings by default.\n4. Correct the odd `em` font sizing in all browsers.\n*/\n\ncode,\nkbd,\nsamp,\npre {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace; /* 1 */\n  font-feature-settings: normal; /* 2 */\n  font-variation-settings: normal; /* 3 */\n  font-size: 1em; /* 4 */\n}\n\n/*\nAdd the correct font size in all browsers.\n*/\n\nsmall {\n  font-size: 80%;\n}\n\n/*\nPrevent `sub` and `sup` elements from affecting the line height in all browsers.\n*/\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\nsup {\n  top: -0.5em;\n}\n\n/*\n1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)\n2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)\n3. Remove gaps between table borders by default.\n*/\n\ntable {\n  text-indent: 0; /* 1 */\n  border-color: inherit; /* 2 */\n  border-collapse: collapse; /* 3 */\n}\n\n/*\n1. Change the font styles in all browsers.\n2. Remove the margin in Firefox and Safari.\n3. Remove default padding in all browsers.\n*/\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  font-family: inherit; /* 1 */\n  font-feature-settings: inherit; /* 1 */\n  font-variation-settings: inherit; /* 1 */\n  font-size: 100%; /* 1 */\n  font-weight: inherit; /* 1 */\n  line-height: inherit; /* 1 */\n  letter-spacing: inherit; /* 1 */\n  color: inherit; /* 1 */\n  margin: 0; /* 2 */\n  padding: 0; /* 3 */\n}\n\n/*\nRemove the inheritance of text transform in Edge and Firefox.\n*/\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Remove default button styles.\n*/\n\nbutton,\ninput:where([type='button']),\ninput:where([type='reset']),\ninput:where([type='submit']) {\n  -webkit-appearance: button; /* 1 */\n  background-color: transparent; /* 2 */\n  background-image: none; /* 2 */\n}\n\n/*\nUse the modern Firefox focus style for all focusable elements.\n*/\n\n:-moz-focusring {\n  outline: auto;\n}\n\n/*\nRemove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)\n*/\n\n:-moz-ui-invalid {\n  box-shadow: none;\n}\n\n/*\nAdd the correct vertical alignment in Chrome and Firefox.\n*/\n\nprogress {\n  vertical-align: baseline;\n}\n\n/*\nCorrect the cursor style of increment and decrement buttons in Safari.\n*/\n\n::-webkit-inner-spin-button,\n::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/*\n1. Correct the odd appearance in Chrome and Safari.\n2. Correct the outline style in Safari.\n*/\n\n[type='search'] {\n  -webkit-appearance: textfield; /* 1 */\n  outline-offset: -2px; /* 2 */\n}\n\n/*\nRemove the inner padding in Chrome and Safari on macOS.\n*/\n\n::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Change font properties to `inherit` in Safari.\n*/\n\n::-webkit-file-upload-button {\n  -webkit-appearance: button; /* 1 */\n  font: inherit; /* 2 */\n}\n\n/*\nAdd the correct display in Chrome and Safari.\n*/\n\nsummary {\n  display: list-item;\n}\n\n/*\nRemoves the default spacing and border for appropriate elements.\n*/\n\nblockquote,\ndl,\ndd,\nh1,\nh2,\nh3,\nh4,\nh5,\nh6,\nhr,\nfigure,\np,\npre {\n  margin: 0;\n}\n\nfieldset {\n  margin: 0;\n  padding: 0;\n}\n\nlegend {\n  padding: 0;\n}\n\nol,\nul,\nmenu {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n}\n\n/*\nReset default styling for dialogs.\n*/\ndialog {\n  padding: 0;\n}\n\n/*\nPrevent resizing textareas horizontally by default.\n*/\n\ntextarea {\n  resize: vertical;\n}\n\n/*\n1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)\n2. Set the default placeholder color to the user's configured gray 400 color.\n*/\n\ninput::-moz-placeholder, textarea::-moz-placeholder {\n  opacity: 1; /* 1 */\n  color: #9ca3af; /* 2 */\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  opacity: 1; /* 1 */\n  color: #9ca3af; /* 2 */\n}\n\n/*\nSet the default cursor for buttons.\n*/\n\nbutton,\n[role=\"button\"] {\n  cursor: pointer;\n}\n\n/*\nMake sure disabled buttons don't get the pointer cursor.\n*/\n:disabled {\n  cursor: default;\n}\n\n/*\n1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)\n2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)\n   This can trigger a poorly considered lint error in some tools but is included by design.\n*/\n\nimg,\nsvg,\nvideo,\ncanvas,\naudio,\niframe,\nembed,\nobject {\n  display: block; /* 1 */\n  vertical-align: middle; /* 2 */\n}\n\n/*\nConstrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)\n*/\n\nimg,\nvideo {\n  max-width: 100%;\n  height: auto;\n}\n\n/* Make elements with the HTML hidden attribute stay hidden by default */\n[hidden]:where(:not([hidden=\"until-found\"])) {\n  display: none;\n}\r\n.\\!container {\n  width: 100% !important;\n}\r\n.container {\n  width: 100%;\n}\r\n@media (min-width: 640px) {\n\n  .\\!container {\n    max-width: 640px !important;\n  }\n\n  .container {\n    max-width: 640px;\n  }\n}\r\n@media (min-width: 768px) {\n\n  .\\!container {\n    max-width: 768px !important;\n  }\n\n  .container {\n    max-width: 768px;\n  }\n}\r\n@media (min-width: 1024px) {\n\n  .\\!container {\n    max-width: 1024px !important;\n  }\n\n  .container {\n    max-width: 1024px;\n  }\n}\r\n@media (min-width: 1280px) {\n\n  .\\!container {\n    max-width: 1280px !important;\n  }\n\n  .container {\n    max-width: 1280px;\n  }\n}\r\n@media (min-width: 1536px) {\n\n  .\\!container {\n    max-width: 1536px !important;\n  }\n\n  .container {\n    max-width: 1536px;\n  }\n}\r\n.pointer-events-none {\n  pointer-events: none;\n}\r\n.pointer-events-auto {\n  pointer-events: auto;\n}\r\n.visible {\n  visibility: visible;\n}\r\n.collapse {\n  visibility: collapse;\n}\r\n.static {\n  position: static;\n}\r\n.fixed {\n  position: fixed;\n}\r\n.absolute {\n  position: absolute;\n}\r\n.relative {\n  position: relative;\n}\r\n.sticky {\n  position: sticky;\n}\r\n.right-4 {\n  right: 1rem;\n}\r\n.top-3 {\n  top: 0.75rem;\n}\r\n.z-10 {\n  z-index: 10;\n}\r\n.ml-auto {\n  margin-left: auto;\n}\r\n.mt-1 {\n  margin-top: 0.25rem;\n}\r\n.mt-2 {\n  margin-top: 0.5rem;\n}\r\n.mt-3 {\n  margin-top: 0.75rem;\n}\r\n.mt-4 {\n  margin-top: 1rem;\n}\r\n.block {\n  display: block;\n}\r\n.inline {\n  display: inline;\n}\r\n.flex {\n  display: flex;\n}\r\n.inline-flex {\n  display: inline-flex;\n}\r\n.table {\n  display: table;\n}\r\n.grid {\n  display: grid;\n}\r\n.contents {\n  display: contents;\n}\r\n.hidden {\n  display: none;\n}\r\n.h-2 {\n  height: 0.5rem;\n}\r\n.h-full {\n  height: 100%;\n}\r\n.min-h-0 {\n  min-height: 0px;\n}\r\n.min-h-11 {\n  min-height: 2.75rem;\n}\r\n.min-h-\\[100dvh\\] {\n  min-height: 100dvh;\n}\r\n.w-2 {\n  width: 0.5rem;\n}\r\n.w-full {\n  width: 100%;\n}\r\n.max-w-md {\n  max-width: 28rem;\n}\r\n.flex-1 {\n  flex: 1 1 0%;\n}\r\n.flex-grow {\n  flex-grow: 1;\n}\r\n.grow {\n  flex-grow: 1;\n}\r\n.border-collapse {\n  border-collapse: collapse;\n}\r\n.transform {\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\r\n.resize {\n  resize: both;\n}\r\n.flex-col {\n  flex-direction: column;\n}\r\n.flex-wrap {\n  flex-wrap: wrap;\n}\r\n.items-start {\n  align-items: flex-start;\n}\r\n.items-center {\n  align-items: center;\n}\r\n.justify-between {\n  justify-content: space-between;\n}\r\n.gap-1 {\n  gap: 0.25rem;\n}\r\n.gap-2 {\n  gap: 0.5rem;\n}\r\n.gap-3 {\n  gap: 0.75rem;\n}\r\n.gap-4 {\n  gap: 1rem;\n}\r\n.space-y-2 > :not([hidden]) ~ :not([hidden]) {\n  --tw-space-y-reverse: 0;\n  margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));\n  margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));\n}\r\n.divide-y > :not([hidden]) ~ :not([hidden]) {\n  --tw-divide-y-reverse: 0;\n  border-top-width: calc(1px * calc(1 - var(--tw-divide-y-reverse)));\n  border-bottom-width: calc(1px * var(--tw-divide-y-reverse));\n}\r\n.divide-brd > :not([hidden]) ~ :not([hidden]) {\n  --tw-divide-opacity: 1;\n  border-color: rgb(39 39 42 / var(--tw-divide-opacity, 1));\n}\r\n.overflow-y-auto {\n  overflow-y: auto;\n}\r\n.truncate {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\r\n.rounded-2xl {\n  border-radius: 1rem;\n}\r\n.rounded-full {\n  border-radius: 9999px;\n}\r\n.rounded-lg {\n  border-radius: 0.5rem;\n}\r\n.rounded-xl {\n  border-radius: 0.75rem;\n}\r\n.border {\n  border-width: 1px;\n}\r\n.border-b {\n  border-bottom-width: 1px;\n}\r\n.border-brd {\n  --tw-border-opacity: 1;\n  border-color: rgb(39 39 42 / var(--tw-border-opacity, 1));\n}\r\n.border-jade {\n  --tw-border-opacity: 1;\n  border-color: rgb(16 185 129 / var(--tw-border-opacity, 1));\n}\r\n.border-jade\\/20 {\n  border-color: rgb(16 185 129 / 0.2);\n}\r\n.border-rose-400 {\n  --tw-border-opacity: 1;\n  border-color: rgb(251 113 133 / var(--tw-border-opacity, 1));\n}\r\n.border-rose-400\\/30 {\n  border-color: rgb(251 113 133 / 0.3);\n}\r\n.bg-\\[\\#08130e\\] {\n  --tw-bg-opacity: 1;\n  background-color: rgb(8 19 14 / var(--tw-bg-opacity, 1));\n}\r\n.bg-amber-300 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(252 211 77 / var(--tw-bg-opacity, 1));\n}\r\n.bg-current {\n  background-color: currentColor;\n}\r\n.bg-ink {\n  --tw-bg-opacity: 1;\n  background-color: rgb(9 9 11 / var(--tw-bg-opacity, 1));\n}\r\n.bg-ink\\/95 {\n  background-color: rgb(9 9 11 / 0.95);\n}\r\n.bg-jade {\n  --tw-bg-opacity: 1;\n  background-color: rgb(16 185 129 / var(--tw-bg-opacity, 1));\n}\r\n.bg-jade\\/10 {\n  background-color: rgb(16 185 129 / 0.1);\n}\r\n.bg-jade\\/15 {\n  background-color: rgb(16 185 129 / 0.15);\n}\r\n.bg-rose-950 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(76 5 25 / var(--tw-bg-opacity, 1));\n}\r\n.bg-rose-950\\/20 {\n  background-color: rgb(76 5 25 / 0.2);\n}\r\n.bg-surface {\n  --tw-bg-opacity: 1;\n  background-color: rgb(18 18 20 / var(--tw-bg-opacity, 1));\n}\r\n.bg-zinc-900 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(24 24 27 / var(--tw-bg-opacity, 1));\n}\r\n.p-4 {\n  padding: 1rem;\n}\r\n.px-2 {\n  padding-left: 0.5rem;\n  padding-right: 0.5rem;\n}\r\n.px-2\\.5 {\n  padding-left: 0.625rem;\n  padding-right: 0.625rem;\n}\r\n.px-3 {\n  padding-left: 0.75rem;\n  padding-right: 0.75rem;\n}\r\n.px-4 {\n  padding-left: 1rem;\n  padding-right: 1rem;\n}\r\n.px-5 {\n  padding-left: 1.25rem;\n  padding-right: 1.25rem;\n}\r\n.py-1 {\n  padding-top: 0.25rem;\n  padding-bottom: 0.25rem;\n}\r\n.py-1\\.5 {\n  padding-top: 0.375rem;\n  padding-bottom: 0.375rem;\n}\r\n.py-2 {\n  padding-top: 0.5rem;\n  padding-bottom: 0.5rem;\n}\r\n.py-2\\.5 {\n  padding-top: 0.625rem;\n  padding-bottom: 0.625rem;\n}\r\n.py-3 {\n  padding-top: 0.75rem;\n  padding-bottom: 0.75rem;\n}\r\n.pb-6 {\n  padding-bottom: 1.5rem;\n}\r\n.pt-5 {\n  padding-top: 1.25rem;\n}\r\n.font-body {\n  font-family: Inter, sans-serif;\n}\r\n.font-display {\n  font-family: Outfit, sans-serif;\n}\r\n.text-2xl {\n  font-size: 1.5rem;\n  line-height: 2rem;\n}\r\n.text-\\[11px\\] {\n  font-size: 11px;\n}\r\n.text-lg {\n  font-size: 1.125rem;\n  line-height: 1.75rem;\n}\r\n.text-sm {\n  font-size: 0.875rem;\n  line-height: 1.25rem;\n}\r\n.text-xl {\n  font-size: 1.25rem;\n  line-height: 1.75rem;\n}\r\n.text-xs {\n  font-size: 0.75rem;\n  line-height: 1rem;\n}\r\n.font-medium {\n  font-weight: 500;\n}\r\n.font-semibold {\n  font-weight: 600;\n}\r\n.uppercase {\n  text-transform: uppercase;\n}\r\n.lowercase {\n  text-transform: lowercase;\n}\r\n.capitalize {\n  text-transform: capitalize;\n}\r\n.leading-relaxed {\n  line-height: 1.625;\n}\r\n.tracking-\\[0\\.16em\\] {\n  letter-spacing: 0.16em;\n}\r\n.tracking-tight {\n  letter-spacing: -0.025em;\n}\r\n.tracking-wider {\n  letter-spacing: 0.05em;\n}\r\n.text-amber-200 {\n  --tw-text-opacity: 1;\n  color: rgb(253 230 138 / var(--tw-text-opacity, 1));\n}\r\n.text-jade {\n  --tw-text-opacity: 1;\n  color: rgb(16 185 129 / var(--tw-text-opacity, 1));\n}\r\n.text-rose-200 {\n  --tw-text-opacity: 1;\n  color: rgb(254 205 211 / var(--tw-text-opacity, 1));\n}\r\n.text-rose-300 {\n  --tw-text-opacity: 1;\n  color: rgb(253 164 175 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-100 {\n  --tw-text-opacity: 1;\n  color: rgb(244 244 245 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-200 {\n  --tw-text-opacity: 1;\n  color: rgb(228 228 231 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-300 {\n  --tw-text-opacity: 1;\n  color: rgb(212 212 216 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-400 {\n  --tw-text-opacity: 1;\n  color: rgb(161 161 170 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-50 {\n  --tw-text-opacity: 1;\n  color: rgb(250 250 250 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-500 {\n  --tw-text-opacity: 1;\n  color: rgb(113 113 122 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-950 {\n  --tw-text-opacity: 1;\n  color: rgb(9 9 11 / var(--tw-text-opacity, 1));\n}\r\n.underline {\n  text-decoration-line: underline;\n}\r\n.antialiased {\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n}\r\n.opacity-50 {\n  opacity: 0.5;\n}\r\n.\\!shadow {\n  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;\n  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color) !important;\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow) !important;\n}\r\n.shadow {\n  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);\n  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\r\n.shadow-2xl {\n  --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);\n  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\r\n.outline {\n  outline-style: solid;\n}\r\n.blur {\n  --tw-blur: blur(8px);\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\r\n.grayscale {\n  --tw-grayscale: grayscale(100%);\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\r\n.filter {\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\r\n.backdrop-filter {\n  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);\n}\r\n.\\!transition {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter !important;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;\n  transition-duration: 150ms !important;\n}\r\n.transition {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\r\n.ease-in-out {\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n}\r\n\r\nhtml,\r\nbody {\r\n  background: #050506;\r\n  color: #f4f4f5;\r\n  font-family: 'Inter', sans-serif;\r\n  -webkit-font-smoothing: antialiased;\r\n  overscroll-behavior: none;\r\n}\r\n\r\n::-moz-selection {\r\n  background: rgba(16, 185, 129, 0.35);\r\n}\r\n\r\n::selection {\r\n  background: rgba(16, 185, 129, 0.35);\r\n}\r\n\r\n.no-scrollbar::-webkit-scrollbar {\r\n  display: none;\r\n}\r\n.no-scrollbar {\r\n  -ms-overflow-style: none;\r\n  scrollbar-width: none;\r\n}\r\n\r\n.tap {\r\n  transition: transform 0.12s ease, opacity 0.12s ease;\r\n}\r\n.tap:active {\r\n  transform: scale(0.97);\r\n  opacity: 0.9;\r\n}\r\n\r\n@keyframes pulse-dot {\r\n  0%, 100% { opacity: 1; }\r\n  50% { opacity: 0.45; }\r\n}\r\n.dot-live {\r\n  animation: pulse-dot 2.4s ease-in-out infinite;\r\n}\r\n.disabled\\:cursor-not-allowed:disabled {\n  cursor: not-allowed;\n}\r\n.disabled\\:opacity-50:disabled {\n  opacity: 0.5;\n}\r\n";
+  var guardian_ui_css_default = "*, ::before, ::after {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}\n\n::backdrop {\n  --tw-border-spacing-x: 0;\n  --tw-border-spacing-y: 0;\n  --tw-translate-x: 0;\n  --tw-translate-y: 0;\n  --tw-rotate: 0;\n  --tw-skew-x: 0;\n  --tw-skew-y: 0;\n  --tw-scale-x: 1;\n  --tw-scale-y: 1;\n  --tw-pan-x:  ;\n  --tw-pan-y:  ;\n  --tw-pinch-zoom:  ;\n  --tw-scroll-snap-strictness: proximity;\n  --tw-gradient-from-position:  ;\n  --tw-gradient-via-position:  ;\n  --tw-gradient-to-position:  ;\n  --tw-ordinal:  ;\n  --tw-slashed-zero:  ;\n  --tw-numeric-figure:  ;\n  --tw-numeric-spacing:  ;\n  --tw-numeric-fraction:  ;\n  --tw-ring-inset:  ;\n  --tw-ring-offset-width: 0px;\n  --tw-ring-offset-color: #fff;\n  --tw-ring-color: rgb(59 130 246 / 0.5);\n  --tw-ring-offset-shadow: 0 0 #0000;\n  --tw-ring-shadow: 0 0 #0000;\n  --tw-shadow: 0 0 #0000;\n  --tw-shadow-colored: 0 0 #0000;\n  --tw-blur:  ;\n  --tw-brightness:  ;\n  --tw-contrast:  ;\n  --tw-grayscale:  ;\n  --tw-hue-rotate:  ;\n  --tw-invert:  ;\n  --tw-saturate:  ;\n  --tw-sepia:  ;\n  --tw-drop-shadow:  ;\n  --tw-backdrop-blur:  ;\n  --tw-backdrop-brightness:  ;\n  --tw-backdrop-contrast:  ;\n  --tw-backdrop-grayscale:  ;\n  --tw-backdrop-hue-rotate:  ;\n  --tw-backdrop-invert:  ;\n  --tw-backdrop-opacity:  ;\n  --tw-backdrop-saturate:  ;\n  --tw-backdrop-sepia:  ;\n  --tw-contain-size:  ;\n  --tw-contain-layout:  ;\n  --tw-contain-paint:  ;\n  --tw-contain-style:  ;\n}/*\n! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com\n*//*\n1. Prevent padding and border from affecting element width. (https://github.com/mozdevs/cssremedy/issues/4)\n2. Allow adding a border to an element by just adding a border-width. (https://github.com/tailwindcss/tailwindcss/pull/116)\n*/\n\n*,\n::before,\n::after {\n  box-sizing: border-box; /* 1 */\n  border-width: 0; /* 2 */\n  border-style: solid; /* 2 */\n  border-color: #e5e7eb; /* 2 */\n}\n\n::before,\n::after {\n  --tw-content: '';\n}\n\n/*\n1. Use a consistent sensible line-height in all browsers.\n2. Prevent adjustments of font size after orientation changes in iOS.\n3. Use a more readable tab size.\n4. Use the user's configured `sans` font-family by default.\n5. Use the user's configured `sans` font-feature-settings by default.\n6. Use the user's configured `sans` font-variation-settings by default.\n7. Disable tap highlights on iOS\n*/\n\nhtml,\n:host {\n  line-height: 1.5; /* 1 */\n  -webkit-text-size-adjust: 100%; /* 2 */\n  -moz-tab-size: 4; /* 3 */\n  -o-tab-size: 4;\n     tab-size: 4; /* 3 */\n  font-family: ui-sans-serif, system-ui, sans-serif, \"Apple Color Emoji\", \"Segoe UI Emoji\", \"Segoe UI Symbol\", \"Noto Color Emoji\"; /* 4 */\n  font-feature-settings: normal; /* 5 */\n  font-variation-settings: normal; /* 6 */\n  -webkit-tap-highlight-color: transparent; /* 7 */\n}\n\n/*\n1. Remove the margin in all browsers.\n2. Inherit line-height from `html` so users can set them as a class directly on the `html` element.\n*/\n\nbody {\n  margin: 0; /* 1 */\n  line-height: inherit; /* 2 */\n}\n\n/*\n1. Add the correct height in Firefox.\n2. Correct the inheritance of border color in Firefox. (https://bugzilla.mozilla.org/show_bug.cgi?id=190655)\n3. Ensure horizontal rules are visible by default.\n*/\n\nhr {\n  height: 0; /* 1 */\n  color: inherit; /* 2 */\n  border-top-width: 1px; /* 3 */\n}\n\n/*\nAdd the correct text decoration in Chrome, Edge, and Safari.\n*/\n\nabbr:where([title]) {\n  -webkit-text-decoration: underline dotted;\n          text-decoration: underline dotted;\n}\n\n/*\nRemove the default font size and weight for headings.\n*/\n\nh1,\nh2,\nh3,\nh4,\nh5,\nh6 {\n  font-size: inherit;\n  font-weight: inherit;\n}\n\n/*\nReset links to optimize for opt-in styling instead of opt-out.\n*/\n\na {\n  color: inherit;\n  text-decoration: inherit;\n}\n\n/*\nAdd the correct font weight in Edge and Safari.\n*/\n\nb,\nstrong {\n  font-weight: bolder;\n}\n\n/*\n1. Use the user's configured `mono` font-family by default.\n2. Use the user's configured `mono` font-feature-settings by default.\n3. Use the user's configured `mono` font-variation-settings by default.\n4. Correct the odd `em` font sizing in all browsers.\n*/\n\ncode,\nkbd,\nsamp,\npre {\n  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, \"Liberation Mono\", \"Courier New\", monospace; /* 1 */\n  font-feature-settings: normal; /* 2 */\n  font-variation-settings: normal; /* 3 */\n  font-size: 1em; /* 4 */\n}\n\n/*\nAdd the correct font size in all browsers.\n*/\n\nsmall {\n  font-size: 80%;\n}\n\n/*\nPrevent `sub` and `sup` elements from affecting the line height in all browsers.\n*/\n\nsub,\nsup {\n  font-size: 75%;\n  line-height: 0;\n  position: relative;\n  vertical-align: baseline;\n}\n\nsub {\n  bottom: -0.25em;\n}\n\nsup {\n  top: -0.5em;\n}\n\n/*\n1. Remove text indentation from table contents in Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=999088, https://bugs.webkit.org/show_bug.cgi?id=201297)\n2. Correct table border color inheritance in all Chrome and Safari. (https://bugs.chromium.org/p/chromium/issues/detail?id=935729, https://bugs.webkit.org/show_bug.cgi?id=195016)\n3. Remove gaps between table borders by default.\n*/\n\ntable {\n  text-indent: 0; /* 1 */\n  border-color: inherit; /* 2 */\n  border-collapse: collapse; /* 3 */\n}\n\n/*\n1. Change the font styles in all browsers.\n2. Remove the margin in Firefox and Safari.\n3. Remove default padding in all browsers.\n*/\n\nbutton,\ninput,\noptgroup,\nselect,\ntextarea {\n  font-family: inherit; /* 1 */\n  font-feature-settings: inherit; /* 1 */\n  font-variation-settings: inherit; /* 1 */\n  font-size: 100%; /* 1 */\n  font-weight: inherit; /* 1 */\n  line-height: inherit; /* 1 */\n  letter-spacing: inherit; /* 1 */\n  color: inherit; /* 1 */\n  margin: 0; /* 2 */\n  padding: 0; /* 3 */\n}\n\n/*\nRemove the inheritance of text transform in Edge and Firefox.\n*/\n\nbutton,\nselect {\n  text-transform: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Remove default button styles.\n*/\n\nbutton,\ninput:where([type='button']),\ninput:where([type='reset']),\ninput:where([type='submit']) {\n  -webkit-appearance: button; /* 1 */\n  background-color: transparent; /* 2 */\n  background-image: none; /* 2 */\n}\n\n/*\nUse the modern Firefox focus style for all focusable elements.\n*/\n\n:-moz-focusring {\n  outline: auto;\n}\n\n/*\nRemove the additional `:invalid` styles in Firefox. (https://github.com/mozilla/gecko-dev/blob/2f9eacd9d3d995c937b4251a5557d95d494c9be1/layout/style/res/forms.css#L728-L737)\n*/\n\n:-moz-ui-invalid {\n  box-shadow: none;\n}\n\n/*\nAdd the correct vertical alignment in Chrome and Firefox.\n*/\n\nprogress {\n  vertical-align: baseline;\n}\n\n/*\nCorrect the cursor style of increment and decrement buttons in Safari.\n*/\n\n::-webkit-inner-spin-button,\n::-webkit-outer-spin-button {\n  height: auto;\n}\n\n/*\n1. Correct the odd appearance in Chrome and Safari.\n2. Correct the outline style in Safari.\n*/\n\n[type='search'] {\n  -webkit-appearance: textfield; /* 1 */\n  outline-offset: -2px; /* 2 */\n}\n\n/*\nRemove the inner padding in Chrome and Safari on macOS.\n*/\n\n::-webkit-search-decoration {\n  -webkit-appearance: none;\n}\n\n/*\n1. Correct the inability to style clickable types in iOS and Safari.\n2. Change font properties to `inherit` in Safari.\n*/\n\n::-webkit-file-upload-button {\n  -webkit-appearance: button; /* 1 */\n  font: inherit; /* 2 */\n}\n\n/*\nAdd the correct display in Chrome and Safari.\n*/\n\nsummary {\n  display: list-item;\n}\n\n/*\nRemoves the default spacing and border for appropriate elements.\n*/\n\nblockquote,\ndl,\ndd,\nh1,\nh2,\nh3,\nh4,\nh5,\nh6,\nhr,\nfigure,\np,\npre {\n  margin: 0;\n}\n\nfieldset {\n  margin: 0;\n  padding: 0;\n}\n\nlegend {\n  padding: 0;\n}\n\nol,\nul,\nmenu {\n  list-style: none;\n  margin: 0;\n  padding: 0;\n}\n\n/*\nReset default styling for dialogs.\n*/\ndialog {\n  padding: 0;\n}\n\n/*\nPrevent resizing textareas horizontally by default.\n*/\n\ntextarea {\n  resize: vertical;\n}\n\n/*\n1. Reset the default placeholder opacity in Firefox. (https://github.com/tailwindlabs/tailwindcss/issues/3300)\n2. Set the default placeholder color to the user's configured gray 400 color.\n*/\n\ninput::-moz-placeholder, textarea::-moz-placeholder {\n  opacity: 1; /* 1 */\n  color: #9ca3af; /* 2 */\n}\n\ninput::placeholder,\ntextarea::placeholder {\n  opacity: 1; /* 1 */\n  color: #9ca3af; /* 2 */\n}\n\n/*\nSet the default cursor for buttons.\n*/\n\nbutton,\n[role=\"button\"] {\n  cursor: pointer;\n}\n\n/*\nMake sure disabled buttons don't get the pointer cursor.\n*/\n:disabled {\n  cursor: default;\n}\n\n/*\n1. Make replaced elements `display: block` by default. (https://github.com/mozdevs/cssremedy/issues/14)\n2. Add `vertical-align: middle` to align replaced elements more sensibly by default. (https://github.com/jensimmons/cssremedy/issues/14#issuecomment-634934210)\n   This can trigger a poorly considered lint error in some tools but is included by design.\n*/\n\nimg,\nsvg,\nvideo,\ncanvas,\naudio,\niframe,\nembed,\nobject {\n  display: block; /* 1 */\n  vertical-align: middle; /* 2 */\n}\n\n/*\nConstrain images and videos to the parent width and preserve their intrinsic aspect ratio. (https://github.com/mozdevs/cssremedy/issues/14)\n*/\n\nimg,\nvideo {\n  max-width: 100%;\n  height: auto;\n}\n\n/* Make elements with the HTML hidden attribute stay hidden by default */\n[hidden]:where(:not([hidden=\"until-found\"])) {\n  display: none;\n}\r\n.\\!container {\n  width: 100% !important;\n}\r\n.container {\n  width: 100%;\n}\r\n@media (min-width: 640px) {\n\n  .\\!container {\n    max-width: 640px !important;\n  }\n\n  .container {\n    max-width: 640px;\n  }\n}\r\n@media (min-width: 768px) {\n\n  .\\!container {\n    max-width: 768px !important;\n  }\n\n  .container {\n    max-width: 768px;\n  }\n}\r\n@media (min-width: 1024px) {\n\n  .\\!container {\n    max-width: 1024px !important;\n  }\n\n  .container {\n    max-width: 1024px;\n  }\n}\r\n@media (min-width: 1280px) {\n\n  .\\!container {\n    max-width: 1280px !important;\n  }\n\n  .container {\n    max-width: 1280px;\n  }\n}\r\n@media (min-width: 1536px) {\n\n  .\\!container {\n    max-width: 1536px !important;\n  }\n\n  .container {\n    max-width: 1536px;\n  }\n}\r\n.pointer-events-none {\n  pointer-events: none;\n}\r\n.pointer-events-auto {\n  pointer-events: auto;\n}\r\n.visible {\n  visibility: visible;\n}\r\n.collapse {\n  visibility: collapse;\n}\r\n.static {\n  position: static;\n}\r\n.fixed {\n  position: fixed;\n}\r\n.absolute {\n  position: absolute;\n}\r\n.relative {\n  position: relative;\n}\r\n.sticky {\n  position: sticky;\n}\r\n.right-4 {\n  right: 1rem;\n}\r\n.top-3 {\n  top: 0.75rem;\n}\r\n.z-10 {\n  z-index: 10;\n}\r\n.ml-auto {\n  margin-left: auto;\n}\r\n.mt-1 {\n  margin-top: 0.25rem;\n}\r\n.mt-2 {\n  margin-top: 0.5rem;\n}\r\n.mt-3 {\n  margin-top: 0.75rem;\n}\r\n.mt-4 {\n  margin-top: 1rem;\n}\r\n.block {\n  display: block;\n}\r\n.inline {\n  display: inline;\n}\r\n.flex {\n  display: flex;\n}\r\n.inline-flex {\n  display: inline-flex;\n}\r\n.table {\n  display: table;\n}\r\n.grid {\n  display: grid;\n}\r\n.contents {\n  display: contents;\n}\r\n.hidden {\n  display: none;\n}\r\n.h-2 {\n  height: 0.5rem;\n}\r\n.h-full {\n  height: 100%;\n}\r\n.min-h-0 {\n  min-height: 0px;\n}\r\n.min-h-11 {\n  min-height: 2.75rem;\n}\r\n.min-h-\\[100dvh\\] {\n  min-height: 100dvh;\n}\r\n.w-2 {\n  width: 0.5rem;\n}\r\n.w-full {\n  width: 100%;\n}\r\n.max-w-md {\n  max-width: 28rem;\n}\r\n.flex-1 {\n  flex: 1 1 0%;\n}\r\n.flex-grow {\n  flex-grow: 1;\n}\r\n.grow {\n  flex-grow: 1;\n}\r\n.border-collapse {\n  border-collapse: collapse;\n}\r\n.transform {\n  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));\n}\r\n.resize {\n  resize: both;\n}\r\n.flex-col {\n  flex-direction: column;\n}\r\n.flex-wrap {\n  flex-wrap: wrap;\n}\r\n.items-start {\n  align-items: flex-start;\n}\r\n.items-center {\n  align-items: center;\n}\r\n.justify-between {\n  justify-content: space-between;\n}\r\n.gap-1 {\n  gap: 0.25rem;\n}\r\n.gap-2 {\n  gap: 0.5rem;\n}\r\n.gap-3 {\n  gap: 0.75rem;\n}\r\n.gap-4 {\n  gap: 1rem;\n}\r\n.space-y-2 > :not([hidden]) ~ :not([hidden]) {\n  --tw-space-y-reverse: 0;\n  margin-top: calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));\n  margin-bottom: calc(0.5rem * var(--tw-space-y-reverse));\n}\r\n.divide-y > :not([hidden]) ~ :not([hidden]) {\n  --tw-divide-y-reverse: 0;\n  border-top-width: calc(1px * calc(1 - var(--tw-divide-y-reverse)));\n  border-bottom-width: calc(1px * var(--tw-divide-y-reverse));\n}\r\n.divide-brd > :not([hidden]) ~ :not([hidden]) {\n  --tw-divide-opacity: 1;\n  border-color: rgb(39 39 42 / var(--tw-divide-opacity, 1));\n}\r\n.overflow-y-auto {\n  overflow-y: auto;\n}\r\n.truncate {\n  overflow: hidden;\n  text-overflow: ellipsis;\n  white-space: nowrap;\n}\r\n.rounded-2xl {\n  border-radius: 1rem;\n}\r\n.rounded-full {\n  border-radius: 9999px;\n}\r\n.rounded-lg {\n  border-radius: 0.5rem;\n}\r\n.rounded-xl {\n  border-radius: 0.75rem;\n}\r\n.border {\n  border-width: 1px;\n}\r\n.border-b {\n  border-bottom-width: 1px;\n}\r\n.border-amber-300 {\n  --tw-border-opacity: 1;\n  border-color: rgb(252 211 77 / var(--tw-border-opacity, 1));\n}\r\n.border-amber-300\\/30 {\n  border-color: rgb(252 211 77 / 0.3);\n}\r\n.border-brd {\n  --tw-border-opacity: 1;\n  border-color: rgb(39 39 42 / var(--tw-border-opacity, 1));\n}\r\n.border-jade {\n  --tw-border-opacity: 1;\n  border-color: rgb(16 185 129 / var(--tw-border-opacity, 1));\n}\r\n.border-jade\\/20 {\n  border-color: rgb(16 185 129 / 0.2);\n}\r\n.border-rose-400 {\n  --tw-border-opacity: 1;\n  border-color: rgb(251 113 133 / var(--tw-border-opacity, 1));\n}\r\n.border-rose-400\\/30 {\n  border-color: rgb(251 113 133 / 0.3);\n}\r\n.bg-\\[\\#08130e\\] {\n  --tw-bg-opacity: 1;\n  background-color: rgb(8 19 14 / var(--tw-bg-opacity, 1));\n}\r\n.bg-amber-300 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(252 211 77 / var(--tw-bg-opacity, 1));\n}\r\n.bg-amber-950 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(69 26 3 / var(--tw-bg-opacity, 1));\n}\r\n.bg-amber-950\\/20 {\n  background-color: rgb(69 26 3 / 0.2);\n}\r\n.bg-current {\n  background-color: currentColor;\n}\r\n.bg-ink {\n  --tw-bg-opacity: 1;\n  background-color: rgb(9 9 11 / var(--tw-bg-opacity, 1));\n}\r\n.bg-ink\\/95 {\n  background-color: rgb(9 9 11 / 0.95);\n}\r\n.bg-jade {\n  --tw-bg-opacity: 1;\n  background-color: rgb(16 185 129 / var(--tw-bg-opacity, 1));\n}\r\n.bg-jade\\/10 {\n  background-color: rgb(16 185 129 / 0.1);\n}\r\n.bg-jade\\/15 {\n  background-color: rgb(16 185 129 / 0.15);\n}\r\n.bg-rose-950 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(76 5 25 / var(--tw-bg-opacity, 1));\n}\r\n.bg-rose-950\\/20 {\n  background-color: rgb(76 5 25 / 0.2);\n}\r\n.bg-surface {\n  --tw-bg-opacity: 1;\n  background-color: rgb(18 18 20 / var(--tw-bg-opacity, 1));\n}\r\n.bg-zinc-900 {\n  --tw-bg-opacity: 1;\n  background-color: rgb(24 24 27 / var(--tw-bg-opacity, 1));\n}\r\n.p-4 {\n  padding: 1rem;\n}\r\n.px-2 {\n  padding-left: 0.5rem;\n  padding-right: 0.5rem;\n}\r\n.px-2\\.5 {\n  padding-left: 0.625rem;\n  padding-right: 0.625rem;\n}\r\n.px-3 {\n  padding-left: 0.75rem;\n  padding-right: 0.75rem;\n}\r\n.px-4 {\n  padding-left: 1rem;\n  padding-right: 1rem;\n}\r\n.px-5 {\n  padding-left: 1.25rem;\n  padding-right: 1.25rem;\n}\r\n.py-1 {\n  padding-top: 0.25rem;\n  padding-bottom: 0.25rem;\n}\r\n.py-1\\.5 {\n  padding-top: 0.375rem;\n  padding-bottom: 0.375rem;\n}\r\n.py-2 {\n  padding-top: 0.5rem;\n  padding-bottom: 0.5rem;\n}\r\n.py-2\\.5 {\n  padding-top: 0.625rem;\n  padding-bottom: 0.625rem;\n}\r\n.py-3 {\n  padding-top: 0.75rem;\n  padding-bottom: 0.75rem;\n}\r\n.pb-6 {\n  padding-bottom: 1.5rem;\n}\r\n.pt-5 {\n  padding-top: 1.25rem;\n}\r\n.font-body {\n  font-family: Inter, sans-serif;\n}\r\n.font-display {\n  font-family: Outfit, sans-serif;\n}\r\n.text-2xl {\n  font-size: 1.5rem;\n  line-height: 2rem;\n}\r\n.text-\\[11px\\] {\n  font-size: 11px;\n}\r\n.text-lg {\n  font-size: 1.125rem;\n  line-height: 1.75rem;\n}\r\n.text-sm {\n  font-size: 0.875rem;\n  line-height: 1.25rem;\n}\r\n.text-xl {\n  font-size: 1.25rem;\n  line-height: 1.75rem;\n}\r\n.text-xs {\n  font-size: 0.75rem;\n  line-height: 1rem;\n}\r\n.font-medium {\n  font-weight: 500;\n}\r\n.font-semibold {\n  font-weight: 600;\n}\r\n.uppercase {\n  text-transform: uppercase;\n}\r\n.lowercase {\n  text-transform: lowercase;\n}\r\n.capitalize {\n  text-transform: capitalize;\n}\r\n.leading-relaxed {\n  line-height: 1.625;\n}\r\n.tracking-\\[0\\.16em\\] {\n  letter-spacing: 0.16em;\n}\r\n.tracking-tight {\n  letter-spacing: -0.025em;\n}\r\n.tracking-wider {\n  letter-spacing: 0.05em;\n}\r\n.text-amber-100 {\n  --tw-text-opacity: 1;\n  color: rgb(254 243 199 / var(--tw-text-opacity, 1));\n}\r\n.text-amber-200 {\n  --tw-text-opacity: 1;\n  color: rgb(253 230 138 / var(--tw-text-opacity, 1));\n}\r\n.text-jade {\n  --tw-text-opacity: 1;\n  color: rgb(16 185 129 / var(--tw-text-opacity, 1));\n}\r\n.text-rose-200 {\n  --tw-text-opacity: 1;\n  color: rgb(254 205 211 / var(--tw-text-opacity, 1));\n}\r\n.text-rose-300 {\n  --tw-text-opacity: 1;\n  color: rgb(253 164 175 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-100 {\n  --tw-text-opacity: 1;\n  color: rgb(244 244 245 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-200 {\n  --tw-text-opacity: 1;\n  color: rgb(228 228 231 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-300 {\n  --tw-text-opacity: 1;\n  color: rgb(212 212 216 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-400 {\n  --tw-text-opacity: 1;\n  color: rgb(161 161 170 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-50 {\n  --tw-text-opacity: 1;\n  color: rgb(250 250 250 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-500 {\n  --tw-text-opacity: 1;\n  color: rgb(113 113 122 / var(--tw-text-opacity, 1));\n}\r\n.text-zinc-950 {\n  --tw-text-opacity: 1;\n  color: rgb(9 9 11 / var(--tw-text-opacity, 1));\n}\r\n.underline {\n  text-decoration-line: underline;\n}\r\n.antialiased {\n  -webkit-font-smoothing: antialiased;\n  -moz-osx-font-smoothing: grayscale;\n}\r\n.opacity-50 {\n  opacity: 0.5;\n}\r\n.\\!shadow {\n  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1) !important;\n  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color) !important;\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow) !important;\n}\r\n.shadow {\n  --tw-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);\n  --tw-shadow-colored: 0 1px 3px 0 var(--tw-shadow-color), 0 1px 2px -1px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\r\n.shadow-2xl {\n  --tw-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);\n  --tw-shadow-colored: 0 25px 50px -12px var(--tw-shadow-color);\n  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);\n}\r\n.outline {\n  outline-style: solid;\n}\r\n.blur {\n  --tw-blur: blur(8px);\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\r\n.grayscale {\n  --tw-grayscale: grayscale(100%);\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\r\n.filter {\n  filter: var(--tw-blur) var(--tw-brightness) var(--tw-contrast) var(--tw-grayscale) var(--tw-hue-rotate) var(--tw-invert) var(--tw-saturate) var(--tw-sepia) var(--tw-drop-shadow);\n}\r\n.backdrop-filter {\n  backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);\n}\r\n.\\!transition {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter !important;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1) !important;\n  transition-duration: 150ms !important;\n}\r\n.transition {\n  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n  transition-duration: 150ms;\n}\r\n.ease-in-out {\n  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);\n}\r\n\r\nhtml,\r\nbody {\r\n  background: #050506;\r\n  color: #f4f4f5;\r\n  font-family: 'Inter', sans-serif;\r\n  -webkit-font-smoothing: antialiased;\r\n  overscroll-behavior: none;\r\n}\r\n\r\n::-moz-selection {\r\n  background: rgba(16, 185, 129, 0.35);\r\n}\r\n\r\n::selection {\r\n  background: rgba(16, 185, 129, 0.35);\r\n}\r\n\r\n.no-scrollbar::-webkit-scrollbar {\r\n  display: none;\r\n}\r\n.no-scrollbar {\r\n  -ms-overflow-style: none;\r\n  scrollbar-width: none;\r\n}\r\n\r\n.tap {\r\n  transition: transform 0.12s ease, opacity 0.12s ease;\r\n}\r\n.tap:active {\r\n  transform: scale(0.97);\r\n  opacity: 0.9;\r\n}\r\n\r\n@keyframes pulse-dot {\r\n  0%, 100% { opacity: 1; }\r\n  50% { opacity: 0.45; }\r\n}\r\n.dot-live {\r\n  animation: pulse-dot 2.4s ease-in-out infinite;\r\n}\r\n.disabled\\:cursor-not-allowed:disabled {\n  cursor: not-allowed;\n}\r\n.disabled\\:opacity-50:disabled {\n  opacity: 0.5;\n}\r\n";
 
   // src/guardian/reactOverlay.jsx
   var HOST_SELECTOR = "[data-guardian-react-root='true']";
@@ -46724,21 +46724,29 @@
       if (!result || result.success !== true || !Array.isArray(result.items)) {
         throw new Error("EA_CAPABILITY_UNAVAILABLE:club.snapshot");
       }
-      const items = result.items.map((item) => ({
-        id: String(item.id),
-        name: String(item.name || "Unknown player"),
-        rating: Number(item.rating),
-        league: String(item.league || ""),
-        nation: String(item.nation || ""),
-        club: String(item.club || ""),
-        rarity: String(item.rarity || ""),
-        locked: item.locked === true,
-        duplicate: item.duplicate === true,
-        tradeable: item.tradeable === true,
-        special: item.special === true,
-        evolution_eligible: item.evolutionEligible === true,
-        scoring_category: String(item.scoring_category || item.scoringCategory || "").toUpperCase()
-      }));
+      const items = result.items.map((item) => {
+        const rawValue = item.marketValueCoins ?? item.market_value_coins;
+        return {
+          id: String(item.id),
+          name: String(item.name || "Unknown player"),
+          rating: Number(item.rating),
+          league: String(item.league || ""),
+          nation: String(item.nation || ""),
+          club: String(item.club || ""),
+          rarity: String(item.rarity || ""),
+          locked: item.locked === true,
+          duplicate: item.duplicate === true,
+          tradeable: item.tradeable === true,
+          special: item.special === true,
+          evolution_eligible: item.evolutionEligible === true,
+          favorite: item.favorite === true,
+          in_active_squad: item.inActiveSquad === true || item.in_active_squad === true,
+          market_value_coins: rawValue != null && rawValue !== "" && Number.isFinite(Number(rawValue)) ? Number(rawValue) : null,
+          valuation_source: item.valuationSource ?? item.valuation_source ?? null,
+          valued_at: item.valuedAt ?? item.valued_at ?? null,
+          scoring_category: String(item.scoring_category || item.scoringCategory || "").toUpperCase()
+        };
+      });
       if (!items.length || items.some((item) => !item.id || !Number.isInteger(item.rating))) {
         throw new Error("GUARDIAN_PARTIAL_SNAPSHOT");
       }
@@ -46764,7 +46772,12 @@
       duplicate: item.duplicate === true,
       tradeable: item.untradeable !== true,
       special: item.isSpecial === true || Number(item.rareflag) > 1,
-      evolutionEligible: item.isEvolutionEligible === true
+      evolutionEligible: item.isEvolutionEligible === true,
+      favorite: item.favorite === true,
+      inActiveSquad: item.inActiveSquad === true || item.in_active_squad === true,
+      marketValueCoins: item.marketValueCoins ?? item.market_value_coins ?? null,
+      valuationSource: item.valuationSource ?? item.valuation_source ?? null,
+      valuedAt: item.valuedAt ?? item.valued_at ?? null
     });
     const currentChallenge = () => {
       const controller = ctx?.cntlr?.current?.();
@@ -46789,6 +46802,28 @@
         const selected = itemIds.map((id) => byId.get(String(id)));
         if (selected.some((item) => !item)) throw new Error("GUARDIAN_STALE_SNAPSHOT");
         return ctx.events.playerListFillSquad(challenge, selected, 2);
+      },
+      submitCurrentChallenge: async () => {
+        const challenge = currentChallenge();
+        const controller = ctx?.cntlr?.current?.();
+        const services2 = ctx?.services;
+        const submit = services2?.SBC?.submitChallenge;
+        const setEntity = controller?._set || challenge && services2?.SBC?.repository?.getSetById?.(challenge.setId);
+        if (!challenge || !controller || typeof submit !== "function" || !setEntity) {
+          throw new Error("EA_CAPABILITY_UNAVAILABLE:sbc.submit");
+        }
+        const skipValidation = services2?.UserSettings?.getSBCValidationSkip?.() === true;
+        const chemistryEnabled = services2?.Chemistry?.isFeatureEnabled?.() === true;
+        const observable = submit.call(services2.SBC, challenge, setEntity, skipValidation, chemistryEnabled);
+        if (!observable || typeof observable.observe !== "function") {
+          throw new Error("GUARDIAN_INVALID_EA_SUBMIT_RESPONSE");
+        }
+        return new Promise((resolve) => {
+          observable.observe(controller, (observer, response) => {
+            observer?.unobserve?.(controller);
+            resolve(response?.success === true ? { success: true, response } : { success: false, response });
+          });
+        });
       }
     };
   }
@@ -46805,6 +46840,17 @@
     if (ids.some((id) => !id || id === "undefined") || new Set(ids).size !== ids.length) throw new Error(`GUARDIAN_INVALID_${edition}_SNAPSHOT`);
     if (edition === "FC27" && (value.schema_version !== 2 || value.taxonomy_verified !== true || value.items.some((item) => typeof item.scoring_category !== "string" || !item.scoring_category))) {
       throw new Error("GUARDIAN_INVALID_FC27_SNAPSHOT");
+    }
+    return value;
+  }
+  function requireRawSnapshotForEdition(value, edition) {
+    if (!record(value) || value.edition !== edition || !Array.isArray(value.items) || !value.items.length || typeof value.snapshot_hash !== "string") {
+      throw new Error(`GUARDIAN_INVALID_${edition}_SNAPSHOT`);
+    }
+    const ids = value.items.map((item) => String(item && item.id));
+    if (ids.some((id) => !id || id === "undefined") || new Set(ids).size !== ids.length) throw new Error(`GUARDIAN_INVALID_${edition}_SNAPSHOT`);
+    if (edition !== "FC27" || value.schema_version !== 2 || value.taxonomy_verified === true) {
+      throw new Error("GUARDIAN_INVALID_RAW_FC27_SNAPSHOT");
     }
     return value;
   }
@@ -46831,6 +46877,12 @@
     }
     if (value.edition !== "FC27" || typeof value.ruleset_version !== "string") {
       throw new Error("GUARDIAN_INVALID_STREAMLINED_RESPONSE");
+    }
+    return value;
+  }
+  function requireActiveScoringRuleset(value, edition) {
+    if (!record(value) || value.edition !== edition || typeof value.ruleset_version !== "string" || !value.ruleset_version || value.active !== true || edition === "FC27" && value.taxonomy_version !== 2) {
+      throw new Error(`GUARDIAN_INVALID_${edition}_RULESET`);
     }
     return value;
   }
@@ -46894,6 +46946,15 @@
       );
       return this.request("/api/v2/snapshots", { method: "POST", body: requireSnapshotForEdition(value, value?.edition === "FC27" ? "FC27" : "FC26") });
     }
+    /** Upload an unverified FC27 capture for admin taxonomy review. */
+    /** @param {unknown} snapshot */
+    async uploadRawSnapshot(snapshot) {
+      const value = (
+        /** @type {any} */
+        snapshot
+      );
+      return this.request("/api/v2/snapshots", { method: "POST", body: requireRawSnapshotForEdition(value, "FC27") });
+    }
     /** @param {unknown} body */
     async solveTraditional(body) {
       return requireTraditionalSolveResponse(
@@ -46911,6 +46972,24 @@
     }
     async getLatestSnapshot() {
       return this.request("/api/v2/snapshots/latest");
+    }
+    async getLatestVerifiedSnapshot(edition = "FC27") {
+      return this.request(`/api/v2/snapshots/latest?edition=${encodeURIComponent(edition)}&taxonomy_verified=true`);
+    }
+    /** @param {"FC26"|"FC27"} [edition] */
+    async getActiveScoringRuleset(edition = "FC27") {
+      return requireActiveScoringRuleset(
+        await this.request(`/api/v2/scoring-rulesets/active?edition=${encodeURIComponent(edition)}`),
+        edition
+      );
+    }
+    /** @param {string} snapshotId */
+    async getSnapshotItems(snapshotId) {
+      const value = await this.request(`/api/v2/snapshots/${encodeURIComponent(snapshotId)}/items`);
+      if (!Array.isArray(value.items) || typeof value.snapshot_id !== "string" || typeof value.snapshot_hash !== "string") {
+        throw new GuardianApiError("GUARDIAN_INVALID_SNAPSHOT_ITEMS");
+      }
+      return value;
     }
     /** @param {number} [limit] */
     async listSolutions(limit = 10) {
@@ -47122,6 +47201,8 @@
       this.refreshClub = refreshClub;
       this.state = { phase: "BOOTING" };
       this.listeners = /* @__PURE__ */ new Set();
+      const pending = this.reconciler?.pendingConfirmation?.();
+      if (pending) this.state = { phase: "EA_SUBMITTED_CONFIRM_PENDING", submitPending: pending };
     }
     /** @param {(state:any)=>void} listener */
     subscribe(listener) {
@@ -47147,11 +47228,36 @@
     tryAlternative() {
       return this.controller?.tryAlternative ? this.controller.tryAlternative() : Promise.reject(new Error("ALTERNATIVE_NOT_AVAILABLE"));
     }
-    requestSubmit() {
-      return this.reconciler ? this.reconciler.submit(
+    async requestSubmit() {
+      if (!this.reconciler) throw new Error("SUBMIT_REQUIRES_CONFIRMATION");
+      const solution = (
         /** @type {any} */
         this.state.solution
-      ) : Promise.reject(new Error("SUBMIT_REQUIRES_CONFIRMATION"));
+      );
+      this.publish({ ...this.state, phase: "SUBMIT_CONFIRMATION" });
+      this.publish({ ...this.state, phase: "SUBMITTING_EA" });
+      try {
+        const result = await this.reconciler.submit(solution);
+        this.publish({ ...this.state, phase: "SUBMITTED", submitResult: result });
+        return result;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        const phase = message === "BACKEND_CONFIRM_PENDING" ? "EA_SUBMITTED_CONFIRM_PENDING" : "APPLIED_NOT_SUBMITTED";
+        this.publish({ ...this.state, phase, error: message });
+        throw error;
+      }
+    }
+    async resumeSubmitConfirmation() {
+      if (!this.reconciler?.resumePendingConfirmation) throw new Error("NO_BACKEND_CONFIRMATION_PENDING");
+      try {
+        const result = await this.reconciler.resumePendingConfirmation();
+        this.publish({ ...this.state, phase: "SUBMITTED", submitResult: result, submitPending: null });
+        return result;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.publish({ ...this.state, phase: "EA_SUBMITTED_CONFIRM_PENDING", error: message });
+        throw error;
+      }
     }
     discardSolution() {
       this.publish({ ...this.state, phase: "EA_READY", solution: null });
@@ -47197,8 +47303,7 @@
     async capture() {
       const snapshot = await super.capture();
       const items = snapshot.items.map((item) => ({ ...item, scoring_category: String(item.scoring_category || "").toUpperCase() }));
-      if (items.some((item) => !item.scoring_category)) throw new Error("GUARDIAN_TAXONOMY_UNVERIFIED");
-      return { ...snapshot, edition: "FC27", schema_version: 2, taxonomy_verified: true, items };
+      return { ...snapshot, edition: "FC27", schema_version: 2, taxonomy_verified: false, items };
     }
   };
 
@@ -47212,16 +47317,48 @@
     }
     /** @param {number} targetCount @param {string} rulesetVersion @param {{previousSolutionId?:string}} [options] */
     async solve(targetCount, rulesetVersion, options = {}) {
+      let activeRuleset;
+      try {
+        activeRuleset = await this.api.getActiveScoringRuleset("FC27");
+      } catch (error) {
+        const source = (
+          /** @type {any} */
+          error
+        );
+        if (source && source.status === 404) throw new Error("GUARDIAN_NO_ACTIVE_RULESET", { cause: error });
+        throw error;
+      }
+      if (rulesetVersion && rulesetVersion !== activeRuleset.ruleset_version) {
+        throw new Error("GUARDIAN_RULESET_CHANGED");
+      }
+      const resolvedRulesetVersion = activeRuleset.ruleset_version;
       const snapshot = await this.snapshotAdapter.capture();
-      const uploaded = await this.api.uploadSnapshot(snapshot);
-      if (!uploaded || uploaded.snapshot_hash !== snapshot.snapshot_hash) throw new Error("GUARDIAN_STALE_SNAPSHOT");
-      const response = await this.api.solveStreamlined({ snapshot_id: uploaded.id, snapshot_hash: snapshot.snapshot_hash, target_count: targetCount, ruleset_version: rulesetVersion, mode: this.mode, ...options.previousSolutionId ? { previous_solution_id: options.previousSolutionId } : {} });
+      await this.api.uploadRawSnapshot(snapshot);
+      let verified;
+      try {
+        verified = await this.api.getLatestVerifiedSnapshot("FC27");
+      } catch (error) {
+        const source = (
+          /** @type {any} */
+          error
+        );
+        if (source && source.status === 404) throw new Error("GUARDIAN_TAXONOMY_UNVERIFIED", { cause: error });
+        throw error;
+      }
+      if (!verified || verified.edition !== "FC27" || verified.schema_version !== 2 || verified.taxonomy_verified !== true) {
+        throw new Error("GUARDIAN_TAXONOMY_UNVERIFIED");
+      }
+      const serverSnapshot = await this.api.getSnapshotItems(verified.id);
+      if (!sameInventory(snapshot.items, serverSnapshot.items)) throw new Error("GUARDIAN_STALE_SNAPSHOT");
+      const response = await this.api.solveStreamlined({ snapshot_id: verified.id, snapshot_hash: verified.snapshot_hash, target_count: targetCount, ruleset_version: resolvedRulesetVersion, mode: this.mode, ...options.previousSolutionId ? { previous_solution_id: options.previousSolutionId } : {} });
       const byId = new Map(snapshot.items.map((item) => [String(item.id), item]));
       return {
         ...response,
         solutionId: response.solution_id,
         decisionId: response.decision_id,
         snapshotHash: snapshot.snapshot_hash,
+        serverSnapshotHash: verified.snapshot_hash,
+        snapshotId: verified.id,
         players: (response.selected || []).map((id) => {
           const item = byId.get(String(id));
           if (!item) throw new Error("GUARDIAN_STALE_SNAPSHOT");
@@ -47235,6 +47372,113 @@
       return this.solve(targetCount, rulesetVersion, { previousSolutionId });
     }
   };
+  function sameInventory(localItems, serverItems) {
+    const fields = [
+      "id",
+      "name",
+      "rating",
+      "league",
+      "nation",
+      "club",
+      "rarity",
+      "locked",
+      "duplicate",
+      "tradeable",
+      "special",
+      "evolution_eligible",
+      "favorite",
+      "in_active_squad",
+      "market_value_coins",
+      "valuation_source",
+      "valued_at"
+    ];
+    const normalize = (items) => items.map((item) => {
+      const copy = Object.fromEntries(fields.map((field) => [field, item[field] ?? null]));
+      return copy;
+    }).sort((a, b) => String(a.id).localeCompare(String(b.id)));
+    return JSON.stringify(normalize(localItems)) === JSON.stringify(normalize(serverItems));
+  }
+
+  // src/guardian/SubmitReconciler.js
+  var SubmitReconciler = class {
+    /** @param {{guardedSubmit?:()=>Promise<any>, confirmBackend?:(solutionId:string, decisionId:string)=>Promise<any>, store?:Storage|null}} [config] */
+    constructor({ guardedSubmit, confirmBackend, store = null } = {}) {
+      this.guardedSubmit = guardedSubmit;
+      this.confirmBackend = confirmBackend;
+      this.store = store;
+      this.pending = null;
+      this.completed = /* @__PURE__ */ new Set();
+      this.inFlight = null;
+      const pending = this.store?.getItem?.("guardian.ea-submit-pending");
+      if (pending) {
+        try {
+          const value = JSON.parse(pending);
+          if (value && typeof value.solutionId === "string" && typeof value.decisionId === "string") this.pending = value;
+        } catch {
+          this.store?.removeItem?.("guardian.ea-submit-pending");
+        }
+      }
+    }
+    pendingConfirmation() {
+      return this.pending ? { ...this.pending } : null;
+    }
+    /** @param {any} solution */
+    async submit(solution) {
+      if (this.inFlight) return this.inFlight;
+      const operation = this._submit(solution);
+      this.inFlight = operation;
+      try {
+        return await operation;
+      } finally {
+        if (this.inFlight === operation) this.inFlight = null;
+      }
+    }
+    async resumePendingConfirmation() {
+      if (this.inFlight) return this.inFlight;
+      if (!this.pending) throw new Error("NO_BACKEND_CONFIRMATION_PENDING");
+      const operation = this._resumePendingConfirmation();
+      this.inFlight = operation;
+      try {
+        return await operation;
+      } finally {
+        if (this.inFlight === operation) this.inFlight = null;
+      }
+    }
+    async _resumePendingConfirmation() {
+      if (!this.confirmBackend) throw new Error("GUARDED_EA_SUBMIT_UNAVAILABLE");
+      const { solutionId, decisionId } = this.pending;
+      const confirmed = await this.confirmBackend(solutionId, decisionId);
+      if (!confirmed || confirmed.status === "PENDING") throw new Error("BACKEND_CONFIRM_PENDING");
+      this.pending = null;
+      this.completed.add(solutionId);
+      this.store?.removeItem?.("guardian.ea-submit-pending");
+      this.store?.setItem?.(`guardian.ea-submit-completed:${solutionId}`, "1");
+      return confirmed;
+    }
+    /** @param {any} solution */
+    async _submit(solution) {
+      if (!solution?.solutionId || !solution?.decisionId) throw new Error("GUARDIAN_INVALID_SOLUTION");
+      if (!this.guardedSubmit || !this.confirmBackend) throw new Error("GUARDED_EA_SUBMIT_UNAVAILABLE");
+      if (this.completed.has(solution.solutionId) || this.store?.getItem?.(`guardian.ea-submit-completed:${solution.solutionId}`) === "1") {
+        this.completed.add(solution.solutionId);
+        return { status: "CONFIRMED", id: solution.solutionId };
+      }
+      if (this.pending && this.pending.solutionId !== solution.solutionId) throw new Error("BACKEND_CONFIRM_PENDING_OTHER_SOLUTION");
+      if (!this.pending || this.pending.solutionId !== solution.solutionId) {
+        const result = await this.guardedSubmit();
+        if (!result || result.success !== true) throw new Error("EA_SUBMIT_FAILED");
+        this.pending = { solutionId: solution.solutionId, decisionId: solution.decisionId };
+        this.store?.setItem?.("guardian.ea-submit-pending", JSON.stringify(this.pending));
+      }
+      const confirmed = await this.confirmBackend(solution.solutionId, solution.decisionId);
+      if (!confirmed || confirmed.status === "PENDING") throw new Error("BACKEND_CONFIRM_PENDING");
+      this.pending = null;
+      this.completed.add(solution.solutionId);
+      this.store?.removeItem?.("guardian.ea-submit-pending");
+      this.store?.setItem?.(`guardian.ea-submit-completed:${solution.solutionId}`, "1");
+      return confirmed;
+    }
+  };
 
   // src/guardian/GuardianSbcController.js
   var GuardianSbcController = class {
@@ -47246,21 +47490,26 @@
       this.activeChallenge = null;
       this.solution = null;
       this.busy = false;
+      this.generation = 0;
     }
     /** @param {any} challenge */
     attach(challenge) {
+      this.generation += 1;
       this.activeChallenge = challenge;
       this.solution = null;
       this.render({ phase: "READY", challenge });
     }
     async solve() {
       if (this.busy || !this.activeChallenge) return;
+      const generation = this.generation;
       this.busy = true;
       this.render({ phase: "SOLVING", challenge: this.activeChallenge });
       try {
         this.solution = await this.solveFacade.solve(this.activeChallenge);
+        if (generation !== this.generation) return;
         this.render({ phase: this.solution.status, challenge: this.activeChallenge, solution: this.solution });
       } catch (error) {
+        if (generation !== this.generation) return;
         this.render({ phase: "ERROR", error: error instanceof Error ? error.message : String(error) });
       } finally {
         this.busy = false;
@@ -47268,11 +47517,14 @@
     }
     async apply() {
       if (this.busy || !this.solution || this.solution.status !== "SOLVED") return;
+      const generation = this.generation;
       this.busy = true;
       try {
         await this.applyController.apply(this.solution);
+        if (generation !== this.generation) return;
         this.render({ phase: "APPLIED_NOT_SUBMITTED", solution: this.solution });
       } catch (error) {
+        if (generation !== this.generation) return;
         this.render({ phase: "ERROR", error: error instanceof Error ? error.message : String(error) });
       } finally {
         this.busy = false;
@@ -47282,12 +47534,15 @@
       if (this.busy || !this.solution || typeof this.solveFacade.tryAlternative !== "function") {
         throw new Error("ALTERNATIVE_NOT_AVAILABLE");
       }
+      const generation = this.generation;
       this.busy = true;
       this.render({ phase: "SOLVING", challenge: this.activeChallenge });
       try {
         this.solution = await this.solveFacade.tryAlternative(this.activeChallenge, this.solution);
+        if (generation !== this.generation) return;
         this.render({ phase: this.solution.status, challenge: this.activeChallenge, solution: this.solution });
       } catch (error) {
+        if (generation !== this.generation) return;
         this.render({ phase: "ERROR", error: error instanceof Error ? error.message : String(error) });
         throw error;
       } finally {
@@ -47313,12 +47568,33 @@
       applySelected: bindings.applySelected,
       captureSnapshot: () => snapshotAdapter.capture()
     });
+    const reconciler = new SubmitReconciler({
+      guardedSubmit: bindings.submitCurrentChallenge,
+      confirmBackend: (solutionId, decisionId) => api.confirmSolution(solutionId, decisionId),
+      store: ctx?.unsafeWindow?.localStorage || null
+    });
     let uiAdapter = null;
     const render = (state) => {
       uiAdapter?.publish(state);
     };
     const controller = new GuardianSbcController({ solveFacade, applyController, render });
-    uiAdapter = new GuardianUiAdapter({ controller, api });
+    uiAdapter = new GuardianUiAdapter({
+      controller,
+      api,
+      reconciler,
+      openEa: () => ctx?.unsafeWindow?.focus?.(),
+      refreshClub: async () => {
+        const snapshot = await snapshotAdapter.capture();
+        const summary = {
+          edition: snapshot.edition,
+          schema_version: snapshot.schema_version,
+          snapshot_hash: snapshot.snapshot_hash,
+          player_count: snapshot.player_count
+        };
+        uiAdapter?.publish({ ...uiAdapter?.getState() || {}, snapshot: summary, localSnapshot: snapshot });
+        return summary;
+      }
+    });
     return {
       open(tool) {
         if (tool !== "sbc") return;
@@ -47336,6 +47612,11 @@
     const api = new GuardianApiClient({ baseUrl: "https://sbc-guardian.duckdns.org", transport: apiTransport });
     const facade = new Fc27SolveFacade({ api, snapshotAdapter });
     const applyController = new GuardianApplyController({ guardian, applySelected: bindings.applySelected, captureSnapshot: () => snapshotAdapter.capture() });
+    const reconciler = new SubmitReconciler({
+      guardedSubmit: bindings.submitCurrentChallenge,
+      confirmBackend: (solutionId, decisionId) => api.confirmSolution(solutionId, decisionId),
+      store: ctx?.unsafeWindow?.localStorage || null
+    });
     const controller = new GuardianSbcController({
       solveFacade: {
         solve: (challenge) => facade.solve(Number(challenge.target_count || 11), String(challenge.ruleset_version || "")),
@@ -47345,7 +47626,23 @@
       render: () => {
       }
     });
-    const adapter = new GuardianUiAdapter({ controller, api });
+    const adapter = new GuardianUiAdapter({
+      controller,
+      api,
+      reconciler,
+      openEa: () => ctx?.unsafeWindow?.focus?.(),
+      refreshClub: async () => {
+        const snapshot = await snapshotAdapter.capture();
+        const summary = {
+          edition: snapshot.edition,
+          schema_version: snapshot.schema_version,
+          snapshot_hash: snapshot.snapshot_hash,
+          player_count: snapshot.player_count
+        };
+        adapter.publish({ ...adapter.getState(), snapshot: summary, localSnapshot: snapshot });
+        return summary;
+      }
+    });
     controller.render = (state) => adapter.publish(state);
     return {
       open(tool) {
@@ -47438,6 +47735,91 @@
     return api;
   }
 
+  // src/guardian/GuardianProductRouter.js
+  var GuardianProductRouter = class {
+    /** @param {{fc26:any, fc27:any, currentChallenge:()=>any}} config */
+    constructor({ fc26, fc27, currentChallenge }) {
+      this.products = { FC26: fc26, FC27: fc27 };
+      this.currentChallenge = currentChallenge;
+      this.active = fc26;
+      this.subscriptions = /* @__PURE__ */ new Map();
+    }
+    /** @param {(state:any)=>void} listener */
+    subscribe(listener) {
+      this.subscriptions.set(listener, this.active.uiAdapter.subscribe(listener));
+      return () => {
+        this.subscriptions.get(listener)?.();
+        this.subscriptions.delete(listener);
+      };
+    }
+    getState() {
+      return this.active.uiAdapter.getState();
+    }
+    /** @param {string} tool */
+    open(tool) {
+      const rawEdition = String(this.currentChallenge()?.edition || "").toUpperCase();
+      if (rawEdition !== "FC26" && rawEdition !== "FC27") {
+        throw new Error("GUARDIAN_UNSUPPORTED_EDITION");
+      }
+      const edition = rawEdition;
+      const next = this.products[edition];
+      if (!next) throw new Error("GUARDIAN_UNSUPPORTED_EDITION");
+      if (next !== this.active) {
+        this.active = next;
+        for (const [listener, unsubscribe] of this.subscriptions) {
+          unsubscribe?.();
+          this.subscriptions.set(listener, this.active.uiAdapter.subscribe(listener));
+        }
+      }
+      return this.active.open(tool);
+    }
+    /** @param {string} method @param {any[]} args */
+    _forward(method, args) {
+      const fn = this.active.uiAdapter[method];
+      if (typeof fn !== "function") throw new Error(`GUARDIAN_ADAPTER_METHOD_UNAVAILABLE:${method}`);
+      return fn.apply(this.active.uiAdapter, args);
+    }
+    findSolution() {
+      return this._forward("findSolution", []);
+    }
+    applySolution() {
+      return this._forward("applySolution", []);
+    }
+    tryAlternative() {
+      return this._forward("tryAlternative", []);
+    }
+    requestSubmit() {
+      return this._forward("requestSubmit", []);
+    }
+    resumeSubmitConfirmation() {
+      return this._forward("resumeSubmitConfirmation", []);
+    }
+    discardSolution() {
+      return this._forward("discardSolution", []);
+    }
+    loadPolicy() {
+      return this._forward("loadPolicy", []);
+    }
+    updatePolicy(policy) {
+      return this._forward("updatePolicy", [policy]);
+    }
+    loadAccount() {
+      return this._forward("loadAccount", []);
+    }
+    loadHome() {
+      return this._forward("loadHome", []);
+    }
+    signOut() {
+      return this._forward("signOut", []);
+    }
+    openEa() {
+      return this._forward("openEa", []);
+    }
+    refreshClub() {
+      return this._forward("refreshClub", []);
+    }
+  };
+
   // src/fsu/index.js
   var FsuUserscriptApp = class {
     constructor(windowRef, lodashRef) {
@@ -47459,16 +47841,21 @@
         const fsuCtx = futweb();
         const guardian = getGuardian2();
         if (guardian) {
-          const challengeEdition = String(fsuCtx?.cntlr?.current?.()?._challenge?.edition || "").toUpperCase();
-          const install = challengeEdition === "FC27" ? installGuardianFc27Product : installGuardianFc26Product;
-          product = install({
+          const installConfig = {
             document: this.windowRef.document,
             ctx: fsuCtx,
             guardian,
             apiTransport: this.windowRef.__guardianApiRequest,
             messages: getBundledGuardianMessages(this.windowRef.navigator?.language || "en")
+          };
+          const fc26 = installGuardianFc26Product(installConfig);
+          const fc27 = installGuardianFc27Product(installConfig);
+          product = new GuardianProductRouter({
+            fc26,
+            fc27,
+            currentChallenge: () => fsuCtx?.cntlr?.current?.()?._challenge || null
           });
-          mountReactGuardianOverlay({ document: this.windowRef.document, adapter: product.uiAdapter });
+          mountReactGuardianOverlay({ document: this.windowRef.document, adapter: product });
         }
       }
     }
