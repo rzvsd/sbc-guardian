@@ -1,7 +1,7 @@
 # Direct dependency pins. Generate the deployable hash lock with:
 # `python -m piptools compile --generate-hashes --output-file requirements.lock requirements.in`
 fastapi==0.115.6
-uvicorn[standard]==0.34.0
+uvicorn==0.34.0
 pydantic==2.10.4
 sqlalchemy==2.0.36
 alembic==1.14.0
