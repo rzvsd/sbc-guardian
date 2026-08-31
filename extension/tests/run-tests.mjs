@@ -62,6 +62,7 @@ import "./fc26-presenter.test.mjs";
 import "./streamlined-contract.test.mjs";
 import "./gecko-confirm-cleanup.test.mjs";
 import "./fc27-snapshot.test.mjs";
+import "./guardian-api-adapter.test.mjs";
 import "./guardian-facade.test.mjs";
 import { runGuardianProductionWiringTests } from "./guardian-production-wiring.test.mjs";
 import { runGuardianLifecycleTests } from "./guardian-lifecycle.test.mjs";

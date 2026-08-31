@@ -66,4 +66,11 @@ export class GuardianApiClient {
       await this.request("/api/v2/solve/streamlined", { method: "POST", body })
     );
   }
+
+  async getPolicy() { return this.request("/api/v2/guardian/policy"); }
+  /** @param {unknown} body */
+  async putPolicy(body) { return this.request("/api/v2/guardian/policy", { method: "PUT", body }); }
+  async getAccount() { return this.request("/api/v2/auth/me"); }
+  async getAccess() { return this.request("/api/v2/account/access"); }
+  async signOut() { return this.request("/api/v2/auth/logout", { method: "POST", body: {} }); }
 }

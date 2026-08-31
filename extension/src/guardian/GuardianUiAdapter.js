@@ -7,9 +7,10 @@ const PUBLIC_PHASES = new Set([
 ]);
 
 export class GuardianUiAdapter {
-  /** @param {{controller?:any, openEa?:()=>void, refreshClub?:()=>void}} config */
-  constructor({ controller, openEa = () => {}, refreshClub = () => {} } = {}) {
+  /** @param {{controller?:any, api?:any, openEa?:()=>void, refreshClub?:()=>void}} config */
+  constructor({ controller, api = null, openEa = () => {}, refreshClub = () => {} } = {}) {
     this.controller = controller;
+    this.api = api;
     this.openEa = openEa;
     this.refreshClub = refreshClub;
     this.state = { phase: "BOOTING" };
@@ -40,8 +41,9 @@ export class GuardianUiAdapter {
   tryAlternative() { return Promise.reject(new Error("ALTERNATIVE_NOT_AVAILABLE")); }
   requestSubmit() { return Promise.reject(new Error("SUBMIT_REQUIRES_CONFIRMATION")); }
   discardSolution() { this.publish({ phase: "EA_READY" }); }
-  loadPolicy() { return Promise.resolve(null); }
-  updatePolicy() { return Promise.reject(new Error("POLICY_NOT_AVAILABLE")); }
-  loadAccount() { return Promise.resolve(null); }
-  signOut() { return Promise.resolve(); }
+  loadPolicy() { return this.api ? this.api.getPolicy() : Promise.reject(new Error("POLICY_NOT_AVAILABLE")); }
+  /** @param {unknown} policy */
+  updatePolicy(policy) { return this.api ? this.api.putPolicy(policy) : Promise.reject(new Error("POLICY_NOT_AVAILABLE")); }
+  loadAccount() { return this.api ? Promise.all([this.api.getAccount(), this.api.getAccess()]) : Promise.reject(new Error("ACCOUNT_NOT_AVAILABLE")); }
+  signOut() { return this.api ? this.api.signOut() : Promise.reject(new Error("ACCOUNT_NOT_AVAILABLE")); }
 }

@@ -120,7 +120,7 @@ export function installGuardianFc26Product({ document, ctx, guardian, messages, 
     root.appendChild(createGuardianWorkspace({ t: /** @type {any} */ (t), children }));
   };
   const controller = new GuardianSbcController({ solveFacade, applyController, render });
-  uiAdapter = new GuardianUiAdapter({ controller });
+  uiAdapter = new GuardianUiAdapter({ controller, api });
   return {
     open(/** @type {string} */ tool) {
       if (tool !== "sbc") return;
@@ -145,7 +145,7 @@ export function installGuardianFc27Product({ document, ctx, guardian, apiTranspo
     applyController,
     render: () => {}
   });
-  const adapter = new GuardianUiAdapter({ controller });
+  const adapter = new GuardianUiAdapter({ controller, api });
   controller.render = (state) => adapter.publish(state);
   return {
     open(/** @type {string} */ tool) {
