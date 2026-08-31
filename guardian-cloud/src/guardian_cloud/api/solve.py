@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import secrets
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, ConfigDict, Field
@@ -29,6 +29,7 @@ class SolveTraditionalIn(BaseModel):
     # the hash so a stale read cannot be solved accidentally.
     snapshot_hash: str | None = None
     challenge_id: str | None = None
+    previous_solution_id: str | None = Field(default=None, min_length=1)
 
 
 class SolveStreamlinedIn(BaseModel):
@@ -40,6 +41,8 @@ class SolveStreamlinedIn(BaseModel):
     snapshot_hash: str | None = None
     target_count: int | None = Field(default=None, ge=1, le=50)
     ruleset_version: str | None = Field(default=None, min_length=1, max_length=64)
+    mode: Literal["DUPLICATE_FIRST", "BALANCED", "MINIMUM_ITEMS"] = "BALANCED"
+    previous_solution_id: str | None = Field(default=None, min_length=1)
 
 
 def _consumed_ids(session: Session, account_id: str) -> set[str]:
@@ -93,6 +96,18 @@ def solve_traditional_endpoint(
         "policy": policy,
         "items": [p.model_dump() for p in players],
     }
+    previous = None
+    if body.previous_solution_id:
+        previous = repo.get_solution(session, account_id, body.previous_solution_id)
+        if (
+            previous.format != "TRADITIONAL"
+            or previous.snapshot_hash != snap.snapshot_hash
+            or previous.edition != "FC26"
+            or previous.challenge_id != body.challenge_id
+            or previous.status != "PENDING"
+        ):
+            raise HTTPException(status_code=409, detail="previous solution context conflict")
+        case["forbidden_selection"] = [item.item_id for item in previous.items]
     result = solve_traditional(case)
     if result.status == "SOLVED":
         compiled = compile_case(case)
@@ -118,6 +133,8 @@ def solve_traditional_endpoint(
             edition="FC26",
             item_ids=result.selected,
         )
+        if previous is not None:
+            previous.status = "DISMISSED"
         return {
             "status": "SOLVED",
             "selected": result.selected,
@@ -170,10 +187,31 @@ def solve_streamlined_endpoint(
             raise HTTPException(status_code=422, detail="unscorable item in snapshot")
         players.append(normalize_player({**it, "points": pts}))
 
+    previous = None
+    forbidden_selection: set[str] = set()
+    if body.previous_solution_id:
+        previous = repo.get_solution(session, account_id, body.previous_solution_id)
+        if (
+            previous.format != "STREAMLINED"
+            or previous.snapshot_hash != snap.snapshot_hash
+            or previous.edition != "FC27"
+            or previous.ruleset_id != ruleset.id
+            or previous.ruleset_version != ruleset.ruleset_version
+            or previous.status != "PENDING"
+        ):
+            raise HTTPException(status_code=409, detail="previous solution context conflict")
+        forbidden_selection = {item.item_id for item in previous.items}
+
+    policy_row = repo.get_policy(session, account_id)
+    from ..domain.guardian_policy import GuardianPolicy
+    policy = GuardianPolicy.from_dict(json.loads(policy_row.policy_json)) if policy_row else GuardianPolicy()
     suggestion = solve_streamlined(
         players,
         body.target_count,
         ScoringRuleset(edition="FC27", ruleset_version=ruleset.ruleset_version),
+        mode=body.mode,
+        forbidden_selection=forbidden_selection,
+        policy=policy,
     )
     selected = suggestion.selected
     if selected:
@@ -196,6 +234,8 @@ def solve_streamlined_endpoint(
             raise HTTPException(status_code=409, detail="ruleset changed during solve")
 
     if selected:
+        if previous is not None:
+            previous.status = "DISMISSED"
         decision_id = secrets.token_urlsafe(24)
         solution = repo.create_solution(
             session,
@@ -211,10 +251,12 @@ def solve_streamlined_endpoint(
             item_ids=selected,
         )
     response = {
+        "status": suggestion.status,
         "selected": selected,
         "score": suggestion.score,
         "edition": "FC27",
         "ruleset_version": ruleset.ruleset_version,
+        "mode": body.mode,
     }
     if selected:
         response.update({"solution_id": solution.id, "decision_id": decision_id})

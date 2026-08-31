@@ -29,3 +29,22 @@ def test_locked_items_are_never_selected():
         ruleset=ScoringRuleset(edition="FC27", ruleset_version="v1"),
     )
     assert result.selected == ["safe"]
+
+
+def test_streamlined_mode_and_no_good_produce_a_different_selection():
+    items = [
+        PlayerItem(id="a", rating=90, points=10, duplicate=False),
+        PlayerItem(id="b", rating=89, points=9, duplicate=True),
+        PlayerItem(id="c", rating=88, points=8, duplicate=True),
+    ]
+    rs = ScoringRuleset(edition="FC27", ruleset_version="v1")
+    first = solve_streamlined(items, target_count=2, ruleset=rs, mode="DUPLICATE_FIRST")
+    alternative = solve_streamlined(
+        items,
+        target_count=2,
+        ruleset=rs,
+        mode="DUPLICATE_FIRST",
+        forbidden_selection=set(first.selected),
+    )
+    assert first.status == alternative.status == "SOLVED"
+    assert set(alternative.selected) != set(first.selected)

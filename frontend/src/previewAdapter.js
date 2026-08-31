@@ -23,6 +23,9 @@ export function createPreviewAdapter() {
     tryAlternative: () => publish({ phase: "SOLUTION_READY" }),
     discardSolution: () => publish({ phase: "EA_READY", solution: null }),
     loadPolicy: async () => state.policy,
+    getLatestSnapshot: async () => ({ player_count: 2184, edition: "FC26", schema_version: 1 }),
+    listSolutions: async () => [],
+    loadHome: async () => { publish({ snapshot: { player_count: 2184, edition: "FC26", schema_version: 1 }, activity: [] }); return { snapshot: state.snapshot, activity: state.activity }; },
     updatePolicy: async policy => { publish({ policy }); return policy; },
     loadAccount: async () => ({ account: state.account, access: state.access }),
     signOut: () => publish({ phase: "SESSION_EXPIRED", account: null, access: null })

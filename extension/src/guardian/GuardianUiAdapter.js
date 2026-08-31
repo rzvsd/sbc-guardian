@@ -39,12 +39,41 @@ export class GuardianUiAdapter {
 
   findSolution() { return this.controller?.solve(); }
   applySolution() { return this.controller?.apply(); }
-  tryAlternative() { return Promise.reject(new Error("ALTERNATIVE_NOT_AVAILABLE")); }
+  tryAlternative() { return this.controller?.tryAlternative ? this.controller.tryAlternative() : Promise.reject(new Error("ALTERNATIVE_NOT_AVAILABLE")); }
   requestSubmit() { return this.reconciler ? this.reconciler.submit(/** @type {any} */ (this.state).solution) : Promise.reject(new Error("SUBMIT_REQUIRES_CONFIRMATION")); }
-  discardSolution() { this.publish({ phase: "EA_READY" }); }
-  loadPolicy() { return this.api ? this.api.getPolicy() : Promise.reject(new Error("POLICY_NOT_AVAILABLE")); }
+  discardSolution() { this.publish({ ...this.state, phase: "EA_READY", solution: null }); }
+  async loadPolicy() {
+    if (!this.api) return Promise.reject(new Error("POLICY_NOT_AVAILABLE"));
+    const policy = await this.api.getPolicy();
+    this.publish({ ...this.state, policy });
+    return policy;
+  }
+  async loadHome() {
+    if (!this.api) return Promise.reject(new Error("HOME_NOT_AVAILABLE"));
+    const [snapshot, activity] = await Promise.all([
+      this.api.getLatestSnapshot(),
+      this.api.listSolutions(10)
+    ]);
+    this.publish({ ...this.state, snapshot, activity });
+    return { snapshot, activity };
+  }
   /** @param {unknown} policy */
-  updatePolicy(policy) { return this.api ? this.api.putPolicy(policy) : Promise.reject(new Error("POLICY_NOT_AVAILABLE")); }
-  loadAccount() { return this.api ? Promise.all([this.api.getAccount(), this.api.getAccess()]) : Promise.reject(new Error("ACCOUNT_NOT_AVAILABLE")); }
-  signOut() { return this.api ? this.api.signOut() : Promise.reject(new Error("ACCOUNT_NOT_AVAILABLE")); }
+  async updatePolicy(policy) {
+    if (!this.api) return Promise.reject(new Error("POLICY_NOT_AVAILABLE"));
+    const saved = await this.api.putPolicy(policy);
+    this.publish({ ...this.state, policy: saved });
+    return saved;
+  }
+  async loadAccount() {
+    if (!this.api) return Promise.reject(new Error("ACCOUNT_NOT_AVAILABLE"));
+    const [account, access] = await Promise.all([this.api.getAccount(), this.api.getAccess()]);
+    this.publish({ ...this.state, account, access });
+    return [account, access];
+  }
+  async signOut() {
+    if (!this.api) return Promise.reject(new Error("ACCOUNT_NOT_AVAILABLE"));
+    const result = await this.api.signOut();
+    this.publish({ ...this.state, phase: "SESSION_EXPIRED", account: null, access: null });
+    return result;
+  }
 }

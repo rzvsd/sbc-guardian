@@ -6,14 +6,19 @@ export class Fc27SolveFacade {
     this.mode = mode;
   }
 
-  /** @param {number} targetCount @param {string} rulesetVersion */
-  async solve(targetCount, rulesetVersion) {
+  /** @param {number} targetCount @param {string} rulesetVersion @param {{previousSolutionId?:string}} [options] */
+  async solve(targetCount, rulesetVersion, options = {}) {
     const snapshot = await this.snapshotAdapter.capture();
     const uploaded = await this.api.uploadSnapshot(snapshot);
     if (!uploaded || uploaded.snapshot_hash !== snapshot.snapshot_hash) throw new Error("GUARDIAN_STALE_SNAPSHOT");
-    const response = await this.api.solveStreamlined({ snapshot_id: uploaded.id, snapshot_hash: snapshot.snapshot_hash, target_count: targetCount, ruleset_version: rulesetVersion, mode: this.mode });
+    const response = await this.api.solveStreamlined({ snapshot_id: uploaded.id, snapshot_hash: snapshot.snapshot_hash, target_count: targetCount, ruleset_version: rulesetVersion, mode: this.mode, ...(options.previousSolutionId ? { previous_solution_id: options.previousSolutionId } : {}) });
     const byId = new Map(snapshot.items.map((/** @type {any} */ item) => [String(item.id), item]));
     return { ...response, solutionId: response.solution_id, decisionId: response.decision_id, snapshotHash: snapshot.snapshot_hash,
       players: (response.selected || []).map((/** @type {string} */ id) => { const item = byId.get(String(id)); if (!item) throw new Error("GUARDIAN_STALE_SNAPSHOT"); return { id: String(id), name: item.name, rating: item.rating, reasons: ["server-scored FC27 item"] }; }), warnings: [] };
+  }
+
+  /** @param {number} targetCount @param {string} rulesetVersion @param {string} previousSolutionId */
+  async tryAlternative(targetCount, rulesetVersion, previousSolutionId) {
+    return this.solve(targetCount, rulesetVersion, { previousSolutionId });
   }
 }

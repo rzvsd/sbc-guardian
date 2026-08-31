@@ -120,13 +120,62 @@ def test_solve_streamlined_endpoint(client, auth_headers, session):
     r = client.post(
         "/api/v2/solve/streamlined",
         headers=headers,
-        json={"snapshot_id": snap.id, "ruleset_version": data["ruleset_version"]},
+        json={"snapshot_id": snap.id, "ruleset_version": data["ruleset_version"], "mode": "BALANCED"},
     )
     assert r.status_code == 200
+    assert r.json()["status"] == "SOLVED"
+    assert r.json()["mode"] == "BALANCED"
     selected = r.json()["selected"]
     assert selected
     server_points = {str(it["id"]): int(it.get("points", 0)) for it in data["items"]}
     assert r.json()["score"] == sum(server_points[i] for i in selected)
+
+
+def test_streamlined_try_another_uses_no_good_and_dismisses_previous(
+    client, auth_headers, session
+):
+    headers, account_id = auth_headers
+    rs, data = _seed_fc27_ruleset(session)
+    items = data["items"] + [
+        {
+            "id": "00000000-0000-0000-0000-000000000004",
+            "rating": 84,
+            "scoring_category": "GOLD_COMMON",
+            "points": 4,
+        }
+    ]
+    snap = repo.save_snapshot(
+        session,
+        account_id,
+        snapshot_hash="h-str-alt",
+        items=items,
+        edition="FC27",
+        schema_version=2,
+        taxonomy_verified=True,
+    )
+    session.commit()
+    body = {
+        "snapshot_id": snap.id,
+        "snapshot_hash": snap.snapshot_hash,
+        "target_count": 2,
+        "ruleset_version": rs.ruleset_version,
+        "mode": "BALANCED",
+    }
+    first = client.post("/api/v2/solve/streamlined", headers=headers, json=body)
+    assert first.status_code == 200
+    first_json = first.json()
+    assert first_json["status"] == "SOLVED"
+
+    second = client.post(
+        "/api/v2/solve/streamlined",
+        headers=headers,
+        json={**body, "previous_solution_id": first_json["solution_id"]},
+    )
+    assert second.status_code == 200
+    second_json = second.json()
+    assert second_json["status"] == "SOLVED"
+    assert set(second_json["selected"]) != set(first_json["selected"])
+    assert repo.get_solution(session, account_id, first_json["solution_id"]).status == "DISMISSED"
 
 
 def test_privacy_flow(client, auth_headers):

@@ -46375,11 +46375,11 @@
   function SolutionCard({ solution, state, run }) {
     const selected = solution.selected_items || solution.items || [];
     const warnings = solution.warnings || [];
-    return /* @__PURE__ */ import_react.default.createElement(Card, { "data-testid": "production-solution-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "flex items-start justify-between gap-3" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-zinc-500" }, "Solution review"), /* @__PURE__ */ import_react.default.createElement("h2", { className: "mt-1 font-display text-xl font-semibold text-zinc-100" }, selected.length, " selected items")), /* @__PURE__ */ import_react.default.createElement("span", { className: "rounded-full bg-jade/10 px-2.5 py-1 text-xs text-jade" }, solution.edition || state.edition || "FC")), (solution.team_rating != null || solution.chemistry != null) && /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-sm text-zinc-400" }, solution.team_rating != null ? `Team rating ${solution.team_rating}` : "", solution.chemistry != null ? ` · Chemistry ${solution.chemistry}` : ""), warnings.length > 0 && /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-sm text-amber-200" }, warnings[0]), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-4 flex flex-wrap gap-2" }, /* @__PURE__ */ import_react.default.createElement(Button, { onClick: () => run("applySolution"), disabled: state.phase !== "SOLUTION_READY", testId: "production-apply" }, "Apply squad"), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("tryAlternative"), disabled: state.phase !== "SOLUTION_READY", testId: "production-alternative" }, "Try another"), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("discardSolution"), testId: "production-discard" }, "Discard")), state.phase === "APPLIED_NOT_SUBMITTED" && /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-3 text-xs text-zinc-400" }, "Applied in EA FC. Nothing has been submitted."));
+    return /* @__PURE__ */ import_react.default.createElement(Card, { "data-testid": "production-solution-card" }, /* @__PURE__ */ import_react.default.createElement("div", { className: "flex items-start justify-between gap-3" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-zinc-500" }, "Solution review"), /* @__PURE__ */ import_react.default.createElement("h2", { className: "mt-1 font-display text-xl font-semibold text-zinc-100" }, selected.length, " selected items")), /* @__PURE__ */ import_react.default.createElement("span", { className: "rounded-full bg-jade/10 px-2.5 py-1 text-xs text-jade" }, solution.edition || state.edition || "FC")), (solution.team_rating != null || solution.chemistry != null) && /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-sm text-zinc-400" }, solution.team_rating != null ? `Team rating ${solution.team_rating}` : "", solution.chemistry != null ? ` · Chemistry ${solution.chemistry}` : ""), warnings.length > 0 && /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-sm text-amber-200" }, warnings[0]), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-4 flex flex-wrap gap-2" }, /* @__PURE__ */ import_react.default.createElement(Button, { onClick: () => run("applySolution"), disabled: state.phase !== "SOLUTION_READY", testId: "production-apply" }, "Apply squad"), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("tryAlternative"), disabled: state.phase !== "SOLUTION_READY", testId: "production-alternative" }, "Try another"), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("discardSolution"), testId: "production-discard" }, "Discard"), state.phase === "APPLIED_NOT_SUBMITTED" && /* @__PURE__ */ import_react.default.createElement(Button, { onClick: () => run("requestSubmit"), testId: "production-submit" }, "Submit in EA FC")), state.phase === "APPLIED_NOT_SUBMITTED" && /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-3 text-xs text-zinc-400" }, "Applied in EA FC. Nothing has been submitted."), state.phase === "EA_SUBMITTED_CONFIRM_PENDING" && /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-3 text-xs text-amber-200" }, "EA submitted once; Guardian is retrying confirmation only."));
   }
   function Home({ state, adapter, run }) {
     const challenge = state.challenge;
-    return /* @__PURE__ */ import_react.default.createElement("div", { className: "flex h-full flex-col gap-4 overflow-y-auto no-scrollbar px-5 pb-6 pt-5" }, /* @__PURE__ */ import_react.default.createElement("header", { className: "flex items-center justify-between" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-[0.16em] text-zinc-500" }, "Guardian"), /* @__PURE__ */ import_react.default.createElement("h1", { className: "font-display text-2xl font-semibold tracking-tight text-zinc-100" }, "SBC Guardian")), /* @__PURE__ */ import_react.default.createElement(Status, { phase: state.phase })), state.error && /* @__PURE__ */ import_react.default.createElement(Card, { className: "border-rose-400/30 bg-rose-950/20" }, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-sm text-rose-200" }, state.error)), /* @__PURE__ */ import_react.default.createElement(Card, null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-zinc-500" }, "Current context"), challenge ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("h2", { className: "mt-2 font-display text-xl font-semibold text-zinc-100" }, challenge.name || "SBC challenge"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-1 text-sm text-zinc-400" }, challenge.edition || "EA FC", " · ", challenge.squad_size || "—", " players")) : /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-sm text-zinc-400" }, "Open an SBC in EA FC to let Guardian read the real challenge."), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-4 flex flex-wrap gap-2" }, /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("openEa"), testId: "production-open-ea" }, "Open EA FC"), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("refreshClub"), testId: "production-refresh-club" }, "Refresh club"), state.phase === "SBC_DETECTED" && /* @__PURE__ */ import_react.default.createElement(Button, { onClick: () => run("findSolution"), testId: "production-find-solution" }, "Find solution"))), state.solution && /* @__PURE__ */ import_react.default.createElement(SolutionCard, { solution: state.solution, state, adapter, run }), /* @__PURE__ */ import_react.default.createElement(Card, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-zinc-500" }, "Recent activity"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-1 text-sm text-zinc-400" }, "Server-backed history only")), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("loadAccount"), testId: "production-refresh-account" }, "Refresh")), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-3 divide-y divide-brd" }, (state.activity || []).slice(0, 5).map((entry) => /* @__PURE__ */ import_react.default.createElement("div", { key: entry.id || `${entry.created_at}-${entry.name}`, className: "flex justify-between py-3 text-sm" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "text-zinc-300" }, entry.name || entry.challenge_name || "Solution"), /* @__PURE__ */ import_react.default.createElement("span", { className: "text-zinc-500" }, entry.status || entry.phase || "—"))), !state.activity?.length && /* @__PURE__ */ import_react.default.createElement("p", { className: "py-3 text-sm text-zinc-500" }, "No activity returned yet."))));
+    return /* @__PURE__ */ import_react.default.createElement("div", { className: "flex h-full flex-col gap-4 overflow-y-auto no-scrollbar px-5 pb-6 pt-5" }, /* @__PURE__ */ import_react.default.createElement("header", { className: "flex items-center justify-between" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-[0.16em] text-zinc-500" }, "Guardian"), /* @__PURE__ */ import_react.default.createElement("h1", { className: "font-display text-2xl font-semibold tracking-tight text-zinc-100" }, "SBC Guardian")), /* @__PURE__ */ import_react.default.createElement(Status, { phase: state.phase })), state.error && /* @__PURE__ */ import_react.default.createElement(Card, { className: "border-rose-400/30 bg-rose-950/20" }, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-sm text-rose-200" }, state.error)), /* @__PURE__ */ import_react.default.createElement(Card, null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-zinc-500" }, "Current context"), challenge ? /* @__PURE__ */ import_react.default.createElement(import_react.default.Fragment, null, /* @__PURE__ */ import_react.default.createElement("h2", { className: "mt-2 font-display text-xl font-semibold text-zinc-100" }, challenge.name || "SBC challenge"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-1 text-sm text-zinc-400" }, challenge.edition || "EA FC", " · ", challenge.squad_size || "—", " players")) : /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-sm text-zinc-400" }, "Open an SBC in EA FC to let Guardian read the real challenge."), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-4 flex flex-wrap gap-2" }, /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("openEa"), testId: "production-open-ea" }, "Open EA FC"), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("refreshClub"), testId: "production-refresh-club" }, "Refresh club"), state.phase === "SBC_DETECTED" && /* @__PURE__ */ import_react.default.createElement(Button, { onClick: () => run("findSolution"), testId: "production-find-solution" }, "Find solution"))), state.solution && /* @__PURE__ */ import_react.default.createElement(SolutionCard, { solution: state.solution, state, adapter, run }), /* @__PURE__ */ import_react.default.createElement(Card, null, /* @__PURE__ */ import_react.default.createElement("div", { className: "flex items-center justify-between" }, /* @__PURE__ */ import_react.default.createElement("div", null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-zinc-500" }, "Recent activity"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-1 text-sm text-zinc-400" }, "Server-backed history only")), /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("loadHome"), testId: "production-refresh-home" }, "Refresh")), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-3 divide-y divide-brd" }, (state.activity || []).slice(0, 5).map((entry) => /* @__PURE__ */ import_react.default.createElement("div", { key: entry.id || `${entry.created_at}-${entry.name}`, className: "flex justify-between py-3 text-sm" }, /* @__PURE__ */ import_react.default.createElement("span", { className: "text-zinc-300" }, entry.name || entry.challenge_name || "Solution"), /* @__PURE__ */ import_react.default.createElement("span", { className: "text-zinc-500" }, entry.status || entry.phase || "—"))), !state.activity?.length && /* @__PURE__ */ import_react.default.createElement("p", { className: "py-3 text-sm text-zinc-500" }, "No activity returned yet."))));
   }
   function EaFc({ state, run }) {
     return /* @__PURE__ */ import_react.default.createElement("div", { className: "flex h-full flex-col gap-4 overflow-y-auto no-scrollbar px-5 pb-6 pt-5" }, /* @__PURE__ */ import_react.default.createElement(Card, { className: "border-jade/20 bg-[#08130e]" }, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs font-medium uppercase tracking-wider text-jade" }, "EA FC underneath"), /* @__PURE__ */ import_react.default.createElement("h1", { className: "mt-2 font-display text-2xl font-semibold text-zinc-100" }, "Your EA page stays visible"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-sm leading-relaxed text-zinc-400" }, "Guardian is an overlay. It does not replace the EA FC interface or submit anything by itself."), /* @__PURE__ */ import_react.default.createElement("div", { className: "mt-4 flex gap-2" }, /* @__PURE__ */ import_react.default.createElement(Button, { onClick: () => run("openEa"), testId: "production-ea-open" }, "Open EA FC"), state.phase === "SBC_DETECTED" && /* @__PURE__ */ import_react.default.createElement(Button, { secondary: true, onClick: () => run("findSolution"), testId: "production-ea-find" }, "Find solution"))), state.challenge && /* @__PURE__ */ import_react.default.createElement(Card, null, /* @__PURE__ */ import_react.default.createElement("p", { className: "text-xs uppercase tracking-wider text-zinc-500" }, "Detected challenge"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-2 text-lg font-semibold text-zinc-100" }, state.challenge.name || "SBC"), /* @__PURE__ */ import_react.default.createElement("p", { className: "mt-1 text-sm text-zinc-400" }, state.challenge.edition || "EA FC")));
@@ -46931,6 +46931,14 @@
     async getPolicy() {
       return this.request("/api/v2/guardian/policy");
     }
+    async getLatestSnapshot() {
+      return this.request("/api/v2/snapshots/latest");
+    }
+    /** @param {number} [limit] */
+    async listSolutions(limit = 10) {
+      const bounded = Math.max(1, Math.min(50, Number(limit) || 10));
+      return this.request(`/api/v2/solutions?limit=${bounded}`);
+    }
     /** @param {unknown} body */
     async putPolicy(body) {
       return this.request("/api/v2/guardian/policy", { method: "PUT", body });
@@ -47001,8 +47009,8 @@
       this.requirementAdapter = requirementAdapter;
       this.presenter = presenter;
     }
-    /** @param {any} challenge */
-    async solve(challenge) {
+    /** @param {any} challenge @param {{previousSolutionId?:string}} [options] */
+    async solve(challenge, options = {}) {
       const compiled = this.requirementAdapter.compile(challenge);
       const snapshot = await this.snapshotAdapter.capture();
       const uploaded = await this.api.uploadSnapshot(snapshot);
@@ -47013,12 +47021,17 @@
         request: compiled.request,
         snapshot_id: uploaded.id,
         snapshot_hash: snapshot.snapshot_hash,
-        challenge_id: compiled.challengeId
+        challenge_id: compiled.challengeId,
+        ...options.previousSolutionId ? { previous_solution_id: options.previousSolutionId } : {}
       });
       if (response.status !== "SOLVED") {
         return { status: response.status, players: [], warnings: [] };
       }
       return this.presenter.present(response, snapshot);
+    }
+    /** @param {any} challenge @param {{solutionId?:string}} previous */
+    async tryAlternative(challenge, previous) {
+      return this.solve(challenge, { previousSolutionId: previous?.solutionId });
     }
   };
 
@@ -47229,7 +47242,7 @@
       return this.controller?.apply();
     }
     tryAlternative() {
-      return Promise.reject(new Error("ALTERNATIVE_NOT_AVAILABLE"));
+      return this.controller?.tryAlternative ? this.controller.tryAlternative() : Promise.reject(new Error("ALTERNATIVE_NOT_AVAILABLE"));
     }
     requestSubmit() {
       return this.reconciler ? this.reconciler.submit(
@@ -47238,20 +47251,41 @@
       ) : Promise.reject(new Error("SUBMIT_REQUIRES_CONFIRMATION"));
     }
     discardSolution() {
-      this.publish({ phase: "EA_READY" });
+      this.publish({ ...this.state, phase: "EA_READY", solution: null });
     }
-    loadPolicy() {
-      return this.api ? this.api.getPolicy() : Promise.reject(new Error("POLICY_NOT_AVAILABLE"));
+    async loadPolicy() {
+      if (!this.api) return Promise.reject(new Error("POLICY_NOT_AVAILABLE"));
+      const policy = await this.api.getPolicy();
+      this.publish({ ...this.state, policy });
+      return policy;
+    }
+    async loadHome() {
+      if (!this.api) return Promise.reject(new Error("HOME_NOT_AVAILABLE"));
+      const [snapshot, activity] = await Promise.all([
+        this.api.getLatestSnapshot(),
+        this.api.listSolutions(10)
+      ]);
+      this.publish({ ...this.state, snapshot, activity });
+      return { snapshot, activity };
     }
     /** @param {unknown} policy */
-    updatePolicy(policy) {
-      return this.api ? this.api.putPolicy(policy) : Promise.reject(new Error("POLICY_NOT_AVAILABLE"));
+    async updatePolicy(policy) {
+      if (!this.api) return Promise.reject(new Error("POLICY_NOT_AVAILABLE"));
+      const saved = await this.api.putPolicy(policy);
+      this.publish({ ...this.state, policy: saved });
+      return saved;
     }
-    loadAccount() {
-      return this.api ? Promise.all([this.api.getAccount(), this.api.getAccess()]) : Promise.reject(new Error("ACCOUNT_NOT_AVAILABLE"));
+    async loadAccount() {
+      if (!this.api) return Promise.reject(new Error("ACCOUNT_NOT_AVAILABLE"));
+      const [account, access] = await Promise.all([this.api.getAccount(), this.api.getAccess()]);
+      this.publish({ ...this.state, account, access });
+      return [account, access];
     }
-    signOut() {
-      return this.api ? this.api.signOut() : Promise.reject(new Error("ACCOUNT_NOT_AVAILABLE"));
+    async signOut() {
+      if (!this.api) return Promise.reject(new Error("ACCOUNT_NOT_AVAILABLE"));
+      const result = await this.api.signOut();
+      this.publish({ ...this.state, phase: "SESSION_EXPIRED", account: null, access: null });
+      return result;
     }
   };
 
@@ -47273,12 +47307,12 @@
       this.snapshotAdapter = snapshotAdapter;
       this.mode = mode;
     }
-    /** @param {number} targetCount @param {string} rulesetVersion */
-    async solve(targetCount, rulesetVersion) {
+    /** @param {number} targetCount @param {string} rulesetVersion @param {{previousSolutionId?:string}} [options] */
+    async solve(targetCount, rulesetVersion, options = {}) {
       const snapshot = await this.snapshotAdapter.capture();
       const uploaded = await this.api.uploadSnapshot(snapshot);
       if (!uploaded || uploaded.snapshot_hash !== snapshot.snapshot_hash) throw new Error("GUARDIAN_STALE_SNAPSHOT");
-      const response = await this.api.solveStreamlined({ snapshot_id: uploaded.id, snapshot_hash: snapshot.snapshot_hash, target_count: targetCount, ruleset_version: rulesetVersion, mode: this.mode });
+      const response = await this.api.solveStreamlined({ snapshot_id: uploaded.id, snapshot_hash: snapshot.snapshot_hash, target_count: targetCount, ruleset_version: rulesetVersion, mode: this.mode, ...options.previousSolutionId ? { previous_solution_id: options.previousSolutionId } : {} });
       const byId = new Map(snapshot.items.map((item) => [String(item.id), item]));
       return {
         ...response,
@@ -47292,6 +47326,10 @@
         }),
         warnings: []
       };
+    }
+    /** @param {number} targetCount @param {string} rulesetVersion @param {string} previousSolutionId */
+    async tryAlternative(targetCount, rulesetVersion, previousSolutionId) {
+      return this.solve(targetCount, rulesetVersion, { previousSolutionId });
     }
   };
 
@@ -47333,6 +47371,22 @@
         this.render({ phase: "APPLIED_NOT_SUBMITTED", solution: this.solution });
       } catch (error) {
         this.render({ phase: "ERROR", error: error instanceof Error ? error.message : String(error) });
+      } finally {
+        this.busy = false;
+      }
+    }
+    async tryAlternative() {
+      if (this.busy || !this.solution || typeof this.solveFacade.tryAlternative !== "function") {
+        throw new Error("ALTERNATIVE_NOT_AVAILABLE");
+      }
+      this.busy = true;
+      this.render({ phase: "SOLVING", challenge: this.activeChallenge });
+      try {
+        this.solution = await this.solveFacade.tryAlternative(this.activeChallenge, this.solution);
+        this.render({ phase: this.solution.status, challenge: this.activeChallenge, solution: this.solution });
+      } catch (error) {
+        this.render({ phase: "ERROR", error: error instanceof Error ? error.message : String(error) });
+        throw error;
       } finally {
         this.busy = false;
       }
@@ -47425,7 +47479,10 @@
     const facade = new Fc27SolveFacade({ api, snapshotAdapter });
     const applyController = new GuardianApplyController({ guardian, applySelected: bindings.applySelected, captureSnapshot: () => snapshotAdapter.capture() });
     const controller = new GuardianSbcController({
-      solveFacade: { solve: (challenge) => facade.solve(Number(challenge.target_count || 11), String(challenge.ruleset_version || "")) },
+      solveFacade: {
+        solve: (challenge) => facade.solve(Number(challenge.target_count || 11), String(challenge.ruleset_version || "")),
+        tryAlternative: (challenge, previous) => facade.tryAlternative(Number(challenge.target_count || 11), String(challenge.ruleset_version || ""), String(previous.solutionId || ""))
+      },
       applyController,
       render: () => {
       }

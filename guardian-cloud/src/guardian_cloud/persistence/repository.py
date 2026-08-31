@@ -202,6 +202,11 @@ def list_solutions(session: Session, account_id: str, limit: int = 10) -> list[S
     return list(session.execute(stmt).scalars())
 
 
+def get_solution(session: Session, account_id: str, solution_id: str) -> Solution:
+    """Return an owned solution or raise the same non-enumerating ownership error."""
+    return require_ownership(session.get(Solution, solution_id), account_id)
+
+
 def confirm_solution(session: Session, account_id: str, solution_id: str, decision_id: str) -> Solution:
     lock_account(session, account_id)
     sol = session.execute(

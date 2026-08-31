@@ -56,6 +56,23 @@ export class GuardianSbcController {
       this.busy = false;
     }
   }
+
+  async tryAlternative() {
+    if (this.busy || !this.solution || typeof this.solveFacade.tryAlternative !== "function") {
+      throw new Error("ALTERNATIVE_NOT_AVAILABLE");
+    }
+    this.busy = true;
+    this.render({ phase: "SOLVING", challenge: this.activeChallenge });
+    try {
+      this.solution = await this.solveFacade.tryAlternative(this.activeChallenge, this.solution);
+      this.render({ phase: this.solution.status, challenge: this.activeChallenge, solution: this.solution });
+    } catch (error) {
+      this.render({ phase: "ERROR", error: error instanceof Error ? error.message : String(error) });
+      throw error;
+    } finally {
+      this.busy = false;
+    }
+  }
 }
 
 /** @param {{document:Document, ctx:any, guardian:any, messages:Record<string,string>, apiTransport:(request:{url:string,method:string,body?:unknown,timeoutMs:number})=>Promise<{status:number,body:unknown}>}} config */
@@ -141,7 +158,10 @@ export function installGuardianFc27Product({ ctx, guardian, apiTransport }) {
   const facade = new Fc27SolveFacade({ api, snapshotAdapter });
   const applyController = new GuardianApplyController({ guardian, applySelected: bindings.applySelected, captureSnapshot: () => snapshotAdapter.capture() });
   const controller = new GuardianSbcController({
-    solveFacade: { solve: (/** @type {any} */ challenge) => facade.solve(Number(challenge.target_count || 11), String(challenge.ruleset_version || "")) },
+    solveFacade: {
+      solve: (/** @type {any} */ challenge) => facade.solve(Number(challenge.target_count || 11), String(challenge.ruleset_version || "")),
+      tryAlternative: (/** @type {any} */ challenge, /** @type {{solutionId?:string}} */ previous) => facade.tryAlternative(Number(challenge.target_count || 11), String(challenge.ruleset_version || ""), String(previous.solutionId || "")),
+    },
     applyController,
     render: () => {}
   });

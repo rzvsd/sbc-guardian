@@ -50,6 +50,13 @@ def solve_traditional(case: dict[str, Any]) -> SolveResult:
     x = [model.new_bool_var(f"x{i}") for i in range(n)]
     model.add(sum(x) == team_size)
 
+    # A no-good constraint is used for a genuine "try another" solve.  The
+    # previous selection may not be reproduced exactly, while all normal
+    # solve calls remain unchanged.
+    forbidden = {str(item_id) for item_id in case.get("forbidden_selection", [])}
+    if forbidden:
+        model.add(sum(x[i] for i, it in enumerate(items) if it.id in forbidden) <= team_size - 1)
+
     for i, it in enumerate(items):
         if it.locked:
             model.add(x[i] == 0)

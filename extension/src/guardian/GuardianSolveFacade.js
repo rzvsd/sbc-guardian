@@ -7,8 +7,8 @@ export class GuardianSolveFacade {
     this.presenter = presenter;
   }
 
-  /** @param {any} challenge */
-  async solve(challenge) {
+  /** @param {any} challenge @param {{previousSolutionId?:string}} [options] */
+  async solve(challenge, options = {}) {
     const compiled = this.requirementAdapter.compile(challenge);
     const snapshot = await this.snapshotAdapter.capture();
     const uploaded = await this.api.uploadSnapshot(snapshot);
@@ -19,11 +19,17 @@ export class GuardianSolveFacade {
       request: compiled.request,
       snapshot_id: uploaded.id,
       snapshot_hash: snapshot.snapshot_hash,
-      challenge_id: compiled.challengeId
+      challenge_id: compiled.challengeId,
+      ...(options.previousSolutionId ? { previous_solution_id: options.previousSolutionId } : {})
     });
     if (response.status !== "SOLVED") {
       return { status: response.status, players: [], warnings: [] };
     }
     return this.presenter.present(response, snapshot);
+  }
+
+  /** @param {any} challenge @param {{solutionId?:string}} previous */
+  async tryAlternative(challenge, previous) {
+    return this.solve(challenge, { previousSolutionId: previous?.solutionId });
   }
 }

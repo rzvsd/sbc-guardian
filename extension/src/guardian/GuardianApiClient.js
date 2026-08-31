@@ -68,6 +68,12 @@ export class GuardianApiClient {
   }
 
   async getPolicy() { return this.request("/api/v2/guardian/policy"); }
+  async getLatestSnapshot() { return this.request("/api/v2/snapshots/latest"); }
+  /** @param {number} [limit] */
+  async listSolutions(limit = 10) {
+    const bounded = Math.max(1, Math.min(50, Number(limit) || 10));
+    return this.request(`/api/v2/solutions?limit=${bounded}`);
+  }
   /** @param {unknown} body */
   async putPolicy(body) { return this.request("/api/v2/guardian/policy", { method: "PUT", body }); }
   async getAccount() { return this.request("/api/v2/auth/me"); }
