@@ -73,4 +73,8 @@ export class GuardianApiClient {
   async getAccount() { return this.request("/api/v2/auth/me"); }
   async getAccess() { return this.request("/api/v2/account/access"); }
   async signOut() { return this.request("/api/v2/auth/logout", { method: "POST", body: {} }); }
+  /** @param {string} solutionId @param {string} decisionId */
+  async confirmSolution(solutionId, decisionId) {
+    return this.request(`/api/v2/solutions/${encodeURIComponent(solutionId)}/confirm`, { method: "POST", body: { decision_id: decisionId } });
+  }
 }

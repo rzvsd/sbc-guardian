@@ -7,10 +7,11 @@ const PUBLIC_PHASES = new Set([
 ]);
 
 export class GuardianUiAdapter {
-  /** @param {{controller?:any, api?:any, openEa?:()=>void, refreshClub?:()=>void}} config */
-  constructor({ controller, api = null, openEa = () => {}, refreshClub = () => {} } = {}) {
+  /** @param {{controller?:any, api?:any, reconciler?:any, openEa?:()=>void, refreshClub?:()=>void}} config */
+  constructor({ controller, api = null, reconciler = null, openEa = () => {}, refreshClub = () => {} } = {}) {
     this.controller = controller;
     this.api = api;
+    this.reconciler = reconciler;
     this.openEa = openEa;
     this.refreshClub = refreshClub;
     this.state = { phase: "BOOTING" };
@@ -39,7 +40,7 @@ export class GuardianUiAdapter {
   findSolution() { return this.controller?.solve(); }
   applySolution() { return this.controller?.apply(); }
   tryAlternative() { return Promise.reject(new Error("ALTERNATIVE_NOT_AVAILABLE")); }
-  requestSubmit() { return Promise.reject(new Error("SUBMIT_REQUIRES_CONFIRMATION")); }
+  requestSubmit() { return this.reconciler ? this.reconciler.submit(/** @type {any} */ (this.state).solution) : Promise.reject(new Error("SUBMIT_REQUIRES_CONFIRMATION")); }
   discardSolution() { this.publish({ phase: "EA_READY" }); }
   loadPolicy() { return this.api ? this.api.getPolicy() : Promise.reject(new Error("POLICY_NOT_AVAILABLE")); }
   /** @param {unknown} policy */
