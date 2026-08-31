@@ -456,7 +456,8 @@ function assertUserscriptBundle() {
   assert.ok(userscript.includes("createFutbinIdFacade"));
   assert.ok(userscript.includes("getPriceForUrl"));
   assert.ok(userscript.includes("mountGuardian"));
-  assert.ok(userscript.includes("guardian-root"));
+  assert.ok(!userscript.includes("guardian-root"), "legacy DOM Guardian root must not ship in production");
+  assert.ok(userscript.includes("guardian-react-root"), "React overlay root must ship in production");
   assert.ok(userscript.includes("requestGuarded"));
   assert.ok(userscript.includes("GUARDIAN_DECISION_REQUIRED"));
   assert.ok(userscript.includes("GUARDIAN_KIND_MISMATCH"));

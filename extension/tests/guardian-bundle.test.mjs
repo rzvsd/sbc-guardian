@@ -137,6 +137,11 @@ assert.ok(typeof mountGuardian === "function", "real bundle exposes mountGuardia
 assert.ok(typeof getGuardian === "function", "real bundle exposes getGuardian (test-only)");
 const api = mountGuardian({ window: sandboxWindow, document: sandboxDocument });
 assert.ok(api && typeof api.requestGuarded === "function", "window.__guardian.requestGuarded exists");
+assert.equal(
+  allNodes.some((node) => node.getAttribute?.("data-guardian-root") === "true"),
+  false,
+  "mountGuardian must not create the legacy DOM UI root"
+);
 
 // 1 + 4. No facade / approval / execution surface on the public object.
 assert.equal(api.guardian, undefined, "window.__guardian.guardian must be undefined");

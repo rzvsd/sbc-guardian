@@ -6,7 +6,6 @@ import {
 import { createTranslator } from "./i18n/index.js";
 import enMessages from "./i18n/en.json";
 import roMessages from "./i18n/ro.json";
-import { createGuardianRail } from "./ui/GuardianRail.js";
 import { createGuardianActionConfirmation } from "./ui/GuardianActionConfirmation.js";
 import { el } from "./ui/dom.js";
 import { registerFsuMutations } from "./fsu/registerFsuMutations.js";
@@ -61,7 +60,7 @@ function injectStyles(doc, css) {
  * @param {{ window?: any, document?: any, ctx?: any, mutations?: Record<string, (payload: unknown, preview: object) => unknown>, sessionNonce?: string, locale?: string, onToolSelect?: (tool:string)=>void, nativeConfirm?: (preview:object)=>Promise<boolean> }} [options]
  * @returns {{ requestGuarded: (kind: string, payload: unknown) => Promise<any>, isRegistered: (kind: string) => boolean, getRegisteredKinds: () => string[] }}
  */
-export function mountGuardian({ window, document, ctx, mutations, sessionNonce, locale, onToolSelect, nativeConfirm } = {}) {
+export function mountGuardian({ window, document, ctx, mutations, sessionNonce, locale, onToolSelect: _onToolSelect, nativeConfirm } = {}) {
   const w = window || (typeof globalThis !== "undefined" ? globalThis : undefined);
   const doc = document || (w && w.document);
   const nonce =
@@ -107,14 +106,6 @@ export function mountGuardian({ window, document, ctx, mutations, sessionNonce, 
       };
     }
   };
-
-  let root;
-  if (doc && doc.body) {
-    root = /** @type {HTMLElement} */ (el("div", { className: "guardian-root", attrs: { "data-guardian-root": "true" } }));
-    const rail = createGuardianRail({ t: /** @type {any} */ (t), onSelect: onToolSelect || (() => {}) });
-    root.appendChild(rail);
-    doc.body.appendChild(root);
-  }
 
   // Public surface is requestGuarded + read-only diagnostics ONLY. It must
   // NOT expose the facade, gate, mutable state, pending decisions, executors,

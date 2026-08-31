@@ -4,10 +4,6 @@ import { GuardianApplyController } from "./GuardianApplyController.js";
 import { GuardianSolveFacade } from "./GuardianSolveFacade.js";
 import { Fc26RequirementAdapter } from "./fc26/Fc26RequirementAdapter.js";
 import { Fc26SolutionPresenter } from "./fc26/Fc26SolutionPresenter.js";
-import { createTranslator } from "./i18n/index.js";
-import { createGuardianSbcWorkspace } from "./ui/GuardianSbcWorkspace.js";
-import { createGuardianSolutionReview } from "./ui/GuardianSolutionReview.js";
-import { createGuardianWorkspace } from "./ui/GuardianWorkspace.js";
 import { GuardianUiAdapter } from "./GuardianUiAdapter.js";
 import { Fc27SnapshotAdapter } from "./Fc27SnapshotAdapter.js";
 import { Fc27SolveFacade } from "./Fc27SolveFacade.js";
@@ -76,7 +72,7 @@ export class GuardianSbcController {
 }
 
 /** @param {{document:Document, ctx:any, guardian:any, messages:Record<string,string>, apiTransport:(request:{url:string,method:string,body?:unknown,timeoutMs:number})=>Promise<{status:number,body:unknown}>}} config */
-export function installGuardianFc26Product({ document, ctx, guardian, messages, apiTransport }) {
+export function installGuardianFc26Product({ ctx, guardian, apiTransport }) {
   const bindings = createFsuProductBindings(ctx);
   const snapshotAdapter = new FsuSnapshotAdapter({ readClubItems: bindings.readClubItems });
   const api = new GuardianApiClient({
@@ -94,47 +90,10 @@ export function installGuardianFc26Product({ document, ctx, guardian, messages, 
     applySelected: bindings.applySelected,
     captureSnapshot: () => snapshotAdapter.capture()
   });
-  const t = createTranslator(messages);
-  const root = document.querySelector("[data-guardian-root='true']");
-
   /** @type {GuardianUiAdapter|null} */
   let uiAdapter = null;
   const render = (/** @type {any} */ state) => {
     uiAdapter?.publish(state);
-    if (!root) return;
-    root.querySelector(".guardian-workspace")?.remove();
-    const children = [];
-    if (state.phase === "READY") {
-      const requirementText = (state.challenge.eligibilityRequirements || []).map((/** @type {any} */ requirement) =>
-        ctx.events.requirementsToText(requirement)
-      );
-      children.push(
-        createGuardianSbcWorkspace({
-          t: /** @type {any} */ (t),
-          challenge: { name: state.challenge.name, requirements: requirementText },
-          onAnalyze: () => controller.solve(),
-          onBuild: () => controller.solve()
-        })
-      );
-    } else if (state.phase === "SOLVED") {
-      children.push(
-        createGuardianSolutionReview({
-          t: /** @type {any} */ (t),
-          solution: {
-            players: state.solution.players.map((/** @type {any} */ player) => `${player.name} (${player.rating})`),
-            rating: String(state.solution.rating),
-            risk: state.solution.warnings.join("; ") || "No protected-item warnings"
-          },
-          onAccept: () => controller.apply(),
-          onEdit: () => controller.attach(bindings.currentChallenge())
-        })
-      );
-    } else {
-      const message = document.createElement("p");
-      message.textContent = state.error || state.phase;
-      children.push(message);
-    }
-    root.appendChild(createGuardianWorkspace({ t: /** @type {any} */ (t), children }));
   };
   const controller = new GuardianSbcController({ solveFacade, applyController, render });
   uiAdapter = new GuardianUiAdapter({ controller, api });

@@ -46634,28 +46634,6 @@
     return button;
   }
 
-  // src/guardian/ui/GuardianRail.js
-  function createGuardianRail({ t, onSelect, tools }) {
-    const toolList = tools && tools.length ? tools : ["sbc", "squad", "filters", "tools"];
-    const items = toolList.map((tool) => {
-      const button = (
-        /** @type {HTMLButtonElement} */
-        el("button", {
-          className: "guardian-rail-item",
-          attrs: { type: "button", "data-tool": tool, title: t("rail." + tool) }
-        })
-      );
-      button.textContent = t("rail." + tool);
-      button.addEventListener("click", () => onSelect && onSelect(tool));
-      return button;
-    });
-    return el("nav", {
-      className: "guardian-rail",
-      attrs: { "aria-label": t("rail.label") },
-      children: items
-    });
-  }
-
   // src/guardian/ui/GuardianActionConfirmation.js
   function createGuardianActionConfirmation({ t, preview, controls }) {
     const summary = el("p", { className: "guardian-confirm-summary", text: preview.summary });
@@ -47111,81 +47089,6 @@
     }
   };
 
-  // src/guardian/ui/GuardianSbcWorkspace.js
-  function createGuardianSbcWorkspace({ t, challenge, onBuild, onAnalyze }) {
-    const title = el("h2", {
-      className: "guardian-sbc-title",
-      text: challenge && challenge.name ? challenge.name : t("sbc.untitled")
-    });
-    const reqs = (challenge && challenge.requirements ? challenge.requirements : []).map(
-      (r) => el("li", { className: "guardian-sbc-req", text: r })
-    );
-    const reqList = el("ul", { className: "guardian-sbc-reqs", children: reqs });
-    const analyzeBtn = (
-      /** @type {HTMLButtonElement} */
-      el("button", { className: "guardian-btn", attrs: { type: "button" }, text: t("sbc.analyze") })
-    );
-    analyzeBtn.addEventListener("click", () => onAnalyze && onAnalyze());
-    const buildBtn = (
-      /** @type {HTMLButtonElement} */
-      el("button", { className: "guardian-btn guardian-btn-primary", attrs: { type: "button" }, text: t("sbc.build") })
-    );
-    buildBtn.addEventListener("click", () => onBuild && onBuild());
-    const info = infoButton(
-      () => {
-      },
-      t("sbc.info")
-    );
-    return el("section", {
-      className: "guardian-sbc-workspace",
-      attrs: { role: "region", "aria-label": t("sbc.label") },
-      children: [title, info, reqList, analyzeBtn, buildBtn]
-    });
-  }
-
-  // src/guardian/ui/GuardianSolutionReview.js
-  function createGuardianSolutionReview({ t, solution, onAccept, onEdit }) {
-    const sol = solution || {};
-    const lines = [];
-    if (sol.players) {
-      lines.push(el("li", { className: "guardian-review-players", text: sol.players.join(", ") }));
-    }
-    if (sol.cost) lines.push(el("li", { text: t("review.cost", { cost: sol.cost }) }));
-    if (sol.rating) lines.push(el("li", { text: t("review.rating", { rating: sol.rating }) }));
-    if (sol.risk) lines.push(el("li", { text: t("review.risk", { risk: sol.risk }) }));
-    const accept = (
-      /** @type {HTMLButtonElement} */
-      el("button", { className: "guardian-btn guardian-btn-primary", attrs: { type: "button" }, text: t("review.accept") })
-    );
-    accept.addEventListener("click", () => onAccept && onAccept());
-    const edit = (
-      /** @type {HTMLButtonElement} */
-      el("button", { className: "guardian-btn", attrs: { type: "button" }, text: t("review.edit") })
-    );
-    edit.addEventListener("click", () => onEdit && onEdit());
-    const info = infoButton(() => {
-    }, t("review.info"));
-    return el("div", {
-      className: "guardian-solution-review",
-      attrs: { role: "region", "aria-label": t("review.label") },
-      children: [info, el("ul", { className: "guardian-review-list", children: lines }), accept, edit]
-    });
-  }
-
-  // src/guardian/ui/GuardianWorkspace.js
-  function createGuardianWorkspace({ t, children = [] }) {
-    const header = el("header", {
-      className: "guardian-workspace-header",
-      children: [el("span", { className: "guardian-brand", text: t("brand.name") })]
-    });
-    const body = el("section", {
-      className: "guardian-workspace-body",
-      attrs: { role: "region", "aria-label": t("workspace.label") },
-      children
-    });
-    return el("div", { className: "guardian-workspace", children: [header, body] });
-  }
-
   // src/guardian/GuardianUiAdapter.js
   var PUBLIC_PHASES = /* @__PURE__ */ new Set([
     "BOOTING",
@@ -47392,7 +47295,7 @@
       }
     }
   };
-  function installGuardianFc26Product({ document: document2, ctx, guardian, messages, apiTransport }) {
+  function installGuardianFc26Product({ ctx, guardian, apiTransport }) {
     const bindings = createFsuProductBindings(ctx);
     const snapshotAdapter = new FsuSnapshotAdapter({ readClubItems: bindings.readClubItems });
     const api = new GuardianApiClient({
@@ -47410,54 +47313,9 @@
       applySelected: bindings.applySelected,
       captureSnapshot: () => snapshotAdapter.capture()
     });
-    const t = createTranslator(messages);
-    const root = document2.querySelector("[data-guardian-root='true']");
     let uiAdapter = null;
     const render = (state) => {
       uiAdapter?.publish(state);
-      if (!root) return;
-      root.querySelector(".guardian-workspace")?.remove();
-      const children = [];
-      if (state.phase === "READY") {
-        const requirementText = (state.challenge.eligibilityRequirements || []).map(
-          (requirement) => ctx.events.requirementsToText(requirement)
-        );
-        children.push(
-          createGuardianSbcWorkspace({
-            t: (
-              /** @type {any} */
-              t
-            ),
-            challenge: { name: state.challenge.name, requirements: requirementText },
-            onAnalyze: () => controller.solve(),
-            onBuild: () => controller.solve()
-          })
-        );
-      } else if (state.phase === "SOLVED") {
-        children.push(
-          createGuardianSolutionReview({
-            t: (
-              /** @type {any} */
-              t
-            ),
-            solution: {
-              players: state.solution.players.map((player) => `${player.name} (${player.rating})`),
-              rating: String(state.solution.rating),
-              risk: state.solution.warnings.join("; ") || "No protected-item warnings"
-            },
-            onAccept: () => controller.apply(),
-            onEdit: () => controller.attach(bindings.currentChallenge())
-          })
-        );
-      } else {
-        const message = document2.createElement("p");
-        message.textContent = state.error || state.phase;
-        children.push(message);
-      }
-      root.appendChild(createGuardianWorkspace({ t: (
-        /** @type {any} */
-        t
-      ), children }));
     };
     const controller = new GuardianSbcController({ solveFacade, applyController, render });
     uiAdapter = new GuardianUiAdapter({ controller, api });
@@ -47524,7 +47382,7 @@
     const head = doc.head || doc.body && doc.body.parentNode || doc;
     (head.appendChild ? head : doc).appendChild(style);
   }
-  function mountGuardian({ window: window2, document: document2, ctx, mutations, sessionNonce, locale, onToolSelect, nativeConfirm } = {}) {
+  function mountGuardian({ window: window2, document: document2, ctx, mutations, sessionNonce, locale, onToolSelect: _onToolSelect, nativeConfirm } = {}) {
     const w = window2 || (typeof globalThis !== "undefined" ? globalThis : void 0);
     const doc = document2 || w && w.document;
     const nonce = sessionNonce || "sess-" + (w && w.crypto && typeof w.crypto.randomUUID === "function" ? w.crypto.randomUUID() : String(Date.now()));
@@ -47569,18 +47427,6 @@
         };
       }
     };
-    let root;
-    if (doc && doc.body) {
-      root = /** @type {HTMLElement} */
-      el("div", { className: "guardian-root", attrs: { "data-guardian-root": "true" } });
-      const rail = createGuardianRail({ t: (
-        /** @type {any} */
-        t
-      ), onSelect: onToolSelect || (() => {
-      }) });
-      root.appendChild(rail);
-      doc.body.appendChild(root);
-    }
     const api = Object.freeze({
       requestGuarded: (kind, payload) => guardian.requestGuarded(kind, payload),
       isRegistered: (kind) => guardian.isRegistered(kind),
