@@ -3,8 +3,12 @@ package com.sbcguardian.app
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -46,6 +50,7 @@ class MainActivity : ComponentActivity() {
         // Install the built-in FSU WebExtension, then open the EA FUT Web App.
         extensionInstaller.installBuiltInExtension(
             onReady = {
+                extensionError.value = null
                 extensionReady.value = true
                 sessionStore.session()?.let { session ->
                     messageBridge.syncGuardianSession(session)
@@ -62,7 +67,9 @@ class MainActivity : ComponentActivity() {
             }
         )
         lifecycleScope.launch {
-            delay(15_000)
+            // Cold GeckoView startup and built-in extension validation can
+            // exceed 15 seconds on a Windows emulator.
+            delay(60_000)
             if (!extensionReady.value) {
                 extensionError.value = "Built-in extension installation timed out"
                 extensionReady.value = true
@@ -70,36 +77,42 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            val preview = pendingPreview.value
-            when {
-                !extensionReady.value -> Text("Preparing SBC Guardian…")
-                extensionError.value != null -> Text("SBC Guardian unavailable: ${extensionError.value}")
-                !linked.value -> AccountLinkScreen(
-                    code = pairingCode.value,
-                    busy = pairingBusy.value,
-                    error = pairingError.value,
-                    onCodeChange = { pairingCode.value = it },
-                    onLink = { linkAccount() }
-                )
-                else -> WrapperScreen(
-                    session = sessionController.session,
-                    uiState = sessionController.uiState,
-                    accessStatus = accessStatus.value,
-                    onUnlinkAccount = { unlinkAccount() }
-                )
-            }
-            if (preview != null) {
-                ActionConfirmationDialog(
-                    request = preview,
-                    onConfirm = {
-                        messageBridge.requestDecision(preview)
-                        pendingPreview.value = null
-                    },
-                    onDismiss = {
-                        messageBridge.dismissDecision(preview)
-                        pendingPreview.value = null
+            MaterialTheme {
+                Surface(modifier = Modifier.fillMaxSize()) {
+                    val preview = pendingPreview.value
+                    when {
+                        !extensionReady.value -> Text("Preparing SBC Guardian…")
+                        extensionError.value != null -> Text(
+                            "SBC Guardian unavailable: ${extensionError.value}"
+                        )
+                        !linked.value -> AccountLinkScreen(
+                            code = pairingCode.value,
+                            busy = pairingBusy.value,
+                            error = pairingError.value,
+                            onCodeChange = { pairingCode.value = it },
+                            onLink = { linkAccount() }
+                        )
+                        else -> WrapperScreen(
+                            session = sessionController.session,
+                            uiState = sessionController.uiState,
+                            accessStatus = accessStatus.value,
+                            onUnlinkAccount = { unlinkAccount() }
+                        )
                     }
-                )
+                    if (preview != null) {
+                        ActionConfirmationDialog(
+                            request = preview,
+                            onConfirm = {
+                                messageBridge.requestDecision(preview)
+                                pendingPreview.value = null
+                            },
+                            onDismiss = {
+                                messageBridge.dismissDecision(preview)
+                                pendingPreview.value = null
+                            }
+                        )
+                    }
+                }
             }
         }
     }
