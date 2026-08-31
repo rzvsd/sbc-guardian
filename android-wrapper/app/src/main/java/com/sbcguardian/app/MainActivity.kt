@@ -7,6 +7,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     private lateinit var runtimeProvider: GeckoRuntimeProvider
@@ -60,6 +61,13 @@ class MainActivity : ComponentActivity() {
                 )
             }
         )
+        lifecycleScope.launch {
+            delay(15_000)
+            if (!extensionReady.value) {
+                extensionError.value = "Built-in extension installation timed out"
+                extensionReady.value = true
+            }
+        }
 
         setContent {
             val preview = pendingPreview.value
