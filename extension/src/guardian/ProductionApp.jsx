@@ -1,48 +1,51 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+
+const TABS = [["home", "Home"], ["ea", "EA FC"], ["protection", "Protection"], ["profile", "Profile"]];
+const PHASE_LABELS = {
+  BOOTING: "Connecting securely…", EA_LOGIN_REQUIRED: "Sign in to EA FC", EA_READY: "Ready for an SBC",
+  SBC_DETECTED: "SBC detected", SOLVING: "Finding a safe solution…", SOLUTION_READY: "Solution ready to review",
+  INFEASIBLE: "No safe solution found", TIMED_OUT: "Solve timed out", STALE_SNAPSHOT: "Club changed — refresh needed",
+  APPLYING: "Applying squad…", APPLIED_NOT_SUBMITTED: "Applied — not submitted", SUBMIT_CONFIRMATION: "Confirm submission",
+  SUBMITTING_EA: "Submitting in EA FC…", EA_SUBMITTED_CONFIRM_PENDING: "Confirming submission…", SUBMITTED: "Submitted",
+  SESSION_EXPIRED: "Session expired", NETWORK_ERROR: "Network error", INVALID_RESPONSE: "Invalid response"
+};
+const EMPTY_POLICY = Object.freeze({ version: 2, preset: "CUSTOM" });
+const phaseLabel = phase => PHASE_LABELS[phase] || PHASE_LABELS.INVALID_RESPONSE;
+const toneForPhase = phase => ["NETWORK_ERROR", "INVALID_RESPONSE", "SESSION_EXPIRED", "INFEASIBLE"].includes(phase) ? "text-rose-300" : ["SOLVING", "APPLYING", "SUBMITTING_EA", "EA_SUBMITTED_CONFIRM_PENDING"].includes(phase) ? "text-amber-200" : ["SOLUTION_READY", "APPLIED_NOT_SUBMITTED", "SUBMITTED"].includes(phase) ? "text-jade" : "text-zinc-300";
+function call(adapter, method, ...args) { const fn = adapter?.[method]; return typeof fn === "function" ? Promise.resolve(fn.apply(adapter, args)) : Promise.reject(new Error(`${method.toUpperCase()}_UNAVAILABLE`)); }
+
+function Button({ children, onClick, disabled = false, secondary = false, testId }) {
+  return <button type="button" data-testid={testId} disabled={disabled} onClick={onClick} className={`tap min-h-11 rounded-xl px-4 py-2.5 text-sm font-semibold transition ${secondary ? "border border-brd bg-surface text-zinc-200" : "bg-jade text-zinc-950"} disabled:cursor-not-allowed disabled:opacity-50`}>{children}</button>;
+}
+function Card({ children, className = "", ...props }) { return <section className={`rounded-2xl border border-brd bg-surface p-4 ${className}`} {...props}>{children}</section>; }
+function Status({ phase }) { return <span className={`inline-flex items-center gap-2 rounded-full border border-brd bg-surface px-3 py-1.5 text-xs font-medium ${toneForPhase(phase)}`}><span className={`h-2 w-2 rounded-full ${phase === "SOLVING" ? "dot-live bg-amber-300" : "bg-current"}`} />{phaseLabel(phase)}</span>; }
+
+function SolutionCard({ solution, state, run }) {
+  const selected = solution.selected_items || solution.items || [];
+  const warnings = solution.warnings || [];
+  return <Card data-testid="production-solution-card"><div className="flex items-start justify-between gap-3"><div><p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Solution review</p><h2 className="mt-1 font-display text-xl font-semibold text-zinc-100">{selected.length} selected items</h2></div><span className="rounded-full bg-jade/10 px-2.5 py-1 text-xs text-jade">{solution.edition || state.edition || "FC"}</span></div>{(solution.team_rating != null || solution.chemistry != null) && <p className="mt-2 text-sm text-zinc-400">{solution.team_rating != null ? `Team rating ${solution.team_rating}` : ""}{solution.chemistry != null ? ` · Chemistry ${solution.chemistry}` : ""}</p>}{warnings.length > 0 && <p className="mt-2 text-sm text-amber-200">{warnings[0]}</p>}<div className="mt-4 flex flex-wrap gap-2"><Button onClick={() => run("applySolution")} disabled={state.phase !== "SOLUTION_READY"} testId="production-apply">Apply squad</Button><Button secondary onClick={() => run("tryAlternative")} disabled={state.phase !== "SOLUTION_READY"} testId="production-alternative">Try another</Button><Button secondary onClick={() => run("discardSolution")} testId="production-discard">Discard</Button></div>{state.phase === "APPLIED_NOT_SUBMITTED" && <p className="mt-3 text-xs text-zinc-400">Applied in EA FC. Nothing has been submitted.</p>}</Card>;
+}
+
+function Home({ state, adapter, run }) {
+  const challenge = state.challenge;
+  return <div className="flex h-full flex-col gap-4 overflow-y-auto no-scrollbar px-5 pb-6 pt-5"><header className="flex items-center justify-between"><div><p className="text-xs font-medium uppercase tracking-[0.16em] text-zinc-500">Guardian</p><h1 className="font-display text-2xl font-semibold tracking-tight text-zinc-100">SBC Guardian</h1></div><Status phase={state.phase} /></header>{state.error && <Card className="border-rose-400/30 bg-rose-950/20"><p className="text-sm text-rose-200">{state.error}</p></Card>}<Card><p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Current context</p>{challenge ? <><h2 className="mt-2 font-display text-xl font-semibold text-zinc-100">{challenge.name || "SBC challenge"}</h2><p className="mt-1 text-sm text-zinc-400">{challenge.edition || "EA FC"} · {challenge.squad_size || "—"} players</p></> : <p className="mt-2 text-sm text-zinc-400">Open an SBC in EA FC to let Guardian read the real challenge.</p>}<div className="mt-4 flex flex-wrap gap-2"><Button secondary onClick={() => run("openEa")} testId="production-open-ea">Open EA FC</Button><Button secondary onClick={() => run("refreshClub")} testId="production-refresh-club">Refresh club</Button>{state.phase === "SBC_DETECTED" && <Button onClick={() => run("findSolution")} testId="production-find-solution">Find solution</Button>}</div></Card>{state.solution && <SolutionCard solution={state.solution} state={state} adapter={adapter} run={run} />}<Card><div className="flex items-center justify-between"><div><p className="text-xs font-medium uppercase tracking-wider text-zinc-500">Recent activity</p><p className="mt-1 text-sm text-zinc-400">Server-backed history only</p></div><Button secondary onClick={() => run("loadAccount")} testId="production-refresh-account">Refresh</Button></div><div className="mt-3 divide-y divide-brd">{(state.activity || []).slice(0, 5).map(entry => <div key={entry.id || `${entry.created_at}-${entry.name}`} className="flex justify-between py-3 text-sm"><span className="text-zinc-300">{entry.name || entry.challenge_name || "Solution"}</span><span className="text-zinc-500">{entry.status || entry.phase || "—"}</span></div>)}{!state.activity?.length && <p className="py-3 text-sm text-zinc-500">No activity returned yet.</p>}</div></Card></div>;
+}
+
+function EaFc({ state, run }) { return <div className="flex h-full flex-col gap-4 overflow-y-auto no-scrollbar px-5 pb-6 pt-5"><Card className="border-jade/20 bg-[#08130e]"><p className="text-xs font-medium uppercase tracking-wider text-jade">EA FC underneath</p><h1 className="mt-2 font-display text-2xl font-semibold text-zinc-100">Your EA page stays visible</h1><p className="mt-2 text-sm leading-relaxed text-zinc-400">Guardian is an overlay. It does not replace the EA FC interface or submit anything by itself.</p><div className="mt-4 flex gap-2"><Button onClick={() => run("openEa")} testId="production-ea-open">Open EA FC</Button>{state.phase === "SBC_DETECTED" && <Button secondary onClick={() => run("findSolution")} testId="production-ea-find">Find solution</Button>}</div></Card>{state.challenge && <Card><p className="text-xs uppercase tracking-wider text-zinc-500">Detected challenge</p><p className="mt-2 text-lg font-semibold text-zinc-100">{state.challenge.name || "SBC"}</p><p className="mt-1 text-sm text-zinc-400">{state.challenge.edition || "EA FC"}</p></Card>}</div>; }
+
+const PROTECTION_FIELDS = [["protect_favorites", "Favorites"], ["protect_active_squad", "Active squad"], ["protect_special", "Special cards"], ["protect_evolution_eligible", "Evolution eligible"]];
+function Protection({ state, run }) { const policy = state.policy || EMPTY_POLICY; const capabilities = state.policyCapabilities || {}; const available = key => capabilities[key] !== false; return <div className="flex h-full flex-col gap-4 overflow-y-auto no-scrollbar px-5 pb-6 pt-5"><header><h1 className="font-display text-2xl font-semibold text-zinc-100">Protection</h1><p className="mt-1 text-sm text-zinc-500">The server applies these rules at solve time.</p></header><Card><div className="flex items-center justify-between"><div><p className="text-xs uppercase tracking-wider text-zinc-500">Policy</p><p className="mt-1 text-sm text-zinc-300">{policy.preset || "CUSTOM"} · version {policy.version ?? "—"}</p></div><Button secondary onClick={() => run("loadPolicy")} testId="production-policy-refresh">Refresh</Button></div><div className="mt-4 space-y-2">{PROTECTION_FIELDS.map(([key, label]) => <label key={key} className={`flex items-center justify-between rounded-xl border border-brd px-3 py-3 ${available(key) ? "" : "opacity-50"}`}><span className="text-sm text-zinc-200">{label}</span><input type="checkbox" checked={Boolean(policy[key])} disabled={!available(key) || !state.policy} onChange={event => run("updatePolicy", { ...policy, [key]: event.target.checked })} aria-label={label} /></label>)}</div><p className="mt-3 text-xs text-zinc-500">Locked, excluded and consumed items are always protected and cannot be disabled.</p></Card></div>; }
+
+function Profile({ state, run }) { const account = state.account || {}; const access = state.access || {}; return <div className="flex h-full flex-col gap-4 overflow-y-auto no-scrollbar px-5 pb-6 pt-5"><header><h1 className="font-display text-2xl font-semibold text-zinc-100">Profile</h1><p className="mt-1 text-sm text-zinc-500">Account and access come from Guardian.</p></header><Card><p className="text-xs uppercase tracking-wider text-zinc-500">Account</p><p className="mt-2 text-lg font-semibold text-zinc-100">{account.email || account.name || "Signed-in account"}</p><p className="mt-1 text-sm text-zinc-400">{account.role || "—"}</p><p className="mt-3 text-sm text-zinc-300">Access: <span className={access.access_level ? "text-jade" : "text-amber-200"}>{access.access_level || "unknown"}</span></p></Card><Card><p className="text-xs uppercase tracking-wider text-zinc-500">Session</p><div className="mt-3 flex gap-2"><Button secondary onClick={() => run("loadAccount")} testId="production-profile-refresh">Refresh account</Button><Button secondary onClick={() => run("signOut")} testId="production-sign-out">Sign out</Button></div></Card></div>; }
 
 export default function ProductionApp({ runtimeAdapter }) {
   const [state, setState] = useState(() => runtimeAdapter?.getState?.() || { phase: "BOOTING" });
   const [tab, setTab] = useState("home");
-  useEffect(() => runtimeAdapter?.subscribe?.(setState), [runtimeAdapter]);
-  const ready = Boolean(runtimeAdapter && state);
-  return (
-    <div
-      data-testid="guardian-production-overlay"
-      style={{ pointerEvents: "none", minHeight: "100dvh" }}
-    >
-      <div
-        style={{
-          pointerEvents: "auto",
-          margin: "16px",
-          padding: "12px 16px",
-          borderRadius: "12px",
-          background: "rgba(9,9,11,.96)",
-          color: "#f4f4f5",
-          fontFamily: "Inter, sans-serif",
-          fontSize: "13px"
-        }}
-      >
-        <div style={{ marginBottom: "10px", fontWeight: 600 }}>SBC Guardian</div>
-        <nav style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
-          {["home", "ea", "protection", "profile"].map((name) => (
-            <button key={name} type="button" style={{ pointerEvents: "auto" }} onClick={() => setTab(name)}>{name}</button>
-          ))}
-        </nav>
-        {tab === "home" && <div>{ready ? `Status: ${state.phase || "ready"}` : "Connecting securely…"}</div>}
-        {tab === "ea" && <div><div>EA FC remains visible below this overlay.</div><button type="button" onClick={() => runtimeAdapter.openEa?.()}>Open EA</button></div>}
-        {tab === "protection" && <div><div>Protection is enforced by the server policy.</div><button type="button" onClick={() => runtimeAdapter.loadPolicy?.()}>Refresh policy</button></div>}
-        {tab === "profile" && <div><div>Account and subscription are loaded from Guardian.</div><button type="button" onClick={() => runtimeAdapter.loadAccount?.()}>Refresh account</button></div>}
-        {ready && state.phase === "SBC_DETECTED" && (
-          <button type="button" style={{ marginLeft: "8px" }} onClick={() => runtimeAdapter.findSolution()}>
-            Find solution
-          </button>
-        )}
-        {ready && state.phase === "SOLUTION_READY" && (
-          <button type="button" style={{ marginLeft: "8px" }} onClick={() => runtimeAdapter.applySolution()}>
-            Apply (not submit)
-          </button>
-        )}
-      </div>
-    </div>
-  );
+  const [error, setError] = useState(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => runtimeAdapter?.subscribe?.(next => setState(next || { phase: "INVALID_RESPONSE" })), [runtimeAdapter]);
+  useEffect(() => { if (state?.error) setError(state.error); }, [state?.error]);
+  const run = async (method, ...args) => { setError(null); setBusy(true); try { await call(runtimeAdapter, method, ...args); } catch (cause) { setError(cause?.message || "Guardian action failed"); } finally { setBusy(false); } };
+  const View = useMemo(() => ({ home: Home, ea: EaFc, protection: Protection, profile: Profile }[tab] || Home), [tab]);
+  return <div data-testid="guardian-production-overlay" className="pointer-events-none min-h-[100dvh] text-zinc-50"><div className="pointer-events-auto ml-auto flex min-h-[100dvh] w-full max-w-md flex-col bg-ink/95 font-body shadow-2xl"><div className="flex items-center gap-1 border-b border-brd px-3 py-2">{TABS.map(([id, label]) => <button key={id} type="button" onClick={() => setTab(id)} aria-current={tab === id ? "page" : undefined} className={`tap flex-1 rounded-lg px-2 py-2 text-xs font-semibold ${tab === id ? "bg-jade/15 text-jade" : "text-zinc-500"}`}>{label}</button>)}</div><div className="relative min-h-0 flex-1">{busy && <div className="absolute right-4 top-3 z-10 rounded-full bg-zinc-900 px-2 py-1 text-[11px] text-zinc-400" role="status">Working…</div>}<View state={{ ...state, error }} run={run} /></div></div></div>;
 }

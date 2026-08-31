@@ -205,6 +205,9 @@ assert.ok(bundleCode.includes("requestGuarded:"), "bundle: requestGuarded public
 assert.ok(bundleCode.includes("GUARDIAN_UNAVAILABLE"), "bundle: fail-closed code present");
 assert.ok(bundleCode.includes("guardianOrFailClosed"), "bundle: fail-closed routing present");
 assert.ok(bundleCode.includes("PACK_OPEN_BULK"), "bundle: PACK_OPEN_BULK kind present");
+assert.ok(!bundleCode.includes("EaMock"), "bundle: preview EA mock must not ship");
+assert.ok(!bundleCode.includes("Prototype scenarios"), "bundle: preview scenarios must not ship");
+assert.ok(!bundleCode.includes("mock/data"), "bundle: preview mock data must not ship");
 
 // ---- ZIP inspection ----
 const AdmZip = require("adm-zip");
@@ -239,6 +242,9 @@ assert.ok(
   "ZIP: all four rerouted services present in shipped userscript"
 );
 assert.ok(zipUserscript.includes("PACK_OPEN_BULK"), "ZIP: PACK_OPEN_BULK kind present in shipped userscript");
+assert.ok(!zipUserscript.includes("EaMock"), "ZIP: preview EA mock must not ship");
+assert.ok(!zipUserscript.includes("Prototype scenarios"), "ZIP: preview scenarios must not ship");
+assert.ok(!zipUserscript.includes("mock/data"), "ZIP: preview mock data must not ship");
 
 console.log("guardian-bundle (real bundle + ZIP, Finding #1): all assertions passed");
 

@@ -133,8 +133,8 @@ export function installGuardianFc26Product({ document, ctx, guardian, messages, 
   };
 }
 
-/** @param {{document:Document, ctx:any, guardian:any, apiTransport:any}} config */
-export function installGuardianFc27Product({ document, ctx, guardian, apiTransport }) {
+/** @param {{ctx:any, guardian:any, apiTransport:any}} config */
+export function installGuardianFc27Product({ ctx, guardian, apiTransport }) {
   const bindings = createFsuProductBindings(ctx);
   const snapshotAdapter = new Fc27SnapshotAdapter({ readClubItems: bindings.readClubItems });
   const api = new GuardianApiClient({ baseUrl: "https://sbc-guardian.duckdns.org", transport: apiTransport });
