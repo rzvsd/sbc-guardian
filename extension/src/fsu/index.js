@@ -1,4 +1,5 @@
 import { futweb } from "./legacy/futweb.js";
+import { mountReactGuardianOverlay } from "../guardian/reactOverlay.jsx";
 import { applyFsuLodashMixins } from "./domain/lodashMixins.js";
 import {
   getBundledGuardianMessages,
@@ -30,6 +31,7 @@ class FsuUserscriptApp {
         onToolSelect: (tool) => product && product.open(tool)
       });
       const fsuCtx = futweb();
+      mountReactGuardianOverlay({ document: this.windowRef.document });
       const guardian = getGuardian();
       if (guardian) {
         product = installGuardianFc26Product({

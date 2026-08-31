@@ -16,7 +16,7 @@ export const PRESET_LABELS = {
   custom: 'Custom',
 };
 
-export function GuardianProvider({ children }) {
+export function GuardianProvider({ children, runtimeAdapter = null, production = false }) {
   const [tab, setTab] = useState('home');
   const [onboarded, setOnboarded] = useState(() => localStorage.getItem('sbcg_onboarded') === '1');
   const [preset, setPresetRaw] = useState('recommended');
@@ -71,6 +71,7 @@ export function GuardianProvider({ children }) {
         info, setInfo,
         toast, showToast,
         activity, addActivity,
+        runtimeAdapter, production,
       }}
     >
       {children}

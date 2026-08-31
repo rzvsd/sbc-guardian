@@ -30,7 +30,14 @@ function Toast() {
 }
 
 function Shell() {
-  const { tab, onboarded } = useGuardian();
+  const { tab, onboarded, production, runtimeAdapter } = useGuardian();
+  if (production && !runtimeAdapter) {
+    return (
+      <div className="flex h-[100dvh] items-center justify-center bg-ink p-6 text-center text-sm text-zinc-300" data-testid="runtime-unavailable">
+        Guardian is unavailable until the secure runtime connection is ready.
+      </div>
+    );
+  }
   const Screen = SCREENS[tab];
 
   return (
@@ -62,9 +69,9 @@ function Shell() {
   );
 }
 
-export default function App() {
+export default function App({ runtimeAdapter = null, production = false }) {
   return (
-    <GuardianProvider>
+    <GuardianProvider runtimeAdapter={runtimeAdapter} production={production}>
       <Shell />
     </GuardianProvider>
   );
