@@ -7,8 +7,10 @@ import TaxonomyReviewPage from "./admin/TaxonomyReviewPage";
 import AuditPage from "./admin/AuditPage";
 
 export default function App() {
+  const basename = import.meta.env.BASE_URL.replace(/\/$/, "") || undefined;
+
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={basename}>
       <nav aria-label="Primary navigation">
         <Link to="/account">Account</Link> | <Link to="/billing">Billing</Link> |{" "}
         <Link to="/admin/users">Admin</Link>
