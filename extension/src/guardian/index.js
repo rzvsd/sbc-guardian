@@ -17,6 +17,7 @@ export function getGuardian() {
 }
 
 export { installGuardianFc26Product } from "./GuardianSbcController.js";
+export { installGuardianFc27Product } from "./GuardianSbcController.js";
 
 /** @type {{ en: Record<string, string>, ro: Record<string, string> }} */
 const MESSAGES = { en: enMessages, ro: roMessages };

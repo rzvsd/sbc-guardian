@@ -9,6 +9,8 @@ import { createGuardianSbcWorkspace } from "./ui/GuardianSbcWorkspace.js";
 import { createGuardianSolutionReview } from "./ui/GuardianSolutionReview.js";
 import { createGuardianWorkspace } from "./ui/GuardianWorkspace.js";
 import { GuardianUiAdapter } from "./GuardianUiAdapter.js";
+import { Fc27SnapshotAdapter } from "./Fc27SnapshotAdapter.js";
+import { Fc27SolveFacade } from "./Fc27SolveFacade.js";
 
 export class GuardianSbcController {
   /** @param {{solveFacade:any, applyController:any, render:(state:any)=>void}} config */
@@ -128,5 +130,31 @@ export function installGuardianFc26Product({ document, ctx, guardian, messages, 
     },
     controller,
     uiAdapter
+  };
+}
+
+/** @param {{document:Document, ctx:any, guardian:any, apiTransport:any}} config */
+export function installGuardianFc27Product({ document, ctx, guardian, apiTransport }) {
+  const bindings = createFsuProductBindings(ctx);
+  const snapshotAdapter = new Fc27SnapshotAdapter({ readClubItems: bindings.readClubItems });
+  const api = new GuardianApiClient({ baseUrl: "https://sbc-guardian.duckdns.org", transport: apiTransport });
+  const facade = new Fc27SolveFacade({ api, snapshotAdapter });
+  const applyController = new GuardianApplyController({ guardian, applySelected: bindings.applySelected, captureSnapshot: () => snapshotAdapter.capture() });
+  const controller = new GuardianSbcController({
+    solveFacade: { solve: (/** @type {any} */ challenge) => facade.solve(Number(challenge.target_count || 11), String(challenge.ruleset_version || "")) },
+    applyController,
+    render: () => {}
+  });
+  const adapter = new GuardianUiAdapter({ controller });
+  controller.render = (state) => adapter.publish(state);
+  return {
+    open(/** @type {string} */ tool) {
+      if (tool !== "sbc") return;
+      const challenge = bindings.currentChallenge();
+      if (!challenge || String(challenge.edition || "").toUpperCase() !== "FC27") throw new Error("FC27_CHALLENGE_REQUIRED");
+      controller.attach(challenge);
+    },
+    controller,
+    uiAdapter: adapter,
   };
 }

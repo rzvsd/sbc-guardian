@@ -5,6 +5,7 @@ import {
   getBundledGuardianMessages,
   getGuardian,
   installGuardianFc26Product,
+  installGuardianFc27Product,
   mountGuardian
 } from "../guardian/index.js";
 
@@ -33,7 +34,9 @@ class FsuUserscriptApp {
       const fsuCtx = futweb();
       const guardian = getGuardian();
       if (guardian) {
-        product = installGuardianFc26Product({
+        const challengeEdition = String(fsuCtx?.cntlr?.current?.()?._challenge?.edition || "").toUpperCase();
+        const install = challengeEdition === "FC27" ? installGuardianFc27Product : installGuardianFc26Product;
+        product = install({
           document: this.windowRef.document,
           ctx: fsuCtx,
           guardian,
