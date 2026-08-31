@@ -54,6 +54,7 @@ captures/
 .externalNativeBuild/
 
 # Web portal
+frontend/dist/
 web-portal/node_modules/
 web-portal/dist/
 
