@@ -38,7 +38,8 @@ export class FsuSnapshotAdapter {
       duplicate: item.duplicate === true,
       tradeable: item.tradeable === true,
       special: item.special === true,
-      evolution_eligible: item.evolutionEligible === true
+      evolution_eligible: item.evolutionEligible === true,
+      scoring_category: String(item.scoring_category || item.scoringCategory || "").toUpperCase()
     }));
     if (!items.length || items.some((/** @type {any} */ item) => !item.id || !Number.isInteger(item.rating))) {
       throw new Error("GUARDIAN_PARTIAL_SNAPSHOT");

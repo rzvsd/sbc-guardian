@@ -1,4 +1,4 @@
-import { requireSnapshot, requireTraditionalSolveResponse, requireStreamlinedSolveResponse } from "./GuardianContracts.js";
+import { requireSnapshotForEdition, requireTraditionalSolveResponse, requireStreamlinedSolveResponse } from "./GuardianContracts.js";
 
 export class GuardianApiError extends Error {
   /** @param {string} code @param {number} [status] */
@@ -49,7 +49,8 @@ export class GuardianApiClient {
 
   /** @param {unknown} snapshot */
   async uploadSnapshot(snapshot) {
-    return this.request("/api/v2/snapshots", { method: "POST", body: requireSnapshot(snapshot) });
+    const value = /** @type {any} */ (snapshot);
+    return this.request("/api/v2/snapshots", { method: "POST", body: requireSnapshotForEdition(value, value?.edition === "FC27" ? "FC27" : "FC26") });
   }
 
   /** @param {unknown} body */
