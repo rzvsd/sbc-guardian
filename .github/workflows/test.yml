@@ -77,10 +77,13 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - run: npm run check:version
+      - run: npm run check:manifests
+      - run: npm run check:gecko-compat
       - run: npm run lint
       - run: npm run test:ci
       - run: git diff --exit-code -- src/userscript.js
       - run: npm run package
+      - run: npm run package:gecko
       - run: npm run package:smoke
       # Sanitized / unit EA inventory coverage lives in npm test (ea-bundle-check.test.mjs).
       # Full local EA bundles are optional on PR; release fails closed via verify:release.
