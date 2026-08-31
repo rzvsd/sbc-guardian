@@ -58,3 +58,10 @@ web-portal/dist/
 
 # Recovery / audit artifacts
 recovery/
+.env
+.env.*
+*.env
+credentials.json
+*.pem
+*.key
+.credentials
