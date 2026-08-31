@@ -137,6 +137,34 @@ Nu se pun în:
 
 Secretele sunt scrise direct în `/etc/sbcguardian-v2/*.env`, root-only.
 
+Variabilele obligatorii pentru runtime se împart astfel (valorile reale nu se
+pun în Git, în documentație sau în command history):
+
+```text
+# /etc/sbcguardian-v2/backend.env
+GUARDIAN_ENV=prod
+GUARDIAN_DB_URL=postgresql+psycopg://<role>:<password>@127.0.0.1:5432/<database>
+
+# /etc/sbcguardian-v2/auth0.env
+SBC_AUTH0_ISSUER=https://<tenant>.auth0.com/
+SBC_AUTH0_CLIENT_ID=<client-id>
+SBC_AUTH0_CLIENT_SECRET=<client-secret>
+SBC_AUTH0_CALLBACK_URL=https://sbc-guardian.duckdns.org/api/v2/auth/callback
+SBC_PRINCIPAL_ADMIN_EMAIL=<verified-owner-email>
+
+# /etc/sbcguardian-v2/stripe.env
+SBC_STRIPE_SECRET_KEY=<stripe-secret-key>
+SBC_STRIPE_WEBHOOK_SECRET=<stripe-webhook-secret>
+SBC_STRIPE_PRICE_MONTHLY=<stripe-price-id>
+SBC_STRIPE_SUCCESS_URL=https://sbc-guardian.duckdns.org/billing/success
+SBC_STRIPE_CANCEL_URL=https://sbc-guardian.duckdns.org/billing/cancel
+SBC_STRIPE_PORTAL_RETURN_URL=https://sbc-guardian.duckdns.org/profile
+```
+
+În producție `GUARDIAN_DB_URL` trebuie să fie PostgreSQL; aplicația refuză
+pornirea dacă lipsește sau indică SQLite. URL-urile Stripe sunt validate ca
+HTTPS și, dacă sunt configurate aici, cererile clientului nu le pot înlocui.
+
 ## Backup gratuit
 
 Fără Storage Box și fără add-on plătit:
