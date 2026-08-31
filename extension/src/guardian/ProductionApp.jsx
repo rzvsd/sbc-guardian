@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 
 export default function ProductionApp({ runtimeAdapter }) {
   const [state, setState] = useState(() => runtimeAdapter?.getState?.() || { phase: "BOOTING" });
+  const [tab, setTab] = useState("home");
   useEffect(() => runtimeAdapter?.subscribe?.(setState), [runtimeAdapter]);
   const ready = Boolean(runtimeAdapter && state);
   return (
@@ -21,7 +22,16 @@ export default function ProductionApp({ runtimeAdapter }) {
           fontSize: "13px"
         }}
       >
-        {ready ? `Guardian connected: ${state.phase || "ready"}` : "Guardian is connecting securely…"}
+        <div style={{ marginBottom: "10px", fontWeight: 600 }}>SBC Guardian</div>
+        <nav style={{ display: "flex", gap: "6px", marginBottom: "10px" }}>
+          {["home", "ea", "protection", "profile"].map((name) => (
+            <button key={name} type="button" style={{ pointerEvents: "auto" }} onClick={() => setTab(name)}>{name}</button>
+          ))}
+        </nav>
+        {tab === "home" && <div>{ready ? `Status: ${state.phase || "ready"}` : "Connecting securely…"}</div>}
+        {tab === "ea" && <div><div>EA FC remains visible below this overlay.</div><button type="button" onClick={() => runtimeAdapter.openEa?.()}>Open EA</button></div>}
+        {tab === "protection" && <div><div>Protection is enforced by the server policy.</div><button type="button" onClick={() => runtimeAdapter.loadPolicy?.()}>Refresh policy</button></div>}
+        {tab === "profile" && <div><div>Account and subscription are loaded from Guardian.</div><button type="button" onClick={() => runtimeAdapter.loadAccount?.()}>Refresh account</button></div>}
         {ready && state.phase === "SBC_DETECTED" && (
           <button type="button" style={{ marginLeft: "8px" }} onClick={() => runtimeAdapter.findSolution()}>
             Find solution
