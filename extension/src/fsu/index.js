@@ -31,7 +31,6 @@ class FsuUserscriptApp {
         onToolSelect: (tool) => product && product.open(tool)
       });
       const fsuCtx = futweb();
-      mountReactGuardianOverlay({ document: this.windowRef.document });
       const guardian = getGuardian();
       if (guardian) {
         product = installGuardianFc26Product({
@@ -41,6 +40,7 @@ class FsuUserscriptApp {
           apiTransport: this.windowRef.__guardianApiRequest,
           messages: getBundledGuardianMessages(this.windowRef.navigator?.language || "en")
         });
+        mountReactGuardianOverlay({ document: this.windowRef.document, adapter: product.uiAdapter });
       }
     }
   }

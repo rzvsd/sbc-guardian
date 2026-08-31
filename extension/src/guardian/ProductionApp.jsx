@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 export default function ProductionApp({ runtimeAdapter }) {
-  const state = runtimeAdapter?.getState?.();
+  const [state, setState] = useState(() => runtimeAdapter?.getState?.() || { phase: "BOOTING" });
+  useEffect(() => runtimeAdapter?.subscribe?.(setState), [runtimeAdapter]);
   const ready = Boolean(runtimeAdapter && state);
   return (
     <div
@@ -21,6 +22,11 @@ export default function ProductionApp({ runtimeAdapter }) {
         }}
       >
         {ready ? `Guardian connected: ${state.phase || "ready"}` : "Guardian is connecting securely…"}
+        {ready && state.phase === "SBC_DETECTED" && (
+          <button type="button" style={{ marginLeft: "8px" }} onClick={() => runtimeAdapter.findSolution()}>
+            Find solution
+          </button>
+        )}
       </div>
     </div>
   );

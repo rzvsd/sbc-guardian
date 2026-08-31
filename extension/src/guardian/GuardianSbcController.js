@@ -8,6 +8,7 @@ import { createTranslator } from "./i18n/index.js";
 import { createGuardianSbcWorkspace } from "./ui/GuardianSbcWorkspace.js";
 import { createGuardianSolutionReview } from "./ui/GuardianSolutionReview.js";
 import { createGuardianWorkspace } from "./ui/GuardianWorkspace.js";
+import { GuardianUiAdapter } from "./GuardianUiAdapter.js";
 
 export class GuardianSbcController {
   /** @param {{solveFacade:any, applyController:any, render:(state:any)=>void}} config */
@@ -77,7 +78,10 @@ export function installGuardianFc26Product({ document, ctx, guardian, messages, 
   const t = createTranslator(messages);
   const root = document.querySelector("[data-guardian-root='true']");
 
+  /** @type {GuardianUiAdapter|null} */
+  let uiAdapter = null;
   const render = (/** @type {any} */ state) => {
+    uiAdapter?.publish(state);
     if (!root) return;
     root.querySelector(".guardian-workspace")?.remove();
     const children = [];
@@ -114,6 +118,7 @@ export function installGuardianFc26Product({ document, ctx, guardian, messages, 
     root.appendChild(createGuardianWorkspace({ t: /** @type {any} */ (t), children }));
   };
   const controller = new GuardianSbcController({ solveFacade, applyController, render });
+  uiAdapter = new GuardianUiAdapter({ controller });
   return {
     open(/** @type {string} */ tool) {
       if (tool !== "sbc") return;
@@ -121,6 +126,7 @@ export function installGuardianFc26Product({ document, ctx, guardian, messages, 
       if (!challenge) render({ phase: "ERROR", error: "Open an FC26 SBC challenge first." });
       else controller.attach(challenge);
     },
-    controller
+    controller,
+    uiAdapter
   };
 }
