@@ -22,6 +22,7 @@ Thumbs.db
 .agents/
 agent-tools/
 terminals/
+.playwright-cli/
 
 # Logs
 *.log
