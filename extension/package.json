@@ -35,10 +35,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "adm-zip": "0.6.0",
-    "esbuild": "^0.28.1",
-    "eslint": "^10.6.0",
-    "playwright": "^1.61.1",
+    "adm-zip": "0.6.1",
+    "esbuild": "^0.28.2",
+    "eslint": "^10.10.0",
+    "playwright": "^1.63.0",
     "typescript": "^7.0.2"
   }
 }
