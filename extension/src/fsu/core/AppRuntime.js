@@ -8,6 +8,7 @@ import { createLocalization } from "../domain/Localization.js";
  */
 export function createAppRuntime() {
   const info = createGameInfo();
+  info.externalPricesAvailable = GM_info.externalPricesAvailable !== false;
   const ctx = new AppContext({
     getValue: GM_getValue,
     setValue: GM_setValue,

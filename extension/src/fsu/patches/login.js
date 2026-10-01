@@ -1,5 +1,5 @@
 export function installLoginPatches(deps) {
-  const { call, events, info, services, debug, fy, GM_getValue, GM_xmlhttpRequest } = deps;
+  const { call, info, services, debug, GM_getValue, GM_xmlhttpRequest } = deps;
   //24.20 lodin页面插入已加载提示
 UTLoginView.prototype._generate = function (...args) {
     if (!this._generated) {
@@ -9,14 +9,6 @@ UTLoginView.prototype._generate = function (...args) {
         if(locale.language == "zh"){
             info.language = locale.variant == "Hans" ? 0 : 1;
         }
-        events.notice("notice.succeeded",0);
-        let psBtn = events.createElementWithConfig("div",{
-            textContent:fy("notice.succeeded"),
-            style:{
-                color:"#36b84b"
-            }
-        })
-
         //读取是否有futgg接口
         const apiProxy = GM_getValue("apiproxy");
 
@@ -25,7 +17,7 @@ UTLoginView.prototype._generate = function (...args) {
         }
 
         //26.04 自动切换价格获取接口的脚本
-        GM_xmlhttpRequest({
+        if (info.externalPricesAvailable !== false) GM_xmlhttpRequest({
             method: 'GET',
             url: `https://www.fut.gg/api/fut/player-prices/26/?ids=${_.random(20000, 39999)}`,
             anonymous: false, // 关键：利用当前页面的已存 Cookie
@@ -51,7 +43,7 @@ UTLoginView.prototype._generate = function (...args) {
         });
 
 
-        this._linkGettingStarted.getRootElement().parentNode.appendChild(psBtn);
+
     }
 }
 //24.15 底层界面展示

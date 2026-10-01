@@ -14,7 +14,11 @@ const geckoPath = join(root, "manifest.gecko.json");
 if (!fs.existsSync(geckoPath)) fail("manifest.gecko.json missing");
 const gecko = JSON.parse(fs.readFileSync(geckoPath, "utf8"));
 
-// GeckoView (Firefox MV3) uses background.scripts, never service_worker.
+if (gecko.manifest_version !== 2) {
+  fail("GeckoView manifest must use MV2 so bundled EA origins are required permissions");
+}
+
+// GeckoView uses background.scripts, never service_worker.
 if (gecko.background?.service_worker) {
   fail("GeckoView cannot use background.service_worker");
 }

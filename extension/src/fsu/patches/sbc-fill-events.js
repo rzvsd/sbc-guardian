@@ -53,10 +53,10 @@ UTSquadBuilderViewModel.prototype.generatePlayerCollection = function(e, o, n, r
     let c = 0;
     let ls = info.build.league ? info.set.shield_league : [];
     let rs = info.build.rare ? [3] : [];
-    let p = o.filter(item => !ls.includes(item.leagueId) && !rs.includes(item.rareflag))
+    let p = o.filter(item => !info.lock.includes(item.id) && !ls.includes(item.leagueId) && !rs.includes(item.rareflag))
     let v = 0;
     for (let i = 0; i < 11; i++) {
-        if(!r.getSlot(i).isValid() && !r.getSlot(i).isBrick()){
+        if(!r || (!r.getSlot(i).isValid() && !r.getSlot(i).isBrick())){
             v++;
         }
     }
@@ -68,7 +68,7 @@ UTSquadBuilderViewModel.prototype.generatePlayerCollection = function(e, o, n, r
         var i = r ? r.getSlot(t) : null;
         return i && (i.isValid() || i.isBrick()) ?
             i.getItem() :
-            info.build.ignorepos ?
+            (n || info.build.ignorepos) ?
             p[c++] : s.getBestPlayerForPos(_, p);
     })
     events.loadPlayerInfo(pa);

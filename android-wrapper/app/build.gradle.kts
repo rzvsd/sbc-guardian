@@ -15,8 +15,8 @@ android {
         applicationId = "com.sbcguardian.app.beta"
         minSdk = 31
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 2
+        versionName = "0.1.1"
     }
 
     compileOptions {
@@ -101,11 +101,9 @@ val bundleFsuExtension = tasks.register("bundleFsuExtension") {
     doLast {
         fsuAssets.deleteRecursively()
         fsuAssets.mkdirs()
-        val zip = fsuDist.listFiles()
-            ?.firstOrNull { it.name.contains("-gecko-") && it.name.endsWith(".zip") }
-            ?: throw GradleException(
-                "FSU gecko package not found in $fsuDist. Run 'npm run package:gecko'."
-            )
+        val extensionVersion = Regex("\"version\"\\s*:\"?\\s*\"([^\"]+)\"").find(file("$extensionDir/manifest.gecko.json").readText())?.groupValues?.get(1) ?: throw GradleException("Missing extension version")
+        val zip = File(fsuDist, "fsu-fut-enhancer-gecko-$extensionVersion.zip")
+        if (!zip.isFile) throw GradleException("FSU Gecko package missing: $zip")
         copy {
             from(zipTree(zip))
             into(fsuAssets)

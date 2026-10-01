@@ -64,6 +64,10 @@ export class PatchInstaller {
   wirePriceService() {
     const { events, fy, priceService } = this.ctx;
     priceService.setErrorHandler((error) => {
+      if (error === "PRICE_PROVIDER_UNAVAILABLE") {
+        events.notice("notice.pricesunavailable", 2);
+        return;
+      }
       events.notice(fy("notice.loaderror") + error, 2);
       events.hideLoader();
     });

@@ -56,7 +56,12 @@ function copyDirectory(relativePath) {
   }
 }
 
-fs.rmSync(distDir, { recursive: true, force: true });
+// Keep the Chrome and Gecko archives side by side.  Removing the whole
+// distribution directory here made `package:chrome && package:gecko &&
+// package:smoke` delete the Chrome archive before smoke verification.
+fs.mkdirSync(distDir, { recursive: true });
+fs.rmSync(stageDir, { recursive: true, force: true });
+fs.rmSync(zipPath, { force: true });
 fs.mkdirSync(stageDir, { recursive: true });
 
 // Stage the selected manifest as manifest.json so the browser loader finds it.

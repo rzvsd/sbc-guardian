@@ -16,6 +16,7 @@ export const LOCALIZATION_STRINGS = {
             "notice.upgradeconfirm":["有新版本点击顶部链接查看","有新版本點擊頂部鏈接查看","There is a new version, click the top link to view"],
             "notice.uasreset":["已重新载入列表","已重新載入列表","The list has been reloaded"],
             "notice.priceloading":["开始读取价格数据 请稍等","開始讀取價格數據 請稍等","Start reading price data, please wait"],
+            "notice.pricesunavailable":["此版本不支持市场价格；其他工具仍可使用。","此版本不支援市場價格；其他工具仍可使用。","Market prices are unavailable in this build. Other tools remain available."],
             "notice.loaderror":["读取数据失败 请检查网络","讀取數據失敗 請檢查網絡","Failed to read data, please check the network"],
             "notice.succeeded":["FSU插件加载成功","FSU插件載入成功","FSU plugin loaded successfully"],
             "notice.duplicateloading":["开始读取重复球员数据 请稍等","開始讀取重複球員數據 請稍等","Start reading duplicate player data, please wait"],

@@ -544,6 +544,11 @@
         return false;
       }
 
+      if (message.type === "DIAGNOSTIC") {
+        sendResponse({ ok: true });
+        return false;
+      }
+
       if (message.type === "GM_XMLHTTP_REQUEST") {
         this.requestService
           .perform(message.details)

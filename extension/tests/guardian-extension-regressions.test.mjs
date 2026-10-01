@@ -41,22 +41,22 @@ async function assertGeckoContentBridgeUsesBrowserNamespace() {
   const source = fs.readFileSync(path.join(root, "src", "content-bridge.js"), "utf8");
   const listeners = new Map();
   const injected = [];
-  const windowRef = {
-    browser: {
-      runtime: {
-        id: "gecko-extension",
-        lastError: null,
-        getURL: (value) => value,
-        sendMessage: (_payload, callback) => callback({ ok: true }),
-      },
-      storage: {
-        local: {
-          get: (_key, callback) => callback({}),
-          set() {},
-          remove() {},
-        },
+  const browserApi = {
+    runtime: {
+      id: "gecko-extension",
+      lastError: null,
+      getURL: (value) => value,
+      sendMessage: (_payload, callback) => callback({ ok: true }),
+    },
+    storage: {
+      local: {
+        get: (_key, callback) => callback({}),
+        set() {},
+        remove() {},
       },
     },
+  };
+  const windowRef = {
     addEventListener(type, listener) {
       listeners.set(type, listener);
     },
@@ -82,7 +82,7 @@ async function assertGeckoContentBridgeUsesBrowserNamespace() {
   const sandbox = {
     window: windowRef,
     document: documentRef,
-    browser: windowRef.browser,
+    browser: browserApi,
     console: { warn() {}, error() {} },
     TextEncoder,
     setTimeout,

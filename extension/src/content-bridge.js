@@ -1,6 +1,9 @@
 (function initContentBridge(globalScope) {
   "use strict";
 
+  if (globalScope.__fsuContentBridgeBootstrapped) return;
+  globalScope.__fsuContentBridgeBootstrapped = true;
+
   const PAGE_SOURCE = "fsu-extension-page";
   const CONTENT_SOURCE = "fsu-extension-content";
   const LODASH_VENDOR_PATH = "vendor/lodash.min.js";
@@ -165,6 +168,10 @@
         {
           source: CONTENT_SOURCE,
           type: "FSU_INIT_STORAGE",
+          capabilities: {
+            externalPrices: [...(this.runtimeApi.getManifest?.().permissions || []), ...(this.runtimeApi.getManifest?.().host_permissions || [])]
+              .some((origin) => /^https:\/\/(www\.fut\.gg|www\.futbin\.org|enhancer-api\.futnext\.com)\//.test(origin))
+          },
           storage
         },
         "*"
@@ -511,9 +518,25 @@
     }
   }
 
-  const extensionApi = globalScope.browser || globalScope.chrome;
+  // Firefox exposes `browser` as a WebExtension global, but GeckoView does
+  // not necessarily mirror it onto the page-like `window` wrapper used by a
+  // content script. Read the lexical extension globals first.
+  const browserApi = typeof browser !== "undefined" ? browser : undefined;
+  const chromeApi = typeof chrome !== "undefined" ? chrome : undefined;
+  const extensionApi = browserApi || chromeApi;
   if (!extensionApi) {
     throw new Error("FSU extension API unavailable");
+  }
+
+  try {
+    extensionApi.runtime.sendMessage({
+      source: CONTENT_SOURCE,
+      type: "DIAGNOSTIC",
+      stage: "content-bridge-start",
+      href: String(globalScope.location?.href || "")
+    });
+  } catch {
+    // Diagnostics are best-effort and never affect the bridge.
   }
 
   new ContentBridgeApp({

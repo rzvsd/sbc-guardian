@@ -4,7 +4,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.mutableStateOf
@@ -32,9 +34,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
 
         runtimeProvider = GeckoRuntimeProvider(this)
-        sessionController = FutSessionController(runtimeProvider)
         messageBridge = GeckoMessageBridge(sessionNonce = runtimeProvider.newSessionNonce())
         extensionInstaller = BuiltInExtensionInstaller(runtimeProvider, messageBridge)
+        // Install the built-in extension before opening the Gecko session so
+        // content scripts are registered for the first EA navigation.
+        sessionController = FutSessionController(runtimeProvider)
         sessionStore = GuardianSessionStore(this)
         linked.value = sessionStore.session() != null
 
@@ -77,8 +81,8 @@ class MainActivity : ComponentActivity() {
         }
 
         setContent {
-            MaterialTheme {
-                Surface(modifier = Modifier.fillMaxSize()) {
+            MaterialTheme(colorScheme = darkColorScheme()) {
+                Surface(modifier = Modifier.fillMaxSize().safeDrawingPadding()) {
                     val preview = pendingPreview.value
                     when {
                         !extensionReady.value -> Text("Preparing SBC Guardian…")
@@ -96,7 +100,8 @@ class MainActivity : ComponentActivity() {
                             session = sessionController.session,
                             uiState = sessionController.uiState,
                             accessStatus = accessStatus.value,
-                            onUnlinkAccount = { unlinkAccount() }
+                            onUnlinkAccount = { unlinkAccount() },
+                            canGoBack = sessionController.canGoBack.value
                         )
                     }
                     if (preview != null) {

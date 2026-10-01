@@ -22,6 +22,7 @@ async function prepareSmokeExtension(tempRoot) {
   const runtimeFiles = [
     "manifest.json",
     "src/background.js",
+    "src/platform/background-core.js",
     "src/content-bridge.js",
     "src/page-runtime.js",
     "vendor/lodash.min.js",

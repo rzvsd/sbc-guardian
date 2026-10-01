@@ -463,6 +463,9 @@
 
       if (message.type === "FSU_INIT_STORAGE" && this.valueStore) {
         this.valueStore.mergeInitialValues(message.storage);
+        if (this.windowRef.GM_info && message.capabilities) {
+          this.windowRef.GM_info.externalPricesAvailable = message.capabilities.externalPrices === true;
+        }
         return;
       }
 

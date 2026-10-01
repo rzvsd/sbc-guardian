@@ -1,3 +1,4 @@
+import { registerSbcFillEvents } from "../src/fsu/patches/sbc-fill-events.js";
 import assert from "assert";
 import { FastSbcService } from "../src/fsu/domain/FastSbcService.js";
 import { SbcPlayerMatchService } from "../src/fsu/domain/SbcPlayerMatchService.js";
@@ -111,6 +112,29 @@ function installLodashMock() {
 }
 
 export function runSbcServiceTests() {
+  const originalUnassigned = globalThis.UTUnassignedItemsViewController;
+  const originalBuilder = globalThis.UTSquadBuilderViewModel;
+  try {
+    globalThis.UTUnassignedItemsViewController = class {};
+    globalThis.UTSquadBuilderViewModel = class {};
+    const info = { build: { league: false, rare: false, ignorepos: false }, set: { shield_league: [] }, lock: [1] };
+    registerSbcFillEvents({ info, events: { loadPlayerInfo() {}, notice() {} } });
+    const model = new UTSquadBuilderViewModel();
+    const pool = Array.from({ length: 12 }, (_, i) => ({ id: i + 1, leagueId: 1, rareflag: 0 }));
+    const positions = Array(11).fill("CM");
+    const result = model.generatePlayerCollection(positions, pool, true);
+    assert.deepStrictEqual(result.map(p => p.id), pool.slice(1).map(p => p.id), "replace-all honors ignore position and excludes locked cards");
+    const occupied = { isValid: () => true, getItem: () => pool[0] };
+    const empty = { isValid: () => false, isBrick: () => false };
+    const retained = model.generatePlayerCollection(positions, pool, true, { getSlot: i => i === 0 ? occupied : empty });
+    assert.strictEqual(retained[0], pool[0], "existing slots are preserved");
+    assert.equal(retained.slice(1).some(p => p.id === 1), false, "locked cards cannot fill vacant slots");
+  } finally {
+    if (originalUnassigned === undefined) delete globalThis.UTUnassignedItemsViewController;
+    else globalThis.UTUnassignedItemsViewController = originalUnassigned;
+    if (originalBuilder === undefined) delete globalThis.UTSquadBuilderViewModel;
+    else globalThis.UTSquadBuilderViewModel = originalBuilder;
+  }
   installLodashMock();
   const sbcDataService = new SbcDataService();
   assert.deepStrictEqual(sbcDataService.adaptSbcChallengesResponse({ challenges: [] }), {

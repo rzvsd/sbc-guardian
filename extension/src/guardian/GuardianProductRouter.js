@@ -4,12 +4,14 @@
  * context; it only forwards the public adapter contract.
  */
 export class GuardianProductRouter {
-  /** @param {{fc26:any, fc27:any, currentChallenge:()=>any}} config */
-  constructor({ fc26, fc27, currentChallenge }) {
+  /** @param {{fc26:any, fc27:any, currentChallenge:()=>any, defaultEdition?:"FC26"|"FC27"}} config */
+  constructor({ fc26, fc27, currentChallenge, defaultEdition = "FC26" }) {
     this.products = { FC26: fc26, FC27: fc27 };
     this.currentChallenge = currentChallenge;
+    this.defaultEdition = defaultEdition;
     this.active = fc26;
     this.subscriptions = new Map();
+    this.challengeKey = null;
   }
 
   /** @param {(state:any)=>void} listener */
@@ -25,7 +27,8 @@ export class GuardianProductRouter {
 
   /** @param {string} tool */
   open(tool) {
-    const rawEdition = String(this.currentChallenge()?.edition || "").toUpperCase();
+    const challenge = this.currentChallenge?.();
+    const rawEdition = String(challenge?.edition || this.defaultEdition || "").toUpperCase();
     if (rawEdition !== "FC26" && rawEdition !== "FC27") {
       throw new Error("GUARDIAN_UNSUPPORTED_EDITION");
     }
@@ -39,7 +42,55 @@ export class GuardianProductRouter {
         this.subscriptions.set(listener, this.active.uiAdapter.subscribe(listener));
       }
     }
-    return this.active.open(tool);
+    const result = this.active.open(tool);
+    if (tool === "sbc") this.challengeKey = this.challengeKeyFor(challenge);
+    return result;
+  }
+
+  /**
+   * Synchronize the public UI with the live FSU controller. The old Guardian
+   * rail used to call open("sbc") explicitly; React has no such legacy click,
+   * so the router must observe SPA navigation and attach exactly once per
+   * challenge.
+   */
+  sync() {
+    const challenge = this.currentChallenge?.();
+    if (!challenge) {
+      const phase = this.active.uiAdapter.getState?.().phase;
+      if (this.challengeKey !== null || phase === "BOOTING") {
+        this.challengeKey = null;
+        this.active.uiAdapter.publish?.({ phase: "EA_READY" });
+      }
+      return false;
+    }
+
+    const key = this.challengeKeyFor(challenge);
+    if (key === this.challengeKey) return true;
+    try {
+      this.open("sbc");
+      return true;
+    } catch (error) {
+      this.challengeKey = key;
+      this.active.uiAdapter.publish?.({
+        phase: "INVALID_RESPONSE",
+        error: error instanceof Error ? error.message : String(error)
+      });
+      return false;
+    }
+  }
+
+  /** @param {any} challenge */
+  challengeKeyFor(challenge) {
+    if (!challenge) return null;
+    return JSON.stringify([
+      challenge.id ?? null,
+      challenge.setId ?? null,
+      challenge.name ?? null,
+      challenge.edition ?? null,
+      challenge.target_count ?? null,
+      challenge.ruleset_version ?? null,
+      challenge.squad_size ?? null
+    ]);
   }
 
   /** @param {string} method @param {any[]} args */

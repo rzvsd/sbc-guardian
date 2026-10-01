@@ -1,5 +1,6 @@
 package com.sbcguardian.app
 
+import android.util.Log
 import org.json.JSONObject
 import org.mozilla.geckoview.GeckoResult
 import org.mozilla.geckoview.WebExtension
@@ -76,6 +77,9 @@ class GeckoMessageBridge(private val sessionNonce: String) {
                 }
             } ?: emptyMap()
             onActionPreview?.invoke(preview)
+        }
+        if (raw.optString("type") == "DIAGNOSTIC") {
+            Log.i("SBCGuardian", "extension diagnostic: ${raw.optJSONObject("payload")}")
         }
         return raw
     }

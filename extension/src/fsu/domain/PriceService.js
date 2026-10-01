@@ -46,6 +46,7 @@ export class PriceService {
     /** @type {((error: any) => void) | null} */
     this.errorHandler = null;
     this.requestQueue = new PriceRequestQueue();
+    this.unavailableReported = false;
   }
 
   /**
@@ -103,6 +104,7 @@ export class PriceService {
     }
 
     if (type === 1) {
+      if (info.externalPricesAvailable === false) return { num: 0, text: "—", type: 0 };
       const item = info.roster[priceDataKey]?.[definitionId] ?? {};
       const priceInfo = {
         num: item?.n ?? 0,
@@ -153,6 +155,10 @@ export class PriceService {
    * @returns {Promise<any>}
    */
   async getFutbinUrl(url) {
+    if (this.getInfo().externalPricesAvailable === false) {
+      this.reportUnavailable();
+      return {};
+    }
     try {
       const response = await this.request("GET", url);
       return this.parseJsonResponse(response, {}, "futbin-url");
@@ -166,6 +172,10 @@ export class PriceService {
    * @returns {Promise<any>}
    */
   async getPriceForUrl(definitionIds) {
+    if (this.getInfo().externalPricesAvailable === false) {
+      this.reportUnavailable();
+      return priceProviderFailure("none", {}, ["provider-unavailable"]);
+    }
     this.debug.log(definitionIds);
     const sortedIds = [...definitionIds].sort((a, b) => a - b);
     const queueKey = `url:${sortedIds.join(",")}`;
@@ -224,6 +234,12 @@ export class PriceService {
     }
   }
 
+  reportUnavailable() {
+    if (this.unavailableReported) return;
+    this.unavailableReported = true;
+    this.reportError("PRICE_PROVIDER_UNAVAILABLE");
+  }
+
   /**
    * @param {any} error
    */
@@ -280,6 +296,10 @@ export class PriceService {
    * @returns {Promise<any>}
    */
   async getPriceForFutbin(playerResourceId) {
+    if (this.getInfo().externalPricesAvailable === false) {
+      this.reportUnavailable();
+      return undefined;
+    }
     try {
       const info = this.getInfo();
       const platform = info.base.platform == "pc" ? "PC" : "PS";
@@ -393,6 +413,10 @@ export class PriceService {
    * @returns {Promise<number>}
    */
   async getFutbinPlayerId(player) {
+    if (this.getInfo().externalPricesAvailable === false) {
+      this.reportUnavailable();
+      return 0;
+    }
     try {
       const info = this.getInfo();
       const platform = info.base.platform == "pc" ? "PC" : "PS";
@@ -447,6 +471,10 @@ export class PriceService {
    * @returns {Promise<any>}
    */
   async getFutbinPrice(definitionId, futbinId) {
+    if (this.getInfo().externalPricesAvailable === false) {
+      this.reportUnavailable();
+      return undefined;
+    }
     try {
       const info = this.getInfo();
       const platform = info.base.platform == "pc" ? "PC" : "PS";

@@ -38,6 +38,18 @@ try {
   );
   await page.goto("https://guardian.test/smoke", { waitUntil: "domcontentloaded" });
   await page.addScriptTag({ content: built.outputFiles[0].text });
+  // Without a pending action the guard must not obstruct the underlying EA UI.
+  await page.evaluate(() => {
+    window.__mountGuardianForSmoke({ window, document, sessionNonce: "idle-guard" });
+    const login = document.createElement("button");
+    login.id = "ea-login-probe";
+    login.textContent = "Login";
+    login.onclick = () => { login.textContent = "EA interaction received"; };
+    document.body.appendChild(login);
+  });
+  assert.equal(await page.locator(".guardian-overlay, [data-guardian-react-root]").count(), 0);
+  await page.locator("#ea-login-probe").click();
+  assert.equal(await page.locator("#ea-login-probe").textContent(), "EA interaction received");
   const publicKeys = await page.evaluate(() => {
     window.__guardianMutations = 0;
     window.__mountGuardianForSmoke({

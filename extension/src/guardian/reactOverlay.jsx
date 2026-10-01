@@ -12,7 +12,10 @@ function safeUnavailableAdapter() {
 export function mountReactGuardianOverlay({ document: documentRef, adapter = null } = {}) {
   if (!documentRef || !documentRef.body) return null;
   const existing = documentRef.querySelector(HOST_SELECTOR);
-  if (existing) return existing;
+  if (existing) {
+    existing.__guardianSetAdapter?.(adapter);
+    return existing;
+  }
 
   const host = documentRef.createElement("div");
   host.dataset.guardianReactRoot = "true";
@@ -31,8 +34,15 @@ export function mountReactGuardianOverlay({ document: documentRef, adapter = nul
   style.textContent = guardianCss;
   shadow.appendChild(style);
   const mountPoint = documentRef.createElement("div");
+  mountPoint.style.width = "100%";
+  mountPoint.style.height = "100%";
   mountPoint.style.pointerEvents = "none";
   shadow.appendChild(mountPoint);
-  createRoot(mountPoint).render(<ProductionApp runtimeAdapter={adapter || safeUnavailableAdapter()} />);
+  const root = createRoot(mountPoint);
+  const render = (nextAdapter) => {
+    root.render(<ProductionApp runtimeAdapter={nextAdapter || safeUnavailableAdapter()} />);
+  };
+  host.__guardianSetAdapter = render;
+  render(adapter);
   return host;
 }

@@ -73,9 +73,61 @@
     });
   }
 
+  // Some GeckoView releases install the built-in extension successfully but
+  // do not attach declarative content scripts to the first top-level page.
+  // Register a narrow, idempotent fallback at navigation completion. The
+  // content bridge itself has a once-per-page guard, so runtimes that support
+  // declarative injection do not receive a duplicate bootstrap.
+  const injectContentBridge = (tabId, url) => {
+    if (!/^https:\/\/(www\.)?ea\.com\/.+ultimate-team\/web-app(?:\/|$)/i.test(url)) return;
+      if (nativePort) {
+        nativePort.postMessage(nativeEnvelope("DIAGNOSTIC", { stage: "content-fallback-attempt", href: url }));
+      }
+      Promise.resolve(browserApi.tabs.executeScript(tabId, {
+        file: "src/content-bridge.js",
+        runAt: "document_idle"
+      })).catch(() => {
+        if (nativePort) {
+          nativePort.postMessage(nativeEnvelope("DIAGNOSTIC", { stage: "content-fallback-failed", href: url }));
+        }
+        // Declarative content scripts remain the primary path; this fallback
+        // is best-effort on GeckoView versions without executeScript support.
+      });
+  };
+
+  if (browserApi?.tabs?.onUpdated && typeof browserApi.tabs.executeScript === "function") {
+    browserApi.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+      if (changeInfo?.status !== "complete") return;
+      injectContentBridge(tabId, String(tab?.url || ""));
+    });
+    // The extension may be installed after the GeckoSession already reached
+    // the page, so also cover the current tab immediately at startup.
+    Promise.resolve(browserApi.tabs.query({ active: true, currentWindow: true }))
+      .then((tabs) => tabs.forEach((tab) => injectContentBridge(tab.id, String(tab.url || ""))))
+      .catch(() => {});
+  }
+
+  if (browserApi?.runtime?.onMessage) {
+    browserApi.runtime.onMessage.addListener((message, sender) => {
+      if (message?.source !== "fsu-extension-content" || message?.type !== "DIAGNOSTIC") return false;
+      if (nativePort) {
+        nativePort.postMessage(nativeEnvelope("DIAGNOSTIC", {
+          stage: String(message.stage || "unknown"),
+          href: String(message.href || sender?.url || "")
+        }));
+      }
+      return false;
+    });
+  }
+
   if (browserApi && browserApi.runtime && typeof browserApi.runtime.connectNative === "function") {
     try {
       nativePort = browserApi.runtime.connectNative("fsu");
+      nativePort.postMessage(nativeEnvelope("DIAGNOSTIC", {
+        stage: "background-ready",
+        tabsUpdated: Boolean(browserApi.tabs?.onUpdated),
+        executeScript: typeof browserApi.tabs?.executeScript === "function"
+      }));
       nativePort.onMessage.addListener((message) => {
         if (!isValidNativeEnvelope(message)) return;
         if (message.type === "HELLO") {

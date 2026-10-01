@@ -27,6 +27,21 @@ function createService({ info, request, now = 100_000, onError = () => {} }) {
 }
 
 export async function runPriceServiceTests() {
+  const unavailableInfo = { ...createInfo(), externalPricesAvailable: false };
+  let requests = 0;
+  const errors = [];
+  const unavailable = createService({ info: unavailableInfo, request: async () => { requests++; return "{}"; }, onError: e => errors.push(e) });
+  for (let i = 0; i < 20; i++) {
+    assert.equal((await unavailable.getPriceForUrl([i])).success, false);
+    assert.equal(await unavailable.getPriceForFutbin(i), undefined);
+    assert.deepEqual(await unavailable.getFutbinUrl("https://www.futbin.org/futbin/api/26/getChallengesBySetId?set_id=1"), {});
+    assert.equal(await unavailable.getFutbinPlayerId({}), 0);
+    assert.equal(await unavailable.getFutbinPrice(i, i), undefined);
+  }
+  assert.equal(requests, 0, "unsupported providers must not be queried on every render");
+  assert.deepEqual(errors, ["PRICE_PROVIDER_UNAVAILABLE"], "show one capability explanation, not an error storm");
+  assert.equal(unavailable.getCachePrice(1, 1).text, "—");
+
   const staleEntry = { n: 700, y: 0, _ts: 95_000 };
   const expiredEntry = { n: 800, y: 0, _ts: 80_000 };
   const malformedInfo = createInfo({ 1: staleEntry, 2: expiredEntry });
